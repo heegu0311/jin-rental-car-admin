@@ -1,0 +1,120 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@import "tw-animate-css";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  
+  --color-primary: #2DA3E8;
+  --color-primary-foreground: #ffffff;
+  
+  --color-popover: #ffffff;
+  --color-popover-foreground: #020617;
+  
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #0f172a;
+  
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: #2DA3E8;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #020617;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #2DA3E8;
+  --radius: 0.75rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: #ffffff !important;
+    color: #020617 !important;
+    font-family: var(--font-sans);
+    antialiased: true;
+  }
+}
+
+/* Glass effect aligned with web project's subtle styling */
+.glass {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+/* TipTap Editor Styles */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+.ProseMirror {
+  outline: none !important;
+}
+
+.ProseMirror p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror h1 {
+  font-size: 2em;
+  font-weight: bold;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+  padding-left: 1.5em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 1.5em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror blockquote {
+  border-left: 4px solid #e2e8f0;
+  padding-left: 1em;
+  font-style: italic;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}

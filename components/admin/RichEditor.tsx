@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -66,6 +68,11 @@ const ToolbarButton = ({
 )
 
 export function RichEditor({ content, onChange, placeholder = "내용을 입력하세요..." }: RichEditorProps) {
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -96,7 +103,8 @@ export function RichEditor({ content, onChange, placeholder = "내용을 입력�
     },
   })
 
-  if (!editor) {
+  // Do not render anything until the component has mounted on the client
+  if (!isMounted || !editor) {
     return null
   }
 

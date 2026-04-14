@@ -2,17 +2,22 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { 
-  ArrowLeft, 
-  Save, 
-  Image as ImageIcon, 
+import {
+  ArrowLeft,
+  Save,
+  Image as ImageIcon,
   Calendar as CalendarIcon,
   AlertCircle,
   X
 } from 'lucide-react'
 import Link from 'next/link'
-import { RichEditor } from '@/components/admin/RichEditor'
+import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
+
+const RichEditor = dynamic(() => import('@/components/admin/RichEditor').then(mod => mod.RichEditor), {
+  ssr: false,
+  loading: () => <div className="h-[400px] w-full bg-slate-50 animate-pulse rounded-xl border border-slate-200" />
+})
 import { cn } from '@/lib/utils'
 
 interface EventFormProps {
@@ -30,10 +35,10 @@ interface EventFormProps {
 export function EventForm({ initialData }: EventFormProps) {
   const router = useRouter()
   const supabase = createClient()
-  
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   const [title, setTitle] = useState(initialData?.title || '')
   const [description, setDescription] = useState(initialData?.description || '')
   const [imageUrl, setImageUrl] = useState(initialData?.image_url || '')
@@ -68,14 +73,14 @@ export function EventForm({ initialData }: EventFormProps) {
           .from('events')
           .update(eventData)
           .eq('id', initialData.id)
-        
+
         if (error) throw error
       } else {
         // Create
         const { error } = await supabase
           .from('events')
           .insert([eventData])
-        
+
         if (error) throw error
       }
 
@@ -93,8 +98,8 @@ export function EventForm({ initialData }: EventFormProps) {
     <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link 
-            href="/events" 
+          <Link
+            href="/events"
             className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-slate-600 hover:border-slate-300 transition-all"
           >
             <ArrowLeft size={20} />
@@ -106,15 +111,15 @@ export function EventForm({ initialData }: EventFormProps) {
             <p className="text-slate-500">이벤트 정보를 입력하고 발행하세요.</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
-          <Link 
+          <Link
             href="/events"
             className="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-all"
           >
             취소
           </Link>
-          <button 
+          <button
             type="submit"
             disabled={loading}
             className="flex items-center gap-2 px-6 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -138,8 +143,8 @@ export function EventForm({ initialData }: EventFormProps) {
           <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700">이벤트 제목 <span className="text-rose-500">*</span></label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="예) 봄맞이 전 차종 20% 할인 이벤트"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -150,7 +155,7 @@ export function EventForm({ initialData }: EventFormProps) {
 
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700">이벤트 상세 내용</label>
-              <RichEditor 
+              <RichEditor
                 content={description}
                 onChange={setDescription}
                 placeholder="이벤트 상세 내용을 입력하세요. 이미지, 링크 등을 활용할 수 있습니다."
@@ -163,7 +168,7 @@ export function EventForm({ initialData }: EventFormProps) {
           {/* Settings */}
           <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
             <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-4">설정</h3>
-            
+
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
                 <div>
@@ -191,8 +196,8 @@ export function EventForm({ initialData }: EventFormProps) {
               <div className="grid grid-cols-1 gap-4">
                 <div className="relative">
                   <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                  <input 
-                    type="date" 
+                  <input
+                    type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
@@ -201,8 +206,8 @@ export function EventForm({ initialData }: EventFormProps) {
                 <div className="flex items-center justify-center text-slate-400 font-bold">~</div>
                 <div className="relative">
                   <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                  <input 
-                    type="date" 
+                  <input
+                    type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
@@ -215,9 +220,9 @@ export function EventForm({ initialData }: EventFormProps) {
           {/* Thumbnail */}
           <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
             <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-4">대표 이미지 (썸네일)</h3>
-            
+
             <div className="space-y-4">
-              <div 
+              <div
                 className={cn(
                   "relative aspect-video rounded-xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden bg-slate-50 group",
                   imageUrl ? "border-solid border-slate-200" : "border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition-all"
@@ -225,13 +230,13 @@ export function EventForm({ initialData }: EventFormProps) {
               >
                 {imageUrl ? (
                   <>
-                    <img 
-                      src={imageUrl} 
-                      alt="Thumbnail preview" 
+                    <img
+                      src={imageUrl}
+                      alt="Thumbnail preview"
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button 
+                      <button
                         type="button"
                         onClick={() => setImageUrl('')}
                         className="p-2 bg-white text-rose-600 rounded-full hover:bg-rose-50 transition-colors"
@@ -251,8 +256,8 @@ export function EventForm({ initialData }: EventFormProps) {
 
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">이미지 URL</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="https://..."
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}

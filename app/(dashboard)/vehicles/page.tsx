@@ -17,8 +17,25 @@ import {
   Trash2,
   X
 } from 'lucide-react'
-import { CARS, Car } from '@/lib/data/cars'
+
+import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+
+export interface Car {
+  id: number;
+  name: string;
+  year: string;
+  price: string;
+  badge?: string;
+  condition: string;
+  image: string;
+  fuel?: string;
+  pricePolicy: {
+    daily: number;
+    weekly: number;
+    monthly: number;
+  };
+}
 
 interface VehicleImageProps {
   src?: string
@@ -236,11 +253,42 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
 }
 
 export default function VehiclesPage() {
-  const [cars, setCars] = useState<Car[]>(CARS)
+  const [cars, setCars] = useState<Car[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedBadge, setSelectedBadge] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCar, setEditingCar] = useState<Car | null>(null)
+
+  const supabase = createClient()
+
+  const fetchCars = async () => {
+    setLoading(true)
+    const { data, error } = await supabase.from('vehicles').select('*').order('id', { ascending: true })
+    if (!error && data) {
+      const mapped = data.map((v: any) => ({
+        id: v.id,
+        name: v.name,
+        year: String(v.year),
+        price: String(v.price_daily * 30),
+        badge: v.badge || '',
+        condition: v.condition || '',
+        image: v.image_url || '',
+        fuel: v.fuel || '',
+        pricePolicy: {
+          daily: v.price_daily,
+          weekly: v.price_weekly,
+          monthly: v.price_monthly
+        }
+      }))
+      setCars(mapped)
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    fetchCars()
+  }, [])
 
   const badges = Array.from(new Set(cars.map(car => car.badge).filter(Boolean))) as string[]
 
@@ -374,7 +422,7 @@ export default function VehiclesPage() {
               <VehicleImage
                 src={car.image}
                 alt={car.name}
-                priority={CARS.indexOf(car) < 6}
+                priority={cars.indexOf(car) < 6}
               />
               <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                 {car.badge && (

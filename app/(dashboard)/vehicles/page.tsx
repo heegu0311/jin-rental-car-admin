@@ -123,7 +123,7 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wider">기본 정보</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 ml-1">차량명</label>
                 <input
@@ -145,7 +145,7 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 ml-1">연료</label>
                 <input
@@ -187,7 +187,7 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
 
           <div className="space-y-4 pt-4 border-t border-slate-100">
             <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wider">요금 정책 (원 단위)</h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 ml-1">일 대여</label>
                 <input

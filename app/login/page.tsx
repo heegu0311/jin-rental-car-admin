@@ -1,18 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { LogIn, Mail, Lock, Chrome, Loader2 } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 
 import { motion } from 'framer-motion'
 import { login } from './actions'
 
-export default function LoginPage() {
+function LoginContent() {
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const errorParam = searchParams.get('error')
+    if (errorParam === 'unauthorized') {
+      setError('관리자 권한이 없는 계정입니다. 다른 계정으로 로그인하거나 관리자에게 문의하세요.')
+    }
+  }, [searchParams])
 
   const supabase = createClient()
 
@@ -139,5 +148,17 @@ export default function LoginPage() {
         </p>
       </motion.div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="animate-spin text-slate-400" size={32} />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   )
 }

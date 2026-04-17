@@ -211,11 +211,11 @@ export default function InquiriesPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-32 text-center">상태</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-32">작성자</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">문의 제목</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-40">등록일</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-20 text-center">관리</th>
+                <th className="px-4 md:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-24 md:w-32 text-center">상태</th>
+                <th className="px-4 md:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-24 md:w-32">작성자</th>
+                <th className="px-4 md:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">문의 제목</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-40 hidden md:table-cell">등록일</th>
+                <th className="px-4 md:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-16 md:w-20 text-center">관리</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -236,49 +236,55 @@ export default function InquiriesPage() {
                     className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
                     onClick={() => setSelectedInquiry(iq)}
                   >
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-4 md:px-6 py-4 text-center">
                       <span className={cn(
-                        "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold",
+                        "inline-flex items-center px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-bold",
                         iq.status === 'answered' 
                           ? "bg-emerald-50 text-emerald-600 border border-emerald-100" 
                           : "bg-amber-50 text-amber-600 border border-amber-100"
                       )}>
                         {iq.status === 'answered' ? (
                           <>
-                            <CheckCircle2 size={12} className="mr-1" />
-                            답변완료
+                            <CheckCircle2 size={10} className="mr-1 md:size-3" />
+                            <span className="hidden sm:inline">답변완료</span>
+                            <span className="sm:hidden">완료</span>
                           </>
                         ) : (
                           <>
-                            <Clock size={12} className="mr-1" />
-                            대기중
+                            <Clock size={10} className="mr-1 md:size-3" />
+                            <span className="hidden sm:inline">대기중</span>
+                            <span className="sm:hidden">대기</span>
                           </>
                         )}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="font-semibold text-slate-900">{iq.user_name}</span>
+                    <td className="px-4 md:px-6 py-4">
+                      <span className="font-semibold text-slate-900 text-sm md:text-base">{iq.user_name}</span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 md:px-6 py-4">
                       <div className="flex flex-col">
-                        <span className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                        <span className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1 text-sm md:text-base">
                           {iq.title}
                         </span>
+                        <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-400 md:hidden">
+                          <Clock size={10} />
+                          {format(new Date(iq.created_at), 'yy.MM.dd', { locale: ko })}
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
+                    <td className="px-6 py-4 text-sm text-slate-500 hidden md:table-cell">
                       <div className="flex items-center gap-1.5">
                         <Clock size={14} className="text-slate-400" />
                         {format(new Date(iq.created_at), 'yyyy.MM.dd HH:mm', { locale: ko })}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-4 md:px-6 py-4 text-center">
                       <button 
                         onClick={(e) => deleteInquiry(iq.id, e)}
-                        className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        className="p-1.5 md:p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                         title="삭제"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} className="md:size-4" />
                       </button>
                     </td>
                   </tr>

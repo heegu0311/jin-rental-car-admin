@@ -195,7 +195,7 @@ export default function EventsPage() {
                     {event.is_active ? '진행 중' : '종료'}
                   </span>
                 </div>
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-4 right-4 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                   <div className="flex gap-1 bg-white/90 backdrop-blur-sm p-1 rounded-lg border border-slate-200">
                     <Link href={`/events/${event.id}`} className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-white rounded-md transition-all">
                       <Edit2 size={16} />

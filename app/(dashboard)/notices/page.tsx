@@ -165,10 +165,10 @@ export default function NoticesPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-16 text-center">고정</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">제목</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-40">등록일</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-32 text-center">관리</th>
+                <th className="px-4 md:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-12 md:w-16 text-center">고정</th>
+                <th className="px-4 md:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">제목</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-40 hidden md:table-cell">등록일</th>
+                <th className="px-4 md:px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-24 md:w-32 text-center">관리</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -190,11 +190,11 @@ export default function NoticesPage() {
                       notice.is_pinned && "bg-orange-50/30"
                     )}
                   >
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-4 md:px-6 py-4 text-center">
                       <button 
                         onClick={() => togglePin(notice.id, notice.is_pinned)}
                         className={cn(
-                          "p-2 rounded-lg transition-all",
+                          "p-1.5 md:p-2 rounded-lg transition-all",
                           notice.is_pinned 
                             ? "text-orange-500 bg-orange-100 hover:bg-orange-200" 
                             : "text-slate-300 hover:text-slate-500 hover:bg-slate-100"
@@ -204,42 +204,44 @@ export default function NoticesPage() {
                         <Pin size={16} fill={notice.is_pinned ? "currentColor" : "none"} />
                       </button>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 md:px-6 py-4">
                       <div className="flex flex-col">
                         <Link 
                           href={`/notices/${notice.id}`}
-                          className="font-bold text-slate-900 hover:text-blue-600 transition-colors line-clamp-1"
+                          className="font-bold text-slate-900 hover:text-blue-600 transition-colors line-clamp-1 text-sm md:text-base"
                         >
                           {notice.title}
-                          {notice.is_pinned && (
-                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-600">
-                              중요
-                            </span>
-                          )}
                         </Link>
+                        <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-400 md:hidden">
+                          <Clock size={10} />
+                          {format(new Date(notice.created_at), 'yy.MM.dd', { locale: ko })}
+                          {notice.is_pinned && (
+                            <span className="ml-1 text-orange-500 font-bold">#중요</span>
+                          )}
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
+                    <td className="px-6 py-4 text-sm text-slate-500 hidden md:table-cell">
                       <div className="flex items-center gap-1.5">
                         <Clock size={14} className="text-slate-400" />
                         {format(new Date(notice.created_at), 'yyyy.MM.dd HH:mm', { locale: ko })}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="px-4 md:px-6 py-4">
+                      <div className="flex items-center justify-center gap-1 md:gap-2">
                         <Link 
                           href={`/notices/${notice.id}`}
-                          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                          className="p-1.5 md:p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                           title="수정"
                         >
-                          <Edit2 size={16} />
+                          <Edit2 size={14} className="md:size-4" />
                         </Link>
                         <button 
                           onClick={() => deleteNotice(notice.id)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                          className="p-1.5 md:p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                           title="삭제"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} className="md:size-4" />
                         </button>
                       </div>
                     </td>

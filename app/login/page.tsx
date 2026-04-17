@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { LogIn, Mail, Lock, Chrome, Loader2, car } from 'lucide-react'
+import { LogIn, Mail, Lock, Chrome, Loader2 } from 'lucide-react'
 
 import { motion } from 'framer-motion'
-import { login, signup } from './actions'
+import { login } from './actions'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -35,11 +35,11 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
-    
+
     const formData = new FormData()
     formData.append('email', email)
     formData.append('password', password)
-    
+
     const result = await login(formData)
     if (result?.error) {
       setError(result.error)
@@ -53,7 +53,7 @@ export default function LoginPage() {
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary-400/20 blur-3xl animate-pulse" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-400/20 blur-3xl animate-pulse delay-700" />
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -70,7 +70,7 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm"

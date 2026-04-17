@@ -46,12 +46,12 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     const redirectResponse = NextResponse.redirect(url)
-    
+
     // Copy cookies from supabaseResponse to ensure session is updated even on redirect
     supabaseResponse.cookies.getAll().forEach((cookie) => {
-      redirectResponse.cookies.set(cookie.name, cookie.value, cookie.options)
+      redirectResponse.cookies.set(cookie)
     })
-    
+
     return redirectResponse
   }
 

@@ -7,7 +7,6 @@ import {
   Plus,
   Filter,
   Download,
-  MoreVertical,
   Car as CarIcon,
   CheckCircle2,
   Clock,
@@ -19,9 +18,10 @@ import {
   LayoutGrid,
   List,
   Hash,
-  Calendar,
-  Fuel,
-  Tag
+  Tag,
+  Upload,
+  Camera,
+  Loader2
 } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/client'
@@ -59,7 +59,7 @@ interface VehicleImageProps {
 
 function VehicleImage({ src, alt, priority }: VehicleImageProps) {
   const [error, setError] = useState(false)
-  
+
   return (
     <Image
       src={error || !src ? '/empty.jpeg' : src}
@@ -94,7 +94,8 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
   const [units, setUnits] = useState<VehicleUnit[]>([])
   const [newPlate, setNewPlate] = useState('')
   const [isAddingUnit, setIsAddingUnit] = useState(false)
-  
+  const [isUploading, setIsUploading] = useState(false)
+
   const supabase = createClient()
 
   useEffect(() => {
@@ -130,12 +131,12 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
     setIsAddingUnit(true)
     const { error } = await supabase
       .from('vehicle_units')
-      .insert([{ 
-        vehicle_id: car.id, 
-        plate_number: newPlate.trim(), 
-        status: 'available' 
+      .insert([{
+        vehicle_id: car.id,
+        plate_number: newPlate.trim(),
+        status: 'available'
       }])
-    
+
     if (!error) {
       setNewPlate('')
       fetchUnits(car.id)
@@ -151,9 +152,38 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
       .from('vehicle_units')
       .delete()
       .eq('id', unitId)
-    
+
     if (!error && car?.id) {
       fetchUnits(car.id)
+    }
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`
+      const filePath = `${fileName}`
+
+      const { data, error: uploadError } = await supabase.storage
+        .from('vehicles')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('vehicles')
+        .getPublicUrl(filePath)
+
+      setFormData({ ...formData, image: publicUrl })
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      alert('이미지 업로드 중 오류가 발생했습니다.')
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -162,7 +192,7 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
     onSave({
       ...formData,
       id: car?.id || '', // New cars will be handled by Parent's Supabase logic
-      price: (formData.pricePolicy?.daily || 0).toLocaleString()
+      price: ((formData.pricePolicy?.monthly || formData.pricePolicy?.daily || 0) * 30).toLocaleString()
     } as Car)
   }
 
@@ -239,13 +269,56 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">차량 이미지 URL</label>
-                <input
-                  value={formData.image || ''}
-                  onChange={e => setFormData({ ...formData, image: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  placeholder="https://..."
-                />
+                <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">차량 이미지</label>
+                <div className="relative group">
+                  {formData.image ? (
+                    <div className="relative h-48 w-full rounded-2xl overflow-hidden border border-slate-200">
+                      <Image
+                        src={formData.image}
+                        alt="Preview"
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <label className="cursor-pointer p-2.5 bg-white text-slate-900 rounded-xl hover:bg-slate-50 transition-all font-bold text-xs flex items-center gap-2">
+                          <Camera size={16} />
+                          이미지 변경
+                          <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, image: '' })}
+                          className="p-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className={cn(
+                      "flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-2xl cursor-pointer transition-all",
+                      isUploading ? "bg-slate-50 border-slate-200" : "bg-slate-50 border-slate-200 hover:border-blue-400 hover:bg-blue-50/30"
+                    )}>
+                      {isUploading ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                          <p className="text-xs font-bold text-slate-500">업로드 중...</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="p-3 bg-white rounded-2xl shadow-sm text-slate-400 group-hover:text-blue-500 transition-colors">
+                            <Upload size={24} />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs font-bold text-slate-600">클릭하여 이미지 업로드</p>
+                            <p className="text-[10px] text-slate-400 mt-1">PNG, JPG, WebP (최대 5MB)</p>
+                          </div>
+                        </div>
+                      )}
+                      <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
+                    </label>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -260,8 +333,8 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
                     type="number"
                     required
                     value={formData.pricePolicy?.daily || 0}
-                    onChange={e => setFormData({ 
-                      ...formData, 
+                    onChange={e => setFormData({
+                      ...formData,
                       pricePolicy: { ...formData.pricePolicy!, daily: parseInt(e.target.value) || 0 }
                     })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500"
@@ -273,8 +346,8 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
                     type="number"
                     required
                     value={formData.pricePolicy?.weekly || 0}
-                    onChange={e => setFormData({ 
-                      ...formData, 
+                    onChange={e => setFormData({
+                      ...formData,
                       pricePolicy: { ...formData.pricePolicy!, weekly: parseInt(e.target.value) || 0 }
                     })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500"
@@ -286,8 +359,8 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
                     type="number"
                     required
                     value={formData.pricePolicy?.monthly || 0}
-                    onChange={e => setFormData({ 
-                      ...formData, 
+                    onChange={e => setFormData({
+                      ...formData,
                       pricePolicy: { ...formData.pricePolicy!, monthly: parseInt(e.target.value) || 0 }
                     })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500"
@@ -303,7 +376,7 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
               <span className="flex items-center gap-2"><Hash size={14} /> 실물 차량 관리 (번호판)</span>
               {car && <span className="text-[10px] bg-slate-200 px-2 py-0.5 rounded text-slate-600">총 {units.length}대</span>}
             </h3>
-            
+
             {car ? (
               <div className="space-y-4">
                 <div className="flex gap-2">
@@ -314,7 +387,7 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
                     placeholder="차량 번호 입력 (예: 29로3714)"
                     className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none transition-all"
                   />
-                  <button 
+                  <button
                     type="button"
                     disabled={isAddingUnit || !newPlate.trim()}
                     onClick={handleAddUnit}
@@ -342,7 +415,7 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
                           </div>
                         </div>
                       </div>
-                      <button 
+                      <button
                         type="button"
                         onClick={() => handleDeleteUnit(unit.id)}
                         className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
@@ -415,7 +488,7 @@ export default function VehiclesPage() {
         id: v.id,
         name: v.name,
         year: String(v.year),
-        price: String(v.price_daily * 30),
+        price: String((v.price_monthly || v.price_daily) * 30),
         badge: v.badge || '',
         condition: v.condition || '',
         image: v.image_url || '',
@@ -477,7 +550,7 @@ export default function VehiclesPage() {
     } else {
       await supabase.from('vehicles').insert([payload])
     }
-    
+
     fetchCars()
     setIsModalOpen(false)
     setEditingCar(null)
@@ -508,7 +581,7 @@ export default function VehiclesPage() {
             <Download size={18} />
             <span className="hidden sm:inline">엑셀 다운로드</span>
           </button>
-          <button 
+          <button
             onClick={() => { setEditingCar(null); setIsModalOpen(true); }}
             className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-sm shadow-blue-200"
           >
@@ -627,7 +700,7 @@ export default function VehiclesPage() {
                       {car.badge}
                     </span>
                   )}
-                  {car.availableCount === 0 && (
+                  {(car.availableCount ?? 0) === 0 && (
                     <span className="px-3 py-1.5 bg-red-600 text-white text-[10px] font-bold rounded-full shadow-lg shadow-red-500/30 uppercase tracking-widest">
                       매진
                     </span>
@@ -635,17 +708,17 @@ export default function VehiclesPage() {
                 </div>
                 <div className="absolute bottom-4 left-4">
                   <span className="bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5">
-                    <Hash size={10} /> {car.availableCount} / {car.unitCount}대 사용 가능
+                    <Hash size={10} /> {car.availableCount ?? 0} / {car.unitCount ?? 0}대 사용 가능
                   </span>
                 </div>
                 <div className="absolute top-4 right-4 flex gap-1.5 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                  <button 
+                  <button
                     onClick={() => handleEditClick(car)}
                     className="p-2.5 bg-white/95 backdrop-blur-sm text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-xl"
                   >
                     <Edit2 size={16} />
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDeleteCar(car.id)}
                     className="p-2.5 bg-white/95 backdrop-blur-sm text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-xl"
                   >
@@ -685,7 +758,7 @@ export default function VehiclesPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <button 
+                    <button
                       onClick={() => handleEditClick(car)}
                       className="group/btn flex items-center justify-center gap-2 flex-1 py-3 text-xs font-bold text-white bg-slate-900 rounded-2xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
                     >
@@ -719,7 +792,7 @@ export default function VehiclesPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
                       <div className="relative w-16 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
-                        <Image src={car.image || '/empty.jpeg'} alt={car.name} fill className="object-cover" />
+                        <Image src={car.image || '/empty.jpeg'} alt={car.name} fill className="object-cover" loading="eager" />
                       </div>
                       <div>
                         <p className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{car.name}</p>
@@ -741,14 +814,14 @@ export default function VehiclesPage() {
                       <div className="flex items-center gap-1.5">
                         <span className={cn(
                           "w-2 h-2 rounded-full",
-                          car.availableCount === 0 ? "bg-red-500" : "bg-emerald-500"
+                          (car.availableCount ?? 0) === 0 ? "bg-red-500" : "bg-emerald-500"
                         )} />
-                        <span className="text-sm font-bold text-slate-700">{car.availableCount} / {car.unitCount}대</span>
+                        <span className="text-sm font-bold text-slate-700">{car.availableCount ?? 0} / {car.unitCount ?? 0}대</span>
                       </div>
                       <div className="w-24 h-1 bg-slate-100 rounded-full overflow-hidden">
-                        <div 
-                          className={cn("h-full", car.availableCount === 0 ? "bg-red-500" : "bg-emerald-500")} 
-                          style={{ width: `${car.unitCount ? (car.availableCount / car.unitCount) * 100 : 0}%` }}
+                        <div
+                          className={cn("h-full", (car.availableCount ?? 0) === 0 ? "bg-red-500" : "bg-emerald-500")}
+                          style={{ width: `${car.unitCount ? ((car.availableCount ?? 0) / car.unitCount) * 100 : 0}%` }}
                         />
                       </div>
                     </div>
@@ -764,13 +837,13 @@ export default function VehiclesPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      <button 
+                      <button
                         onClick={() => handleEditClick(car)}
                         className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
                       >
                         <Edit2 size={16} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDeleteCar(car.id)}
                         className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
                       >

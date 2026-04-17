@@ -20,10 +20,13 @@ CREATE TABLE vehicles (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   type TEXT NOT NULL, -- (예: 경차, 소형, 중형, 대형, SUV, 승합차)
+  fuel TEXT,          -- (예: 휘발유, LPG, 경유, 전기)
   year INTEGER NOT NULL,
   price_daily INTEGER NOT NULL,
   price_weekly INTEGER NOT NULL,
   price_monthly INTEGER NOT NULL,
+  badge TEXT,         -- (예: 인기, 신차, 특가)
+  condition TEXT,     -- (예: 비흡연/완벽점검)
   status TEXT DEFAULT 'available' CHECK (status IN ('available', 'rented', 'maintenance')),
   image_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,

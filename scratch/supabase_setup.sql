@@ -82,6 +82,23 @@ CREATE TABLE inquiries (
 );
 
 -- ==========================================
+-- 5.5 차량 예약 상담 테이블 (reservations)
+-- ==========================================
+-- 차량 예약 상담 내역을 별도로 관리합니다.
+CREATE TABLE reservations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  car_name TEXT NOT NULL,
+  start_date TEXT NOT NULL,
+  period TEXT NOT NULL,
+  package_km TEXT NOT NULL,
+  options TEXT[],
+  user_name TEXT NOT NULL,
+  user_phone TEXT NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- ==========================================
 -- 6. Updated_at 자동 갱신 트리거 생성
 -- ==========================================
 CREATE OR REPLACE FUNCTION handle_updated_at()
@@ -122,6 +139,10 @@ CREATE POLICY "인증된 사용자만 공지사항 수정 가능" ON notices FOR
 ALTER TABLE inquiries ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "본인 문의 조회(필요시) 및 추가" ON inquiries FOR INSERT WITH CHECK (true);
 CREATE POLICY "인증된 사용자는 문의 관리 불가능" ON inquiries FOR ALL USING (auth.role() = 'authenticated'); -- 어드민만 확인/수정 가능하도록
+
+ALTER TABLE reservations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "누구나 예약 상담 신청 가능" ON reservations FOR INSERT WITH CHECK (true);
+CREATE POLICY "인증된 사용자만 예약 상담 관리 가능" ON reservations FOR ALL USING (auth.role() = 'authenticated');
 
 -- ==========================================
 -- 8. 회원가입 시 profile 자동 생성 트리거 (선택사항)

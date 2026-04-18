@@ -22,6 +22,7 @@ const menuItems = [
   { icon: Car, label: '차량 관리', href: '/vehicles' },
   { icon: Calendar, label: '이벤트 관리', href: '/events' },
   { icon: Bell, label: '공지사항 관리', href: '/notices' },
+  { icon: Calendar, label: '예약 상담 관리', href: '/reservations' },
   { icon: MessageSquare, label: '1:1 문의', href: '/inquiries' },
 ]
 

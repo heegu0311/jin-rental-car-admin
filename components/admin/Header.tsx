@@ -1,12 +1,30 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Search, Bell, User, Menu } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 interface HeaderProps {
   onMenuClick?: () => void
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
+  const [user, setUser] = useState<{ email?: string; name?: string } | null>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function getUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUser({
+          email: user.email,
+          name: user.user_metadata?.name || user.user_metadata?.full_name || '관리자'
+        })
+      }
+    }
+    getUser()
+  }, [supabase.auth])
+
   return (
     <header className="h-16 border-b border-slate-200 bg-white px-4 md:px-8 flex items-center justify-between sticky top-0 z-30">
       <div className="flex items-center gap-4 flex-1">
@@ -37,8 +55,8 @@ export function Header({ onMenuClick }: HeaderProps) {
         
         <div className="flex items-center gap-2 md:gap-3">
           <div className="text-right hidden xl:block">
-            <p className="text-sm font-bold text-slate-700">관리자</p>
-            <p className="text-xs text-slate-500">admin@jin-rental.com</p>
+            <p className="text-sm font-bold text-slate-700">{user?.name || '관리자'}</p>
+            <p className="text-xs text-slate-500">{user?.email || 'admin@jin-rental.com'}</p>
           </div>
           <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-md shadow-blue-100">
             <User size={18} className="md:size-5" />

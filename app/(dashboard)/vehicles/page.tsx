@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
+const RichEditor = dynamic(() => import('@/components/admin/RichEditor').then(mod => mod.RichEditor), { ssr: false })
 import {
   Search,
   Plus,
@@ -43,6 +45,7 @@ export interface Car {
   };
   unitCount?: number;
   availableCount?: number;
+  content?: string;
 }
 
 interface VehicleUnit {
@@ -111,7 +114,8 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
         condition: '비흡연/완벽점검',
         image: '',
         pricePolicy: { daily: 0, weekly: 0, monthly: 0 },
-        price: ''
+        price: '',
+        content: ''
       })
       setUnits([])
     }
@@ -319,6 +323,15 @@ function VehicleModal({ isOpen, onClose, onSave, car }: VehicleModalProps) {
                     </label>
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-1.5 pt-4">
+                <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">상세 내용</label>
+                <RichEditor
+                  content={formData.content || ''}
+                  onChange={(val) => setFormData({ ...formData, content: val })}
+                  placeholder="차량 상세 설명을 입력하세요..."
+                />
               </div>
             </div>
 

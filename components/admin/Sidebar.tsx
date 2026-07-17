@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import {
   LayoutDashboard,
   Car,
@@ -45,10 +46,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       <div className="hidden lg:flex w-64 h-full bg-white border-r border-slate-200 flex-col">
         <div className="p-6">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
-              <Car size={20} />
-            </div>
-            <span className="text-xl font-bold text-blue-700 tracking-tight">JIN ADMIN</span>
+            <Image src="/jintrental-logo.jpeg" alt="JIN ADMIN" width={180} height={60} className="h-8 md:h-10 w-auto" priority />
           </div>
         </div>
       </div>
@@ -63,10 +61,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       <div className="p-6">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
-              <Car size={20} />
-            </div>
-            <span className="text-xl font-bold text-blue-700 tracking-tight">JIN ADMIN</span>
+            <Image src="/jintrental-logo.jpeg" alt="JIN ADMIN" width={180} height={60} className="h-8 md:h-10 w-auto" priority />
           </div>
           <button 
             onClick={() => setIsOpen?.(false)}

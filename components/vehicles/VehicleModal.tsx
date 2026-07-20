@@ -302,39 +302,48 @@ export function VehicleModal({ isOpen, onClose, onSave, car, categories }: Vehic
                   <input
                     type="number"
                     required
-                    value={formData.pricePolicy?.daily || 0}
+                    value={formData.pricePolicy?.daily || ''}
                     onChange={e => setFormData({
                       ...formData,
                       pricePolicy: { ...formData.pricePolicy!, daily: parseInt(e.target.value) || 0 }
                     })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500"
                   />
+                  <div className="text-[10px] text-slate-500 ml-1 mt-1">
+                    하루 <span className="font-bold text-slate-700">{(formData.pricePolicy?.daily || 0).toLocaleString()}</span>원
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-400 ml-1">주 대여(일)</label>
                   <input
                     type="number"
                     required
-                    value={formData.pricePolicy?.weekly || 0}
+                    value={formData.pricePolicy?.weekly || ''}
                     onChange={e => setFormData({
                       ...formData,
                       pricePolicy: { ...formData.pricePolicy!, weekly: parseInt(e.target.value) || 0 }
                     })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500"
                   />
+                  <div className="text-[10px] text-slate-500 ml-1 mt-1">
+                    하루 <span className="font-bold text-blue-600">{Math.round((formData.pricePolicy?.weekly || 0) / 7).toLocaleString()}</span>원
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-400 ml-1">월 대여(일)</label>
                   <input
                     type="number"
                     required
-                    value={formData.pricePolicy?.monthly || 0}
+                    value={formData.pricePolicy?.monthly || ''}
                     onChange={e => setFormData({
                       ...formData,
                       pricePolicy: { ...formData.pricePolicy!, monthly: parseInt(e.target.value) || 0 }
                     })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500"
                   />
+                  <div className="text-[10px] text-slate-500 ml-1 mt-1">
+                    하루 <span className="font-bold text-blue-600">{Math.round((formData.pricePolicy?.monthly || 0) / 30).toLocaleString()}</span>원
+                  </div>
                 </div>
               </div>
             </div>

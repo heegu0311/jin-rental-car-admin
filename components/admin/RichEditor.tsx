@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -34,6 +34,7 @@ interface RichEditorProps {
   content: string
   onChange: (content: string) => void
   placeholder?: string
+  onImageUpload?: (file: File) => Promise<string>
 }
 
 const ToolbarButton = ({
@@ -67,8 +68,10 @@ const ToolbarButton = ({
   </button>
 )
 
-export function RichEditor({ content, onChange, placeholder = "내용을 입력하세요..." }: RichEditorProps) {
+export function RichEditor({ content, onChange, placeholder = "내용을 입력하세요...", onImageUpload }: RichEditorProps) {
   const [isMounted, setIsMounted] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setIsMounted(true)
@@ -109,9 +112,43 @@ export function RichEditor({ content, onChange, placeholder = "내용을 입력�
   }
 
   const addImage = () => {
-    const url = window.prompt('이미지 URL을 입력하세요:')
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run()
+    if (onImageUpload && fileInputRef.current) {
+      fileInputRef.current.click()
+    } else {
+      const url = window.prompt('이미지 URL을 입력하세요:')
+      if (url) {
+        editor.chain().focus().setImage({ src: url }).run()
+      }
+    }
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (onImageUpload) {
+      try {
+        setIsUploading(true)
+        const url = await onImageUpload(file)
+        editor.chain().focus().setImage({ src: url }).run()
+      } catch (error) {
+        console.error('Image upload failed:', error)
+        alert('이미지 업로드에 실패했습니다.')
+      } finally {
+        setIsUploading(false)
+        if (e.target) {
+          e.target.value = ''
+        }
+      }
+    } else {
+      // Fallback if no upload handler is provided
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          editor.chain().focus().setImage({ src: event.target.result as string }).run()
+        }
+      }
+      reader.readAsDataURL(file)
     }
   }
 
@@ -135,7 +172,22 @@ export function RichEditor({ content, onChange, placeholder = "내용을 입력�
   }
 
   return (
-    <div className="w-full border border-slate-200 rounded-xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
+    <div className="w-full border border-slate-200 rounded-xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all relative">
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        className="hidden" 
+        accept="image/*" 
+        onChange={handleImageUpload} 
+      />
+      {isUploading && (
+        <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
+          <div className="bg-white p-3 rounded-xl shadow-lg border border-slate-200 flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-bold text-slate-700">이미지 업로드 중...</span>
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-50 border-b border-slate-200">
         <div className="flex items-center gap-0.5 pr-2 border-r border-slate-200">
           <ToolbarButton

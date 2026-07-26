@@ -133,6 +133,24 @@ export function VehicleModal({ isOpen, onClose, onSave, car, categories }: Vehic
     }
   }
 
+  const handleEditorImageUpload = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `editor_${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`
+    const filePath = `${fileName}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('vehicles')
+      .upload(filePath, file)
+
+    if (uploadError) throw uploadError
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('vehicles')
+      .getPublicUrl(filePath)
+
+    return publicUrl
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSave({
@@ -287,6 +305,7 @@ export function VehicleModal({ isOpen, onClose, onSave, car, categories }: Vehic
                 <RichEditor
                   content={formData.content || ''}
                   onChange={(val) => setFormData({ ...formData, content: val })}
+                  onImageUpload={handleEditorImageUpload}
                   placeholder="차량 상세 설명을 입력하세요..."
                 />
               </div>

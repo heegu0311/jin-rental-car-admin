@@ -7,7 +7,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
   
-  --color-primary: #2DA3E8;
+  --color-primary: #2563eb;
   --color-primary-foreground: #ffffff;
   
   --color-popover: #ffffff;
@@ -21,7 +21,7 @@
   
   --color-border: #e2e8f0;
   --color-input: #e2e8f0;
-  --color-ring: #2DA3E8;
+  --color-ring: #2563eb;
 }
 
 :root {
@@ -29,7 +29,7 @@
   --foreground: #020617;
   --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #2DA3E8;
+  --ring: #2563eb;
   --radius: 0.75rem;
 }
 
@@ -41,7 +41,7 @@
     background-color: #ffffff !important;
     color: #020617 !important;
     font-family: var(--font-sans);
-    antialiased: true;
+
   }
 }
 

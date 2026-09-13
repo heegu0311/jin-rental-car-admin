@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
 
+const noto = Noto_Sans_KR({
+  subsets: ["latin"],
+  variable: "--font-noto",
+  display: "swap",
+});
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
@@ -17,7 +22,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${inter.variable} h-full antialiased`}
+      className={`${inter.variable} ${noto.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans overflow-x-hidden">
         {children}

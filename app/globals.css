@@ -6,19 +6,19 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
-  
+
   --color-primary: #2563eb;
   --color-primary-foreground: #ffffff;
-  
+
   --color-popover: #ffffff;
   --color-popover-foreground: #020617;
-  
+
   --color-muted: #f1f5f9;
   --color-muted-foreground: #64748b;
-  
+
   --color-accent: #f1f5f9;
   --color-accent-foreground: #0f172a;
-  
+
   --color-border: #e2e8f0;
   --color-input: #e2e8f0;
   --color-ring: #2563eb;
@@ -41,7 +41,6 @@
     background-color: #ffffff !important;
     color: #020617 !important;
     font-family: var(--font-sans);
-
   }
 }
 

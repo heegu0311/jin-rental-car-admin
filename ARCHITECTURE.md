@@ -17,30 +17,30 @@
 
 ## 공통 컴포넌트
 
-| Figma | 코드/책임 | 사용처 |
-|---|---|---|
-| navigation-bar, footer | Header / Footer / MobileNav | 클라이언트 전체 |
-| button, input-field, select-trigger, checkbox, dialog | 기존 components/ui | 모든 폼 |
-| category-tab, car-card | 차량 카테고리 필터 / VehicleCard / Price | 홈·렌트검색·사고대차 |
-| benefit-card, Step Card | 콘텐츠 섹션 / 절차 목록 | 홈·이용안내·사고대차 |
-| quick-rent-consultation-form | ConsultationForm / PrivacyConsent | 홈·차량상세·신차 |
-| badge, table-header, table-row | StatusBadge / DataTable / Panel | 어드민 전체 |
-| search-bar, tab-bar | 기능별 검색 상태 + 공통 폼 | 목록·문의·예약 |
-| 공통 상태 | PageHeading / EmptyState / Feedback | 양쪽 전체 |
+| Figma                                                 | 코드/책임                                | 사용처               |
+| ----------------------------------------------------- | ---------------------------------------- | -------------------- |
+| navigation-bar, footer                                | Header / Footer / MobileNav              | 클라이언트 전체      |
+| button, input-field, select-trigger, checkbox, dialog | 기존 components/ui                       | 모든 폼              |
+| category-tab, car-card                                | 차량 카테고리 필터 / VehicleCard / Price | 홈·렌트검색·사고대차 |
+| benefit-card, Step Card                               | 콘텐츠 섹션 / 절차 목록                  | 홈·이용안내·사고대차 |
+| quick-rent-consultation-form                          | ConsultationForm / PrivacyConsent        | 홈·차량상세·신차     |
+| badge, table-header, table-row                        | StatusBadge / DataTable / Panel          | 어드민 전체          |
+| search-bar, tab-bar                                   | 기능별 검색 상태 + 공통 폼               | 목록·문의·예약       |
+| 공통 상태                                             | PageHeading / EmptyState / Feedback      | 양쪽 전체            |
 
 ## 데이터와 소유권
 
-| 테이블 | 관리 화면 | 클라이언트 사용처 |
-|---|---|---|
-| vehicles | /vehicles | 추천·필터·상세·신차 선택 |
-| vehicle_categories | /vehicles 카테고리 | 홈·검색 |
-| vehicle_units | /vehicles 차량별 실차 | 현재 재고 안내 (날짜별 예약 확정 아님) |
-| reservations | /reservations | 빠른 상담·차량/기간 상담·신차 상담 |
-| inquiries | /inquiries | /contact |
-| events | /events | /event, /event/[id], 홈 팝업 |
-| notices | /notices | /notice, /notice/[id] |
-| site_content | /content/[slug], /settings | 배너·특장점·회사소개·이용안내·사고대차·약관·고객센터 |
-| profiles | 관리자만 DB에서 권한 부여 | 웹에는 노출하지 않음 |
+| 테이블             | 관리 화면                  | 클라이언트 사용처                                    |
+| ------------------ | -------------------------- | ---------------------------------------------------- |
+| vehicles           | /vehicles                  | 추천·필터·상세·신차 선택                             |
+| vehicle_categories | /vehicles 카테고리         | 홈·검색                                              |
+| vehicle_units      | /vehicles 차량별 실차      | 현재 재고 안내 (날짜별 예약 확정 아님)               |
+| reservations       | /reservations              | 빠른 상담·차량/기간 상담·신차 상담                   |
+| inquiries          | /inquiries                 | /contact                                             |
+| events             | /events                    | /event, /event/[id], 홈 팝업                         |
+| notices            | /notices                   | /notice, /notice/[id]                                |
+| site_content       | /content/[slug], /settings | 배너·특장점·회사소개·이용안내·사고대차·약관·고객센터 |
+| profiles           | 관리자만 DB에서 권한 부여  | 웹에는 노출하지 않음                                 |
 
 - 차량 UUID는 string. 금액은 원 단위 정수. 일/주/월 요금은 독립 저장값이다. 월 요금에 30을 다시 곱하지 않는다.
 - 예약은 **상담 접수**이며 결제/실차 배차 확정 시스템이 아니다. confirmed는 상담완료를 뜻한다.
@@ -55,17 +55,17 @@
 공통 커밋을 먼저 만든 다음 아래 브랜치를 **동일한 foundation 커밋에서** 분기한다.
 모든 브랜치의 `codex/` 접두사는 유지한다. 두 저장소에서 같은 번호가 한 기능 묶음이다.
 
-| 번호 | web 브랜치 | admin 브랜치 | 전용 파일 |
-|---|---|---|---|
-| 00 | 00-web-foundation | 00-admin-foundation | shared, domain, globals, layout, 문서 |
-| 01 | 01-web-home | 01-admin-home | 홈, Hero, USP / 대시보드 |
-| 02 | 02-web-vehicles | 02-admin-vehicles | cars, VehicleCard / vehicles |
-| 03 | 03-web-rent | 03-admin-rent | rent, rental / reservations |
-| 04 | 04-web-accident | 04-admin-accident | accident / 사고대차 콘텐츠 |
-| 05 | 05-web-new-car | 05-admin-new-car | new-car, cars/NewCarApplicationForm / 신차 상담 분류 |
-| 06 | 06-web-information | 06-admin-information | about, info, terms, privacy / 콘텐츠 편집·설정 |
-| 07 | 07-web-content | 07-admin-content | event, notice, EventPopup / events, notices |
-| 08 | 08-web-contact | 08-admin-contact | contact / inquiries |
+| 번호 | web 브랜치         | admin 브랜치         | 전용 파일                                            |
+| ---- | ------------------ | -------------------- | ---------------------------------------------------- |
+| 00   | 00-web-foundation  | 00-admin-foundation  | shared, domain, globals, layout, 문서                |
+| 01   | 01-web-home        | 01-admin-home        | 홈, Hero, USP / 대시보드                             |
+| 02   | 02-web-vehicles    | 02-admin-vehicles    | cars, VehicleCard / vehicles                         |
+| 03   | 03-web-rent        | 03-admin-rent        | rent, rental / reservations                          |
+| 04   | 04-web-accident    | 04-admin-accident    | accident / 사고대차 콘텐츠                           |
+| 05   | 05-web-new-car     | 05-admin-new-car     | new-car, cars/NewCarApplicationForm / 신차 상담 분류 |
+| 06   | 06-web-information | 06-admin-information | about, info, terms, privacy / 콘텐츠 편집·설정       |
+| 07   | 07-web-content     | 07-admin-content     | event, notice, EventPopup / events, notices          |
+| 08   | 08-web-contact     | 08-admin-contact     | contact / inquiries                                  |
 
 각 기능의 워크트리는 `../.worktrees/<app>/<번호>-<기능>/`에 둔다. main은 보존하고 결과는 `codex/integration`에 merge --no-ff로 모은다.
 독립 기능 브랜치는 다른 기능 파일을 수정하지 않는다. 공통 수정이 필요하면 foundation 보완 커밋을 만들고 영향 브랜치에 먼저 병합한다.

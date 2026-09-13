@@ -5,7 +5,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-inter), var(--font-noto), sans-serif;
 
   --color-primary: #2563eb;
   --color-primary-foreground: #ffffff;

@@ -11,9 +11,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen bg-background overflow-hidden relative">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className="min-w-0 flex-1 flex flex-col h-full overflow-hidden">
         <Header onMenuClick={() => setIsSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto bg-slate-50/50 p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto bg-slate-100 p-4 md:p-8">
           {children}
         </main>
       </div>

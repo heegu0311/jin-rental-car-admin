@@ -90,7 +90,7 @@ export const VEHICLE_LABELS: Record<VehicleStatus, string> = {
   maintenance: "정비 중",
 };
 export function formatWon(value: number | null | undefined) {
-  return value != null && Number.isFinite(value) && value >= 0
+  return value != null && Number.isFinite(value) && value > 0
     ? `${new Intl.NumberFormat("ko-KR").format(value)}원`
     : "상담 문의";
 }

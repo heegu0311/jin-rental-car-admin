@@ -1,10 +1,3 @@
-<!-- BEGIN:nextjs-agent-rules -->
-
-# This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
-
 # 진렌트카 작업 규칙
 
 ARCHITECTURE.md를 먼저 읽는다. web/admin은 별도 저장소이며 이 폴더 자체는 Git 루트가 아니다.

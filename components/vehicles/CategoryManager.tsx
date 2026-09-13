@@ -1,74 +1,77 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { X, Plus, Trash2, Tag, Edit2 } from 'lucide-react'
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { X, Plus, Trash2, Tag } from "lucide-react";
 
 interface Category {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 interface CategoryManagerProps {
-  onCategoryChange?: () => void
+  onCategoryChange?: () => void;
 }
 
 export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [isOpen, setIsOpen] = useState(false)
-  const [newCategory, setNewCategory] = useState('')
-  const [isAdding, setIsAdding] = useState(false)
-  const supabase = createClient()
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchCategories()
-    }
-  }, [isOpen])
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+  const supabase = createClient();
 
   const fetchCategories = async () => {
     const { data, error } = await supabase
-      .from('vehicle_categories')
-      .select('*')
-      .order('created_at', { ascending: true })
-    if (data) setCategories(data)
-  }
+      .from("vehicle_categories")
+      .select("*")
+      .order("created_at", { ascending: true });
+    if (error) alert("카테고리를 불러오지 못했습니다.");
+    if (data) setCategories(data);
+  };
 
   const handleAdd = async () => {
-    if (!newCategory.trim()) return
-    setIsAdding(true)
+    if (!newCategory.trim()) return;
+    setIsAdding(true);
     const { error } = await supabase
-      .from('vehicle_categories')
-      .insert([{ name: newCategory.trim() }])
-    
+      .from("vehicle_categories")
+      .insert([{ name: newCategory.trim() }]);
+
     if (!error) {
-      setNewCategory('')
-      fetchCategories()
-      onCategoryChange?.()
+      setNewCategory("");
+      fetchCategories();
+      onCategoryChange?.();
     } else {
-      alert('카테고리 추가에 실패했습니다. (중복된 이름일 수 있습니다)')
+      alert("카테고리 추가에 실패했습니다. (중복된 이름일 수 있습니다)");
     }
-    setIsAdding(false)
-  }
+    setIsAdding(false);
+  };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('이 카테고리를 삭제하시겠습니까? 연결된 차량의 카테고리가 비워집니다.')) return
-    
+    if (
+      !confirm(
+        "이 카테고리를 삭제하시겠습니까? 연결된 차량의 카테고리가 비워집니다.",
+      )
+    )
+      return;
+
     const { error } = await supabase
-      .from('vehicle_categories')
+      .from("vehicle_categories")
       .delete()
-      .eq('id', id)
-      
+      .eq("id", id);
+
     if (!error) {
-      fetchCategories()
-      onCategoryChange?.()
+      fetchCategories();
+      onCategoryChange?.();
     }
-  }
+  };
 
   return (
     <>
-      <button 
-        onClick={() => setIsOpen(true)}
+      <button
+        onClick={() => {
+          setIsOpen(true);
+          void fetchCategories();
+        }}
         className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-all shadow-sm"
       >
         <Tag size={18} />
@@ -83,18 +86,21 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
                 <Tag size={18} className="text-blue-500" />
                 차량 카테고리 관리
               </h2>
-              <button onClick={() => setIsOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors">
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
+              >
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div className="flex gap-2">
-                <input 
+                <input
                   type="text"
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
                   placeholder="새 카테고리 이름 (예: SUV)"
                   className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                 />
@@ -108,18 +114,27 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
               </div>
 
               <div className="space-y-2 mt-4 max-h-60 overflow-y-auto">
-                {categories.length > 0 ? categories.map((cat) => (
-                  <div key={cat.id} className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl">
-                    <span className="font-semibold text-slate-700">{cat.name}</span>
-                    <button 
-                      onClick={() => handleDelete(cat.id)}
-                      className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                {categories.length > 0 ? (
+                  categories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl"
                     >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                )) : (
-                  <p className="text-center text-sm text-slate-400 py-4">등록된 카테고리가 없습니다.</p>
+                      <span className="font-semibold text-slate-700">
+                        {cat.name}
+                      </span>
+                      <button
+                        onClick={() => handleDelete(cat.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-sm text-slate-400 py-4">
+                    등록된 카테고리가 없습니다.
+                  </p>
                 )}
               </div>
             </div>
@@ -127,5 +142,5 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
         </div>
       )}
     </>
-  )
+  );
 }

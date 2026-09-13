@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -51,10 +52,18 @@ export function EventForm({ initialData }: EventFormProps) {
   );
   const [imageUrl, setImageUrl] = useState(initialData?.image_url || "");
   const [startDate, setStartDate] = useState(
-    initialData?.start_date?.split("T")[0] || "",
+    initialData?.start_date
+      ? new Date(initialData.start_date).toLocaleDateString("en-CA", {
+          timeZone: "Asia/Seoul",
+        })
+      : "",
   );
   const [endDate, setEndDate] = useState(
-    initialData?.end_date?.split("T")[0] || "",
+    initialData?.end_date
+      ? new Date(initialData.end_date).toLocaleDateString("en-CA", {
+          timeZone: "Asia/Seoul",
+        })
+      : "",
   );
   const [isPopup, setIsPopup] = useState(initialData?.is_popup ?? false);
   const [isActive, setIsActive] = useState(initialData?.is_active ?? true);
@@ -95,7 +104,9 @@ export function EventForm({ initialData }: EventFormProps) {
         const { error } = await supabase
           .from("events")
           .update(eventData)
-          .eq("id", initialData.id);
+          .eq("id", initialData.id)
+          .select("id")
+          .single();
 
         if (error) throw error;
       } else {
@@ -286,7 +297,10 @@ export function EventForm({ initialData }: EventFormProps) {
               >
                 {imageUrl ? (
                   <>
-                    <img
+                    <Image
+                      unoptimized
+                      width={1200}
+                      height={600}
                       src={imageUrl}
                       alt="Thumbnail preview"
                       className="w-full h-full object-cover"

@@ -8,6 +8,7 @@ import {
 } from "../lib/domain/contracts.ts";
 test("금액은 저장된 단위를 유지하고 유효하지 않은 값을 문의로 표시", () => {
   assert.equal(formatWon(380000), "380,000원");
+  assert.equal(formatWon(0), "상담 문의");
   assert.equal(formatWon(null), "상담 문의");
   assert.equal(formatWon(NaN), "상담 문의");
   assert.equal(formatWon(-1), "상담 문의");

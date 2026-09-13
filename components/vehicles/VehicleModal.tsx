@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Car, VehicleUnit, Category } from "./types";
@@ -37,55 +37,50 @@ export function VehicleModal({
   car,
   categories,
 }: VehicleModalProps) {
-  const [formData, setFormData] = useState<Partial<Car>>({
-    name: "",
-    year: "2025",
-    fuel: "휘발유",
-    badge: "",
-    condition: "비흡연/완벽점검",
-    image: "",
-    category_id: "",
-    pricePolicy: { daily: 0, weekly: 0, monthly: 0 },
-    price: "",
-    content: "",
-  });
+  const [formData, setFormData] = useState<Partial<Car>>(
+    car || {
+      name: "",
+      year: "2025",
+      fuel: "휘발유",
+      badge: "",
+      condition: "비흡연/완벽점검",
+      image: "",
+      category_id: "",
+      pricePolicy: { daily: 0, weekly: 0, monthly: 0 },
+      price: "",
+      content: "",
+    },
+  );
   const [units, setUnits] = useState<VehicleUnit[]>([]);
   const [newPlate, setNewPlate] = useState("");
   const [isAddingUnit, setIsAddingUnit] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const supabase = createClient();
+  const [supabase] = useState(createClient);
 
+  const loadUnits = useCallback(
+    async (vehicleId: string) => {
+      const { data } = await supabase
+        .from("vehicle_units")
+        .select("*")
+        .eq("vehicle_id", vehicleId)
+        .order("created_at", { ascending: false });
+      return data || [];
+    },
+    [supabase],
+  );
+  const fetchUnits = async (id: string) => setUnits(await loadUnits(id));
   useEffect(() => {
-    if (car) {
-      setFormData(car);
-      fetchUnits(car.id);
-    } else {
-      setFormData({
-        name: "",
-        year: "2025",
-        fuel: "휘발유",
-        badge: "",
-        condition: "비흡연/완벽점검",
-        image: "",
-        category_id: "",
-        pricePolicy: { daily: 0, weekly: 0, monthly: 0 },
-        price: "",
-        content: "",
+    let active = true;
+    if (car?.id)
+      loadUnits(car.id).then((data) => {
+        if (active) setUnits(data);
       });
-      setUnits([]);
-    }
-  }, [car, isOpen]);
-
-  const fetchUnits = async (vehicleId: string) => {
-    const { data } = await supabase
-      .from("vehicle_units")
-      .select("*")
-      .eq("vehicle_id", vehicleId)
-      .order("created_at", { ascending: false });
-    if (data) setUnits(data);
-  };
+    return () => {
+      active = false;
+    };
+  }, [car?.id, loadUnits]);
 
   const handleAddUnit = async () => {
     if (!newPlate.trim() || !car?.id) return;
@@ -136,7 +131,7 @@ export function VehicleModal({
       const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      const { data, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("vehicles")
         .upload(filePath, file);
 
@@ -188,6 +183,10 @@ export function VehicleModal({
         id: car?.id || "",
         price: (formData.pricePolicy?.monthly || 0).toLocaleString(),
       } as Car);
+    } catch (error) {
+      alert(
+        error instanceof Error ? error.message : "차량을 저장하지 못했습니다.",
+      );
     } finally {
       setSaving(false);
     }
@@ -208,6 +207,7 @@ export function VehicleModal({
             </p>
           </div>
           <button
+            aria-label="차량 편집 닫기"
             onClick={onClose}
             className="p-2 hover:bg-slate-100 rounded-full transition-colors"
           >
@@ -672,6 +672,7 @@ export function VehicleModal({
         <div className="sticky bottom-0 bg-white p-6 border-t border-slate-100 flex gap-3">
           <button
             type="button"
+            aria-label="차량 편집 닫기"
             onClick={onClose}
             className="flex-1 py-3 text-sm font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
           >

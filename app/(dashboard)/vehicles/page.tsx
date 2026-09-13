@@ -2,7 +2,7 @@
 import type { Vehicle } from "@/lib/domain/contracts";
 import { Feedback } from "@/components/shared/feedback";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Car, Category } from "@/components/vehicles/types";
 import { VehicleList } from "@/components/vehicles/VehicleList";
@@ -11,7 +11,6 @@ import { CategoryManager } from "@/components/vehicles/CategoryManager";
 import {
   Search,
   Plus,
-  Filter,
   Car as CarIcon,
   CheckCircle2,
   Clock,
@@ -35,10 +34,10 @@ export default function VehiclesPage() {
   const [editingCar, setEditingCar] = useState<Car | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
-  const supabase = createClient();
+  const [supabase] = useState(createClient);
 
-  const fetchData = async () => {
-    const [vehiclesRes, categoriesRes] = await Promise.all([
+  const loadData = useCallback(async () => {
+    return Promise.all([
       supabase
         .from("vehicles")
         .select(
@@ -53,50 +52,64 @@ export default function VehiclesPage() {
         .select("*")
         .order("created_at", { ascending: true }),
     ]);
+  }, [supabase]);
 
-    if (!vehiclesRes.error && vehiclesRes.data) {
-      const mapped = vehiclesRes.data.map((v: Vehicle) => ({
-        id: v.id,
-        name: v.name,
-        year: String(v.year),
-        price: String(v.price_monthly ?? 0),
-        badge: v.badge || "",
-        condition: v.condition || "",
-        image: v.image_url || "",
-        fuel: v.fuel || "",
-        category_id: v.category_id || "",
-        pricePolicy: {
-          daily: v.price_daily,
-          weekly: v.price_weekly,
-          monthly: v.price_monthly,
-        },
-        unitCount: v.vehicle_units?.length || 0,
-        availableCount:
-          v.vehicle_units?.filter((u) => u.status === "available").length || 0,
-        content: v.content || "",
-        options: v.options || [],
-        manufacturer: v.manufacturer || "",
-        seats: v.seats || 5,
-        rentedCount:
-          v.vehicle_units?.filter((u) => u.status === "rented").length || 0,
-      }));
-      setCars(mapped);
-    }
+  const applyData = useCallback(
+    ([vehiclesRes, categoriesRes]: Awaited<ReturnType<typeof loadData>>) => {
+      if (!vehiclesRes.error && vehiclesRes.data) {
+        const mapped = vehiclesRes.data.map((v: Vehicle) => ({
+          id: v.id,
+          name: v.name,
+        type: v.type,
+          year: String(v.year),
+          price: String(v.price_monthly ?? 0),
+          badge: v.badge || "",
+          condition: v.condition || "",
+          image: v.image_url || "",
+          fuel: v.fuel || "",
+          category_id: v.category_id || "",
+          pricePolicy: {
+            daily: v.price_daily,
+            weekly: v.price_weekly,
+            monthly: v.price_monthly,
+          },
+          unitCount: v.vehicle_units?.length || 0,
+          availableCount:
+            v.vehicle_units?.filter((u) => u.status === "available").length ||
+            0,
+          content: v.content || "",
+          options: v.options || [],
+          manufacturer: v.manufacturer || "",
+          seats: v.seats || 5,
+          rentedCount:
+            v.vehicle_units?.filter((u) => u.status === "rented").length || 0,
+        }));
+        setCars(mapped);
+      }
 
-    if (!categoriesRes.error && categoriesRes.data) {
-      setCategories(categoriesRes.data);
-    }
+      if (!categoriesRes.error && categoriesRes.data) {
+        setCategories(categoriesRes.data);
+      }
 
-    if (vehiclesRes.error || categoriesRes.error)
-      setError(
-        "차량 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.",
-      );
-    setLoading(false);
-  };
+      if (vehiclesRes.error || categoriesRes.error)
+        setError(
+          "차량 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.",
+        );
+      setLoading(false);
+    },
+    [],
+  );
 
+  const fetchData = () => loadData().then(applyData);
   useEffect(() => {
-    fetchData();
-  }, []);
+    let active = true;
+    loadData().then((data) => {
+      if (active) applyData(data);
+    });
+    return () => {
+      active = false;
+    };
+  }, [loadData, applyData]);
 
   const badges = Array.from(
     new Set(cars.map((car) => car.badge).filter(Boolean)),
@@ -168,9 +181,9 @@ export default function VehiclesPage() {
       price_weekly: carData.pricePolicy.weekly,
       price_monthly: carData.pricePolicy.monthly,
       type:
-        categories.find((c) => c.id === carData.category_id)?.name || "일반",
+        categories.find((c) => c.id === carData.category_id)?.name || carData.type || "일반",
       content: carData.content || "",
-      options: carData.options || [],
+      options: (carData.options || []).map((s) => s.trim()).filter(Boolean),
       manufacturer: carData.manufacturer || "",
       seats: carData.seats || 5,
     };
@@ -184,8 +197,7 @@ export default function VehiclesPage() {
         (p) => !Number.isInteger(p) || p < 0,
       )
     ) {
-      setError("차량명, 연식 및 0 이상의 정수 요금을 입력해주세요.");
-      return;
+      throw new Error("차량명, 연식 및 0 이상의 정수 요금을 입력해주세요.");
     }
     setError("");
     const result = editingCar
@@ -197,8 +209,9 @@ export default function VehiclesPage() {
           .single()
       : await supabase.from("vehicles").insert(payload).select("id").single();
     if (result.error) {
-      setError("차량 저장에 실패했습니다. 입력값과 권한을 확인해주세요.");
-      return;
+      throw new Error(
+        "차량 저장에 실패했습니다. 입력값과 권한을 확인해주세요.",
+      );
     }
     fetchData();
     setIsModalOpen(false);
@@ -363,6 +376,7 @@ export default function VehiclesPage() {
         <div className="flex items-center gap-2 border-t xl:border-t-0 pt-4 xl:pt-0">
           <div className="bg-slate-100 p-1 rounded-xl flex items-center shrink-0">
             <button
+              aria-label="카드 보기"
               onClick={() => setViewMode("grid")}
               className={cn(
                 "p-2 rounded-lg transition-all",
@@ -374,6 +388,7 @@ export default function VehiclesPage() {
               <LayoutGrid size={18} />
             </button>
             <button
+              aria-label="표 보기"
               onClick={() => setViewMode("table")}
               className={cn(
                 "p-2 rounded-lg transition-all",
@@ -386,10 +401,6 @@ export default function VehiclesPage() {
             </button>
           </div>
           <div className="h-6 w-px bg-slate-200 mx-1" />
-          <button className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-            <Filter size={14} />
-            <span>상세 필터</span>
-          </button>
         </div>
       </div>
 

@@ -16,12 +16,16 @@ export interface Car {
   unitCount?: number;
   availableCount?: number;
   content?: string;
+  options?: string[];
+  manufacturer?: string;
+  seats?: number;
+  rentedCount?: number;
 }
 
 export interface VehicleUnit {
   id: string;
   plate_number: string;
-  status: 'available' | 'rented' | 'maintenance';
+  status: "available" | "rented" | "maintenance";
 }
 
 export interface Category {

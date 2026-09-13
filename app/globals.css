@@ -5,23 +5,23 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  
-  --color-primary: #2DA3E8;
+  --font-sans: var(--font-inter), var(--font-noto), sans-serif;
+
+  --color-primary: #2563eb;
   --color-primary-foreground: #ffffff;
-  
+
   --color-popover: #ffffff;
   --color-popover-foreground: #020617;
-  
+
   --color-muted: #f1f5f9;
   --color-muted-foreground: #64748b;
-  
+
   --color-accent: #f1f5f9;
   --color-accent-foreground: #0f172a;
-  
+
   --color-border: #e2e8f0;
   --color-input: #e2e8f0;
-  --color-ring: #2DA3E8;
+  --color-ring: #2563eb;
 }
 
 :root {
@@ -29,7 +29,7 @@
   --foreground: #020617;
   --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #2DA3E8;
+  --ring: #2563eb;
   --radius: 0.75rem;
 }
 
@@ -41,7 +41,6 @@
     background-color: #ffffff !important;
     color: #020617 !important;
     font-family: var(--font-sans);
-    antialiased: true;
   }
 }
 

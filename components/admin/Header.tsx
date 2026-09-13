@@ -1,68 +1,40 @@
-'use client'
-
-import { useState, useEffect } from 'react'
-import { Search, Bell, User, Menu } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-
-interface HeaderProps {
-  onMenuClick?: () => void
-}
-
-export function Header({ onMenuClick }: HeaderProps) {
-  const [user, setUser] = useState<{ email?: string; name?: string } | null>(null)
-  const supabase = createClient()
-
-  useEffect(() => {
-    async function getUser() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setUser({
-          email: user.email,
-          name: user.user_metadata?.name || user.user_metadata?.full_name || '관리자'
-        })
-      }
-    }
-    getUser()
-  }, [supabase.auth])
-
+"use client";
+import { usePathname } from "next/navigation";
+import { UserRound } from "lucide-react";
+const titles: Record<string, string> = {
+  "/": "대시보드 개요",
+  "/vehicles": "차량 관리",
+  "/reservations": "예약 관리",
+  "/new-car": "신차 상담 관리",
+  "/events": "이벤트 관리",
+  "/notices": "공지사항 관리",
+  "/inquiries": "문의 관리",
+  "/content": "웹사이트 콘텐츠 관리",
+  "/settings": "사이트 설정",
+  "/accident": "사고대차 안내 관리",
+};
+export function Header({ onMenuClick }: { onMenuClick: () => void }) {
+  const path = usePathname();
+  const key = path === "/" ? "/" : "/" + path.split("/")[1];
   return (
-    <header className="h-16 border-b border-slate-200 bg-white px-4 md:px-8 flex items-center justify-between sticky top-0 z-30">
-      <div className="flex items-center gap-4 flex-1">
-        <button 
-          onClick={onMenuClick}
-          className="p-2 lg:hidden text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
-        >
-          <Menu size={24} />
-        </button>
-        
-        <div className="relative w-full max-w-md hidden sm:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input
-            type="text"
-            placeholder="검색어를 입력하세요..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-lg border border-slate-200 focus:bg-white focus:border-blue-400 transition-all outline-none text-sm text-slate-900"
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2 md:gap-4">
-        <button className="relative p-2 text-slate-400 hover:bg-slate-50 hover:text-blue-600 rounded-full transition-all">
-          <Bell size={20} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-        </button>
-        
-        <div className="h-8 w-px bg-slate-200 mx-1 md:mx-2"></div>
-        
-        <div className="flex items-center gap-2 md:gap-3">
-          <div className="text-right hidden xl:block">
-            <p className="text-sm font-bold text-slate-700">{user?.name || '관리자'}</p>
-            <p className="text-xs text-slate-500">{user?.email || 'admin@jin-rental.com'}</p>
-          </div>
-          <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-md shadow-blue-100">
-            <User size={18} className="md:size-5" />
-          </div>
-        </div>
+    <header className="flex h-[68px] shrink-0 items-center gap-4 border-b border-slate-200 bg-white px-5 md:px-8">
+      <button
+        onClick={onMenuClick}
+        aria-label="관리자 메뉴 열기"
+        className="rounded-lg border border-slate-200 px-3 py-2 text-sm lg:hidden"
+      >
+        메뉴
+      </button>
+      <p className="text-lg font-bold text-slate-900">
+        {titles[key] || "진렌트카 운영 관리"}
+      </p>
+      <div className="ml-auto flex items-center gap-3 text-xs">
+        <span className="grid size-8 place-items-center rounded-full bg-slate-100 text-slate-500">
+          <UserRound size={16} />
+        </span>
+        <strong>관리자</strong>
+        <span className="hidden text-slate-500 sm:inline">운영 관리</span>
       </div>
     </header>
-  )
+  );
 }

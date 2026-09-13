@@ -1,6 +1,7 @@
 export interface Car {
   id: string;
   name: string;
+  type?: string;
   year: string;
   price: string;
   badge?: string;
@@ -16,12 +17,16 @@ export interface Car {
   unitCount?: number;
   availableCount?: number;
   content?: string;
+  options?: string[];
+  manufacturer?: string;
+  seats?: number;
+  rentedCount?: number;
 }
 
 export interface VehicleUnit {
   id: string;
   plate_number: string;
-  status: 'available' | 'rented' | 'maintenance';
+  status: "available" | "rented" | "maintenance";
 }
 
 export interface Category {

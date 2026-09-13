@@ -1,60 +1,57 @@
-'use client'
+"use client";
 
-import { useState, useEffect, Suspense } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { LogIn, Mail, Lock, Chrome, Loader2 } from 'lucide-react'
-import { useSearchParams } from 'next/navigation'
+import { useState, Suspense } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { LogIn, Mail, Lock, Chrome, Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
-import { motion } from 'framer-motion'
-import { login } from './actions'
+import { motion } from "framer-motion";
+import { login } from "./actions";
 
 function LoginContent() {
-  const searchParams = useSearchParams()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [error, setError] = useState<string | null>(
+    searchParams.get("error") === "unauthorized"
+      ? "관리자 권한이 없는 계정입니다. 관리자에게 문의하세요."
+      : null,
+  );
 
-  useEffect(() => {
-    const errorParam = searchParams.get('error')
-    if (errorParam === 'unauthorized') {
-      setError('관리자 권한이 없는 계정입니다. 다른 계정으로 로그인하거나 관리자에게 문의하세요.')
-    }
-  }, [searchParams])
-
-  const supabase = createClient()
+  const supabase = createClient();
 
   const handleGoogleLogin = async () => {
-    setIsGoogleLoading(true)
-    setError(null)
+    setIsGoogleLoading(true);
+    setError(null);
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
-    })
+    });
     if (error) {
-      setError(error.message)
-      setIsGoogleLoading(false)
+      setError(error.message);
+      setIsGoogleLoading(false);
     }
-  }
+  };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError(null)
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
-    const formData = new FormData()
-    formData.append('email', email)
-    formData.append('password', password)
+    const formData = new FormData();
+    formData.append("email", email);
+    formData.append("password", password);
 
-    const result = await login(formData)
+    const result = await login(formData);
     if (result?.error) {
-      setError(result.error)
-      setIsLoading(false)
+      setError(result.error);
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
@@ -71,7 +68,9 @@ function LoginContent() {
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             진렌트카 관리자
           </h1>
-          <p className="text-slate-500 mt-2 text-sm text-center">서비스 관리를 위한 관리자 전용 로그인입니다</p>
+          <p className="text-slate-500 mt-2 text-sm text-center">
+            서비스 관리를 위한 관리자 전용 로그인입니다
+          </p>
         </div>
 
         {error && (
@@ -88,7 +87,10 @@ function LoginContent() {
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">이메일</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <Mail
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={18}
+              />
               <input
                 type="email"
                 placeholder="admin@jin-rental.com"
@@ -101,9 +103,14 @@ function LoginContent() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700">비밀번호</label>
+            <label className="text-sm font-medium text-slate-700">
+              비밀번호
+            </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <Lock
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={18}
+              />
               <input
                 type="password"
                 placeholder="••••••••"
@@ -120,7 +127,11 @@ function LoginContent() {
             disabled={isLoading || isGoogleLoading}
             className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50 text-sm"
           >
-            {isLoading ? <Loader2 className="animate-spin" size={18} /> : <LogIn size={18} />}
+            {isLoading ? (
+              <Loader2 className="animate-spin" size={18} />
+            ) : (
+              <LogIn size={18} />
+            )}
             로그인
           </button>
         </form>
@@ -139,7 +150,11 @@ function LoginContent() {
           disabled={isLoading || isGoogleLoading}
           className="w-full py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50 text-sm"
         >
-          {isGoogleLoading ? <Loader2 className="animate-spin" size={18} /> : <Chrome size={18} className="text-slate-400" />}
+          {isGoogleLoading ? (
+            <Loader2 className="animate-spin" size={18} />
+          ) : (
+            <Chrome size={18} className="text-slate-400" />
+          )}
           Google로 계속하기
         </button>
 
@@ -148,17 +163,19 @@ function LoginContent() {
         </p>
       </motion.div>
     </div>
-  )
+  );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="animate-spin text-slate-400" size={32} />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+          <Loader2 className="animate-spin text-slate-400" size={32} />
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
-  )
+  );
 }

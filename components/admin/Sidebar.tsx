@@ -1,119 +1,105 @@
-'use client'
-
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import Image from 'next/image'
+"use client";
 import {
-  LayoutDashboard,
-  Car,
-  Calendar,
-  Bell,
-  MessageSquare,
+  Table2,
   Settings,
+  CalendarCheck,
+  Users,
+  CircleAlert,
+  MessageCircle,
+  Car,
+  FileText,
+  Shield,
   LogOut,
-  ChevronRight,
-  X
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { logout } from '@/app/login/actions'
-
-const menuItems = [
-  { icon: LayoutDashboard, label: '대시보드', href: '/' },
-  { icon: Car, label: '차량 관리', href: '/vehicles' },
-  { icon: Calendar, label: '이벤트 관리', href: '/events' },
-  { icon: Bell, label: '공지사항 관리', href: '/notices' },
-  { icon: Calendar, label: '예약 상담 관리', href: '/reservations' },
-  { icon: MessageSquare, label: '1:1 문의', href: '/inquiries' },
-]
-
-interface SidebarProps {
-  isOpen?: boolean
-  setIsOpen?: (isOpen: boolean) => void
-}
-
-export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
-  const pathname = usePathname()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Prevent hydration mismatch by rendering a consistent server-side version
-  if (!mounted) {
-    return (
-      <div className="hidden lg:flex w-64 h-full bg-white border-r border-slate-200 flex-col">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-8">
-            <Image src="/jintrental-logo.jpeg" alt="JIN ADMIN" width={240} height={80} className="h-10 md:h-14 w-auto" priority />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { logout } from "@/app/login/actions";
+const menu = [
+  ["/", "대시보드"],
+  ["/vehicles", "차량 관리"],
+  ["/reservations", "예약 상담"],
+  ["/new-car", "신차 상담"],
+  ["/events", "이벤트 관리"],
+  ["/notices", "공지사항"],
+  ["/inquiries", "1:1 문의"],
+  ["/content", "웹사이트 콘텐츠"],
+  ["/accident", "사고대차 안내"],
+  ["/settings", "사이트 설정"],
+];
+const icons = [
+  Table2,
+  Settings,
+  CalendarCheck,
+  Car,
+  Users,
+  CircleAlert,
+  MessageCircle,
+  FileText,
+  Shield,
+  Settings,
+];
+export function Sidebar({
+  isOpen,
+  setIsOpen,
+}: {
+  isOpen?: boolean;
+  setIsOpen?: (value: boolean) => void;
+}) {
+  const path = usePathname();
   return (
-    <aside className={cn(
-      "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 transform lg:relative lg:translate-x-0",
-      isOpen ? "translate-x-0" : "-translate-x-full"
-    )}>
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <Image src="/jintrental-logo.jpeg" alt="JIN ADMIN" width={240} height={80} className="h-10 md:h-14 w-auto" priority />
-          </div>
-          <button 
-            onClick={() => setIsOpen?.(false)}
-            className="p-2 lg:hidden text-slate-400 hover:text-slate-600"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <nav className="space-y-1">
-          {menuItems.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setIsOpen?.(false)}
-                className={cn(
-                  "flex items-center justify-between px-4 py-3 rounded-lg transition-all group",
-                  isActive
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-blue-600"
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <item.icon size={20} className={cn(isActive ? "text-blue-600" : "text-slate-400 group-hover:text-blue-600")} />
-                  <span className="font-semibold text-sm">{item.label}</span>
-                </div>
-                {isActive && <ChevronRight size={16} className="text-blue-400" />}
-              </Link>
-            )
-          })}
-        </nav>
-      </div>
-
-      <div className="mt-auto p-6 space-y-2 border-t border-slate-100">
+    <aside
+      className={`fixed inset-y-0 left-0 z-50 flex w-[260px] shrink-0 flex-col bg-slate-900 text-slate-400 transition-transform lg:relative lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+    >
+      <div className="flex items-center justify-between border-b border-slate-800 p-6">
         <Link
-          href="/settings"
-          onClick={() => setIsOpen?.(false)}
-          className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all group"
+          href="/"
+          className="flex items-center gap-2.5 text-base font-extrabold text-white"
         >
-          <Settings size={20} className="text-slate-400 group-hover:text-blue-600" />
-          <span className="font-semibold text-sm">설정</span>
+          <span className="size-8 shrink-0 rounded-lg bg-blue-900" />
+          <span>
+            JIN RENTAL CAR
+            <span className="mt-1 block text-[10px] tracking-widest text-sky-400">
+              ADMIN SYSTEM
+            </span>
+          </span>
         </Link>
         <button
-          onClick={() => logout()}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all group text-left"
+          aria-label="메뉴 닫기"
+          className="size-10 rounded text-xl lg:hidden"
+          onClick={() => setIsOpen?.(false)}
         >
-          <LogOut size={20} className="text-slate-400 group-hover:text-red-500" />
-          <span className="font-semibold text-sm">로그아웃</span>
+          ×
+        </button>
+      </div>
+      <nav aria-label="관리자 메뉴" className="overflow-y-auto py-0">
+        {menu.map(([href, label], i) => {
+          const Icon = icons[i];
+          const active = href === "/" ? path === "/" : path.startsWith(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setIsOpen?.(false)}
+              aria-current={active ? "page" : undefined}
+              className={`relative flex items-center gap-3 px-6 py-3 text-sm transition ${active ? "bg-slate-800 text-white" : "hover:bg-slate-800/70 hover:text-white"}`}
+            >
+              <Icon size={22} aria-hidden="true" />
+              {active && (
+                <span className="absolute right-6 h-4 w-1 rounded bg-sky-400" />
+              )}
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="mt-auto border-t border-slate-800 p-5">
+        <button
+          onClick={() => logout()}
+          className="w-full rounded-lg px-4 py-3 text-left text-sm hover:bg-slate-800 hover:text-white"
+        >
+          <LogOut size={16} className="mr-2 inline" /> 로그아웃
         </button>
       </div>
     </aside>
-  )
+  );
 }

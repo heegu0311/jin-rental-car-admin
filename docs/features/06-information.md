@@ -1,0 +1,13 @@
+# admin / 06-information
+
+브랜치: codex/06-admin-information
+
+공통 기반에서 분리한 기능 작업. TypeScript 검사 통과. 통합 빌드·브라우저 검증은 docs/WORKLOG.md 참조.
+
+변경 파일:
+
+- `app/(dashboard)/content/ContentEditor.tsx`
+- `app/(dashboard)/content/[slug]/page.tsx`
+- `app/(dashboard)/content/actions.ts`
+- `app/(dashboard)/content/page.tsx`
+- `app/(dashboard)/settings/page.tsx`

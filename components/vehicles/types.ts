@@ -21,6 +21,7 @@ export interface Car {
   manufacturer?: string;
   seats?: number;
   rentedCount?: number;
+  maintenanceCount?: number;
 }
 
 export interface VehicleUnit {

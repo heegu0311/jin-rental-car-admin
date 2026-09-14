@@ -1,10 +1,14 @@
 "use client";
-import type { Vehicle } from "@/lib/domain/contracts";
+import {
+  VEHICLE_LABELS,
+  type Vehicle,
+  type VehicleStatus,
+} from "@/lib/domain/contracts";
 import { Feedback } from "@/components/shared/feedback";
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Car, Category } from "@/components/vehicles/types";
+import type { Car, Category } from "@/components/vehicles/types";
 import { VehicleList } from "@/components/vehicles/VehicleList";
 import { VehicleModal } from "@/components/vehicles/VehicleModal";
 import { CategoryManager } from "@/components/vehicles/CategoryManager";
@@ -25,6 +29,8 @@ export default function VehiclesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [bulkUpdating, setBulkUpdating] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
@@ -60,7 +66,7 @@ export default function VehiclesPage() {
         const mapped = vehiclesRes.data.map((v: Vehicle) => ({
           id: v.id,
           name: v.name,
-        type: v.type,
+          type: v.type,
           year: String(v.year),
           price: String(v.price_monthly ?? 0),
           badge: v.badge || "",
@@ -83,6 +89,9 @@ export default function VehiclesPage() {
           seats: v.seats || 5,
           rentedCount:
             v.vehicle_units?.filter((u) => u.status === "rented").length || 0,
+          maintenanceCount:
+            v.vehicle_units?.filter((u) => u.status === "maintenance").length ||
+            0,
         }));
         setCars(mapped);
       }
@@ -181,7 +190,9 @@ export default function VehiclesPage() {
       price_weekly: carData.pricePolicy.weekly,
       price_monthly: carData.pricePolicy.monthly,
       type:
-        categories.find((c) => c.id === carData.category_id)?.name || carData.type || "일반",
+        categories.find((c) => c.id === carData.category_id)?.name ||
+        carData.type ||
+        "일반",
       content: carData.content || "",
       options: (carData.options || []).map((s) => s.trim()).filter(Boolean),
       manufacturer: carData.manufacturer || "",
@@ -239,9 +250,64 @@ export default function VehiclesPage() {
     setIsModalOpen(true);
   };
 
+  const handleBulkStatusChange = async (
+    carIds: string[],
+    status: VehicleStatus,
+  ) => {
+    const selectedCars = cars.filter((car) => carIds.includes(car.id));
+    const unitCount = selectedCars.reduce(
+      (total, car) => total + (car.unitCount || 0),
+      0,
+    );
+
+    setError("");
+    setSuccess("");
+    if (unitCount === 0) {
+      setError("선택한 모델에 상태를 변경할 실물 차량이 없습니다.");
+      return false;
+    }
+
+    const confirmed = window.confirm(
+      `선택한 ${selectedCars.length}개 모델의 실물 차량 ${unitCount}대를 모두 '${VEHICLE_LABELS[status]}' 상태로 변경하시겠습니까?`,
+    );
+    if (!confirmed) return false;
+
+    setBulkUpdating(true);
+    try {
+      const result = await supabase
+        .from("vehicle_units")
+        .update({ status })
+        .in("vehicle_id", carIds)
+        .select("id");
+
+      if (result.error || result.data?.length !== unitCount) {
+        setError(
+          "선택한 차량의 상태를 모두 변경하지 못했습니다. 새로고침 후 현재 상태를 확인해주세요.",
+        );
+        await fetchData();
+        return false;
+      }
+
+      await fetchData();
+      setSuccess(
+        `${selectedCars.length}개 모델의 실물 차량 ${unitCount}대를 '${VEHICLE_LABELS[status]}' 상태로 변경했습니다.`,
+      );
+      return true;
+    } catch {
+      setError(
+        "선택한 차량의 상태를 모두 변경하지 못했습니다. 새로고침 후 현재 상태를 확인해주세요.",
+      );
+      await fetchData();
+      return false;
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <Feedback message={error} />
+      <Feedback message={success} tone="success" />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -379,25 +445,27 @@ export default function VehiclesPage() {
               aria-label="카드 보기"
               onClick={() => setViewMode("grid")}
               className={cn(
-                "p-2 rounded-lg transition-all",
+                "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold transition-all",
                 viewMode === "grid"
                   ? "bg-white text-blue-600 shadow-sm"
                   : "text-slate-500 hover:text-slate-700",
               )}
             >
               <LayoutGrid size={18} />
+              <span>카드</span>
             </button>
             <button
               aria-label="표 보기"
               onClick={() => setViewMode("table")}
               className={cn(
-                "p-2 rounded-lg transition-all",
+                "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold transition-all",
                 viewMode === "table"
                   ? "bg-white text-blue-600 shadow-sm"
                   : "text-slate-500 hover:text-slate-700",
               )}
             >
               <List size={18} />
+              <span>목록</span>
             </button>
           </div>
           <div className="h-6 w-px bg-slate-200 mx-1" />
@@ -417,6 +485,8 @@ export default function VehiclesPage() {
           viewMode={viewMode}
           onEdit={handleEditClick}
           onDelete={handleDeleteCar}
+          onBulkStatusChange={handleBulkStatusChange}
+          bulkUpdating={bulkUpdating}
         />
       )}
 

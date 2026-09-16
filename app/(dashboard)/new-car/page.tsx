@@ -2,7 +2,11 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { PageHeading, StatusBadge } from "@/components/shared/feedback";
 import { DataTable } from "@/components/shared/DataTable";
-import { type Reservation, RESERVATION_LABELS } from "@/lib/domain/contracts";
+import {
+  type Reservation,
+  RESERVATION_LABELS,
+  vehicleOptions,
+} from "@/lib/domain/contracts";
 export default async function NewCarInquiries() {
   const { db } = await requireAdmin();
   const { data, error } = await db
@@ -32,6 +36,14 @@ export default async function NewCarInquiries() {
           { key: "phone", label: "연락처", render: (r) => r.user_phone },
           { key: "period", label: "기간", render: (r) => r.period },
           { key: "delivery", label: "출고 시기", render: (r) => r.start_date },
+          {
+            key: "options",
+            label: "희망 옵션",
+            render: (r) => {
+              const selected = vehicleOptions(r.options || []);
+              return selected.length ? selected.join(", ") : "선택 없음";
+            },
+          },
           {
             key: "status",
             label: "상태",

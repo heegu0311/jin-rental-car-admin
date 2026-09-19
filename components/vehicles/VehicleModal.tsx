@@ -7,6 +7,10 @@ import { Car, VehicleUnit, Category } from "./types";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import {
+  VEHICLE_OPTIONS,
+  vehicleOptions,
+} from "@/lib/domain/contracts";
+import {
   Car as CarIcon,
   X,
   Camera,
@@ -58,6 +62,10 @@ export function VehicleModal({
   const [saving, setSaving] = useState(false);
 
   const [supabase] = useState(createClient);
+  const selectedOptions = vehicleOptions(formData.options || []);
+  const legacyOptions = (formData.options || []).filter(
+    (option) => !VEHICLE_OPTIONS.some((allowed) => allowed === option),
+  );
 
   const loadUnits = useCallback(
     async (vehicleId: string) => {
@@ -527,21 +535,48 @@ export function VehicleModal({
                 }
               />
             </label>
-            <label className="block text-sm font-semibold">
-              옵션 (쉼표로 구분)
-              <input
-                form="vehicle-form"
-                className="mt-2 w-full rounded-lg border p-3"
-                value={(formData.options || []).join(",")}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    options: e.target.value.split(","),
-                  })
-                }
-                placeholder="내비게이션,블랙박스,스마트키"
-              />
-            </label>
+            <fieldset className="space-y-3">
+              <legend className="text-sm font-semibold">차량 옵션</legend>
+              <p className="text-xs leading-5 text-slate-500">
+                해당 차량에 장착된 옵션을 모두 선택하세요.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {VEHICLE_OPTIONS.map((option) => (
+                  <label
+                    key={option}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 text-sm font-medium text-slate-700 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-700"
+                  >
+                    <input
+                      form="vehicle-form"
+                      type="checkbox"
+                      checked={selectedOptions.includes(option)}
+                      onChange={(event) => {
+                        const nextOptions = event.target.checked
+                          ? vehicleOptions([...selectedOptions, option])
+                          : selectedOptions.filter(
+                              (selected) => selected !== option,
+                            );
+                        setFormData({
+                          ...formData,
+                          options: [...nextOptions, ...legacyOptions],
+                        });
+                      }}
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>{option}</span>
+                  </label>
+                ))}
+              </div>
+              {legacyOptions.length > 0 && (
+                <div className="rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-800">
+                  <p className="font-semibold">기존 기타 옵션</p>
+                  <p>{legacyOptions.join(", ")}</p>
+                  <p className="mt-1 text-amber-700">
+                    기존 데이터 보호를 위해 차량 저장 시 그대로 유지됩니다.
+                  </p>
+                </div>
+              )}
+            </fieldset>
           </div>
           <div className="space-y-4 pt-6 border-t border-slate-100 bg-slate-50/50 -mx-6 px-6 pb-6">
             <h3 className="text-xs font-bold text-slate-700 flex items-center justify-between">

@@ -5,6 +5,7 @@ import {
   rentalPeriod,
   rentalType,
   validPhone,
+  vehicleOptions,
 } from "../lib/domain/contracts.ts";
 test("금액은 저장된 단위를 유지하고 유효하지 않은 값을 문의로 표시", () => {
   assert.equal(formatWon(380000), "380,000원");
@@ -24,4 +25,10 @@ test("연락처는 국내 전화번호만 허용", () => {
   assert.equal(validPhone("02-123-4567"), true);
   assert.equal(validPhone("hello"), false);
   assert.equal(validPhone("1234567890"), false);
+});
+test("차량 옵션은 허용 목록 순서로 중복 없이 정규화", () => {
+  assert.deepEqual(
+    vehicleOptions(["HUD", "열선시트", "HUD", "임의 옵션", null]),
+    ["열선시트", "HUD"],
+  );
 });

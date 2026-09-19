@@ -3,6 +3,20 @@ export type VehicleStatus = "available" | "rented" | "maintenance";
 export type ReservationStatus = "pending" | "confirmed" | "cancelled";
 export type InquiryStatus = "pending" | "answered";
 export type RentalType = "daily" | "weekly" | "monthly";
+export const VEHICLE_OPTIONS = [
+  "열선시트",
+  "열선핸들",
+  "블랙박스",
+  "정품네비",
+  "후방카메라",
+  "차선유지보조 기능",
+  "파노라마선루프",
+  "스마트 크루즈컨트롤",
+  "통풍시트",
+  "어라운드뷰",
+  "HUD",
+] as const;
+export type VehicleOption = (typeof VEHICLE_OPTIONS)[number];
 export interface Vehicle {
   id: string;
   name: string;
@@ -111,4 +125,14 @@ export function categoryName(car: Vehicle) {
 }
 export function validPhone(value: string) {
   return /^0\d{8,10}$/.test(value.replace(/[\s-]/g, ""));
+}
+export function vehicleOptions(values: readonly unknown[]): VehicleOption[] {
+  const selected = new Set(
+    values.filter(
+      (value): value is VehicleOption =>
+        typeof value === "string" &&
+        (VEHICLE_OPTIONS as readonly string[]).includes(value),
+    ),
+  );
+  return VEHICLE_OPTIONS.filter((option) => selected.has(option));
 }

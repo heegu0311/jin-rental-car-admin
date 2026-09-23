@@ -7,6 +7,7 @@
 - `site-assets` 공개 읽기 버킷, 5MB 제한, JPG/PNG/WebP 제한을 추가했다.
 - 업로드·목록·수정·삭제는 로그인 사용자 중 `profiles.role`이 `admin` 또는 `superadmin`인 세션만 허용한다.
 - 차량·이벤트·페이지 콘텐츠 대표 이미지, 차량/이벤트/공지 TipTap 본문 이미지 업로드가 공용 업로드 함수를 사용한다.
+- TipTap은 Storage 업로드가 성공한 뒤 반환된 public URL을 이미지 노드의 `src`로 삽입해 본문 HTML에 저장한다. base64와 URL 직접 입력 fallback은 사용하지 않는다.
 - 업로드 파일은 기능별 경로에 UUID 이름으로 저장하고, 기존 DB 계약의 `image_url`/HTML 이미지 URL에 public URL을 넣는다.
 - 기존 `vehicles` 버킷의 파일과 레코드는 그대로 유지한다. 새 업로드는 `site-assets`에 쌓인다.
 

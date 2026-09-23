@@ -9,6 +9,7 @@ import {
 } from "@/lib/domain/contracts";
 import { PageHeading, Feedback } from "@/components/shared/feedback";
 import { saveContent } from "./actions";
+import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import {
   CONTENT_GUIDES,
   type ContentFieldGuide,
@@ -181,19 +182,20 @@ export function ContentEditor({ initial }: { initial: SiteContent }) {
             onChange={(e) => update({ ...draft, subtitle: e.target.value })}
           />
         </label>
-        <label className="block text-sm font-semibold">
+        <div className="text-sm font-semibold">
           <span className="flex items-center gap-2">
-            <ImageIcon size={16} className="text-blue-600" aria-hidden="true" />{" "}
-            대표 이미지 경로
+            <ImageIcon size={16} className="text-blue-600" aria-hidden="true" /> 대표 이미지
           </span>
           <FieldGuide guide={guide.fields.image} />
-          <input
-            className={input}
-            value={draft.image_url}
-            placeholder="https://… 또는 /images/…"
-            onChange={(e) => update({ ...draft, image_url: e.target.value })}
-          />
-        </label>
+          <div className="mt-2">
+            <ImageUploadField
+              value={draft.image_url}
+              onChange={(image_url) => update({ ...draft, image_url })}
+              folder={`content-${slug}`}
+              preview
+            />
+          </div>
+        </div>
         <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
           <input
             type="checkbox"

@@ -23,7 +23,6 @@ const menu = [
   ["/notices", "공지사항"],
   ["/inquiries", "1:1 문의"],
   ["/content", "웹사이트 콘텐츠"],
-  ["/accident", "사고대차 안내"],
   ["/settings", "사이트 설정"],
 ];
 const icons = [
@@ -35,7 +34,6 @@ const icons = [
   CircleAlert,
   MessageCircle,
   FileText,
-  Shield,
   Settings,
 ];
 export function Sidebar({

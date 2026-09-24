@@ -50,27 +50,13 @@
 - public에는 공개된 콘텐츠만 조회 가능. 연락처가 포함된 inquiries/reservations는 관리자만 조회·수정한다.
 - profiles는 본인 role 읽기만 허용하고 브라우저에서 role을 수정하거나 스스로 admin이 되게 하지 않는다.
 
-## 브랜치와 워크트리
+## 현재 작업 방식
 
-공통 커밋을 먼저 만든 다음 아래 브랜치를 **동일한 foundation 커밋에서** 분기한다.
-모든 브랜치의 `codex/` 접두사는 유지한다. 두 저장소에서 같은 번호가 한 기능 묶음이다.
-
-| 번호 | web 브랜치 | admin 브랜치 | 전용 파일 |
-|---|---|---|---|
-| 00 | 00-web-foundation | 00-admin-foundation | shared, domain, globals, layout, 문서 |
-| 01 | 01-web-home | 01-admin-home | 홈, Hero, USP / 대시보드 |
-| 02 | 02-web-vehicles | 02-admin-vehicles | cars / vehicles (VehicleCard는 foundation 소유) |
-| 03 | 03-web-rent | 03-admin-rent | rent, rental / reservations |
-| 04 | 04-web-accident | 04-admin-accident | accident / 사고대차 콘텐츠 |
-| 05 | 05-web-new-car | 05-admin-new-car | new-car, cars/NewCarApplicationForm / 신차 상담 분류 |
-| 06 | 06-web-information | 06-admin-information | about, info, terms, privacy / 콘텐츠 편집·설정 |
-| 07 | 07-web-content | 07-admin-content | event, notice, EventPopup / events, notices |
-| 08 | 08-web-contact | 08-admin-contact | contact / inquiries |
-
-각 기능의 워크트리는 `../.worktrees/<app>/<번호>-<기능>/`에 둔다. main은 보존하고 결과는 `codex/integration`에 merge --no-ff로 모은다.
-독립 기능 브랜치는 다른 기능 파일을 수정하지 않는다. 공통 수정이 필요하면 foundation 보완 커밋을 만들고 영향 브랜치에 먼저 병합한다.
-DB 변경은 한 담당자만 수행한다. package.json, lockfile, globals.css, root layout, 공통 컴포넌트, contracts는 foundation 소유다.
-워크트리에는 `.env.local`을 복사하거나 커밋하지 않는다. 필요하면 로컬 심볼릭 링크로 연결한다. 의존성 설치와 dev 포트를 분리한다 (이번 검증: web 3100, admin 3101; 기존 3000~3002 서비스 보존).
+- `web/`와 `admin/`은 별도 Git 저장소이며 각 저장소의 루트 체크아웃에서 `main`에 직접 작업한다. 새 기능 브랜치나 워크트리는 만들지 않는다.
+- 작업 전 각 저장소의 브랜치·미커밋 변경·원격 상태를 확인한다. 기존 변경을 덮어쓰지 않고, 관련 변경만 검증한 뒤 각 저장소에서 커밋한다.
+- 두 저장소에 걸친 계약 변경은 `lib/domain/contracts.ts`를 동일하게 갱신한다. DB schema·권한 SQL은 admin이 소유한다.
+- 공통 컴포넌트, 전역 CSS, 루트 layout, lockfile은 영향 범위를 확인하고 순차적으로 수정한다. `.env.local`은 커밋하지 않는다.
+- push와 외부 배포는 요청 범위에 따라 수행하고 결과를 확인한다. Codex에서 새 작업을 시작할 때는 별도 워크트리 대신 현재 로컬 체크아웃을 선택한다.
 
 ## 완료 기준
 
@@ -79,12 +65,11 @@ DB 변경은 한 담당자만 수행한다. package.json, lockfile, globals.css,
 3. 390px / 1440px, 키보드 초점, 필수 라벨, 동의·중복 제출 방지, 네트워크 실패를 확인한다.
 4. 양쪽 pnpm exec tsc --noEmit, pnpm lint, pnpm build. 금액·기간·권한·입력 검증은 의미 있는 테스트를 추가한다.
 5. 운영 DB에 실제 고객처럼 보이는 테스트 예약을 넣지 않는다. 통합 테스트는 분리된 데이터/목킹으로 수행하며 실제 검증과 구별해 기록한다.
-6. 배포·푸시 상태, 검증하지 못한 항목, 커밋·워크트리 위치를 최종 문서에 남긴다.
+6. 배포·푸시 상태, 검증하지 못한 항목, 커밋·저장소 위치를 최종 문서에 남긴다.
 
-## 통합 상태와 후속 작업 방식
+## 통합 이력과 후속 작업
 
-현재 두 저장소의 실행 체크아웃은 `codex/integration`이다. 01~08 기능 브랜치를 충돌 없이 통합했고, 통합 검사 수정은 `codex/09-web-validation` / `codex/09-admin-validation`에 대응시킨다. 16개 기능 워크트리는 작업 이력과 다음 수정의 출발점으로 유지한다.
-새 기능은 현재 integration에서 새 번호 쌍으로 분기한다. 기존 기능 브랜치를 재사용할 때는 **그 브랜치의 워크트리에서** integration을 먼저 병합한다. 현재 최신 결과를 보려면 루트 web/admin을 실행한다. 기능 워크트리는 해당 기능 시점의 코드이므로 독립적으로 실행 시 다른 기능이 아직 없을 수 있다.
+01~08 기능 브랜치와 과거 `codex/integration`의 결과는 이미 main에 통합됐다. 이전 브랜치는 작업 이력으로만 남기고 새 작업의 출발점으로 사용하지 않는다. 앞으로는 web/admin의 main에서 직접 수정·검증·커밋한다.
 
 `site_content`의 공개된 제목·설명·이미지를 Wireframe 레이아웃 안에 반영한다. 회사소개·이용안내·사고대차는 원본 섹션 배치를 유지하고 추가 구조화 본문을 표시한다. 개인정보·약관은 공개된 본문으로 대체한다. 사업자 연락처·상담 채널은 `/settings`에서 관리하며 비어 있는 사업자 표시 값은 Figma 원본의 값을 기본값으로 사용한다. 카카오·네이버 URL 미등록 시 문의 페이지로 연결한다.
 
@@ -92,7 +77,7 @@ DB 변경은 한 담당자만 수행한다. package.json, lockfile, globals.css,
 
 ## 10 — Wireframe 디자인 정합성 수정
 
-- 후속 수정은 `codex/10-web-design-parity`와 `codex/10-admin-design-parity`에서 관리한다. 검증 후 integration에 통합한다.
+- 디자인 정합성 수정은 과거 기능 브랜치에서 진행해 main에 통합했다. 이후 수정은 각 저장소의 main에서 진행한다.
 - 원본 치수와 에셋은 `DESIGN_PARITY.md`를 참조한다. web의 `app/wireframe.css`는 페이지 간 공통 시각 규칙이므로 동시에 수정하지 않는다.
 - Header/Footer, PageBanner, ChannelButtons, QuickConsultation, PremiumCTA를 공통 구성으로 사용한다. Inter + Noto Sans KR을 두 앱에 적용한다.
 - 사용자 결정: 차량명·가격·사진은 실제 관리자 데이터를 유지한다. 디자인의 샘플 차량/가격으로 덮어쓰지 않는다.

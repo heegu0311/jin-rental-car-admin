@@ -34,7 +34,7 @@ interface RichEditorProps {
   content: string
   onChange: (content: string) => void
   placeholder?: string
-  onImageUpload?: (file: File) => Promise<string>
+  onImageUpload: (file: File) => Promise<string>
 }
 
 const ToolbarButton = ({
@@ -80,9 +80,7 @@ export function RichEditor({ content, onChange, placeholder = "내용을 입력�
     extensions: [
       StarterKit,
       Underline,
-      Image.configure({
-        allowBase64: true,
-      }),
+      Image,
       Link.configure({
         openOnClick: false,
       }),
@@ -112,43 +110,22 @@ export function RichEditor({ content, onChange, placeholder = "내용을 입력�
   }
 
   const addImage = () => {
-    if (onImageUpload && fileInputRef.current) {
-      fileInputRef.current.click()
-    } else {
-      const url = window.prompt('이미지 URL을 입력하세요:')
-      if (url) {
-        editor.chain().focus().setImage({ src: url }).run()
-      }
-    }
+    fileInputRef.current?.click()
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (onImageUpload) {
-      try {
-        setIsUploading(true)
-        const url = await onImageUpload(file)
-        editor.chain().focus().setImage({ src: url }).run()
-      } catch (error) {
-        console.error('Image upload failed:', error)
-        alert('이미지 업로드에 실패했습니다.')
-      } finally {
-        setIsUploading(false)
-        if (e.target) {
-          e.target.value = ''
-        }
-      }
-    } else {
-      // Fallback if no upload handler is provided
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          editor.chain().focus().setImage({ src: event.target.result as string }).run()
-        }
-      }
-      reader.readAsDataURL(file)
+    try {
+      setIsUploading(true)
+      const url = await onImageUpload(file)
+      editor.chain().focus().setImage({ src: url }).run()
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '이미지 업로드에 실패했습니다.')
+    } finally {
+      setIsUploading(false)
+      e.target.value = ''
     }
   }
 
@@ -177,7 +154,7 @@ export function RichEditor({ content, onChange, placeholder = "내용을 입력�
         type="file" 
         ref={fileInputRef} 
         className="hidden" 
-        accept="image/*" 
+        accept="image/jpeg,image/png,image/webp"
         onChange={handleImageUpload} 
       />
       {isUploading && (

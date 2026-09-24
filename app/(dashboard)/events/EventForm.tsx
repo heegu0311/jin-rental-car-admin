@@ -25,6 +25,8 @@ const RichEditor = dynamic(
   },
 );
 import { cn } from "@/lib/utils";
+import { ImageUploadField } from "@/components/shared/ImageUploadField";
+import { uploadAdminImage } from "@/lib/storage/upload-image";
 
 interface EventFormProps {
   initialData?: {
@@ -67,6 +69,9 @@ export function EventForm({ initialData }: EventFormProps) {
   );
   const [isPopup, setIsPopup] = useState(initialData?.is_popup ?? false);
   const [isActive, setIsActive] = useState(initialData?.is_active ?? true);
+
+  const handleEditorImageUpload = (file: File) =>
+    uploadAdminImage(createClient(), file, "event-content");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,9 +209,10 @@ export function EventForm({ initialData }: EventFormProps) {
               <label className="text-sm font-bold text-slate-700">
                 이벤트 상세 내용
               </label>
-              <RichEditor
-                content={description}
-                onChange={setDescription}
+                <RichEditor
+                  content={description}
+                  onChange={setDescription}
+                  onImageUpload={handleEditorImageUpload}
                 placeholder="이벤트 상세 내용을 입력하세요. 이미지, 링크 등을 활용할 수 있습니다."
               />
             </div>
@@ -328,18 +334,12 @@ export function EventForm({ initialData }: EventFormProps) {
                 )}
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  이미지 URL
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://..."
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                />
-              </div>
+              <ImageUploadField
+                label="이벤트 대표 이미지"
+                value={imageUrl}
+                onChange={setImageUrl}
+                folder="events"
+              />
             </div>
           </div>
         </div>

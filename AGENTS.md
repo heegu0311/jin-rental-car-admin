@@ -3,8 +3,8 @@
 ARCHITECTURE.md를 먼저 읽는다. web/admin은 별도 저장소이며 이 폴더 자체는 Git 루트가 아니다.
 
 - 디자인은 Wireframe 네이비·블루. 원본 프레임을 삭제·재배치하지 않는다.
-- 공통 기반을 먼저 커밋하고 번호가 같은 web/admin 기능 브랜치를 만든다. 작업 파일은 ARCHITECTURE.md의 소유권 표를 따른다.
-- 공통 컴포넌트, 전역 CSS, 루트 layout, contracts, lockfile은 기능별 작업에서 동시에 수정하지 않는다.
+- web/admin은 각각 현재 체크아웃의 main에서 직접 작업한다. 기능 브랜치·워크트리를 만들지 않는다. 작업 전 Git 상태를 확인하고 기존 변경을 보존한다.
+- 공통 컴포넌트, 전역 CSS, 루트 layout, contracts, lockfile은 영향 범위를 확인하고 순차적으로 수정한다.
 - Next.js 16의 현재 node_modules/next/dist/docs 문서를 읽고 비동기 params/cookies 규칙을 따른다.
 - 기존 컴포넌트를 재사용하고 any, 가짜 성공 메시지, 예시 운영 데이터, 하드코딩된 통계를 추가하지 않는다.
 - Supabase schema/권한 SQL은 admin 소유. 계약을 변경하면 두 저장소의 lib/domain/contracts.ts를 동일하게 갱신한다.

@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { Car, VehicleUnit, Category } from "./types";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { uploadAdminImage } from "@/lib/storage/upload-image";
 import {
   VEHICLE_OPTIONS,
   vehicleOptions,
@@ -135,20 +136,7 @@ export function VehicleModal({
 
     setIsUploading(true);
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("vehicles")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("vehicles").getPublicUrl(filePath);
-
+      const publicUrl = await uploadAdminImage(supabase, file, "vehicles");
       setFormData({ ...formData, image: publicUrl });
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -164,21 +152,7 @@ export function VehicleModal({
       file.size > 5 * 1024 * 1024
     )
       throw new Error("5MB 이하 이미지만 업로드 가능합니다.");
-    const fileExt = file.name.split(".").pop();
-    const fileName = `editor_${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("vehicles")
-      .upload(filePath, file);
-
-    if (uploadError) throw uploadError;
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("vehicles").getPublicUrl(filePath);
-
-    return publicUrl;
+    return uploadAdminImage(supabase, file, "vehicle-content");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

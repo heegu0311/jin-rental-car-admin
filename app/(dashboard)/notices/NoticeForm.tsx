@@ -6,6 +6,7 @@ import { ArrowLeft, Save, AlertCircle, Pin, Check } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
+import { uploadAdminImage } from "@/lib/storage/upload-image";
 import { cn } from "@/lib/utils";
 
 const RichEditor = dynamic(
@@ -30,6 +31,8 @@ interface NoticeFormProps {
 export function NoticeForm({ initialData }: NoticeFormProps) {
   const router = useRouter();
   const supabase = createClient();
+  const handleEditorImageUpload = (file: File) =>
+    uploadAdminImage(supabase, file, "notice-content");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -168,6 +171,7 @@ export function NoticeForm({ initialData }: NoticeFormProps) {
               <RichEditor
                 content={content}
                 onChange={setContent}
+                onImageUpload={handleEditorImageUpload}
                 placeholder="공지할 내용을 상세히 입력하세요. 이미지와 링크를 포함할 수 있습니다."
               />
             </div>

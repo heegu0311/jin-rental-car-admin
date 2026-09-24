@@ -8,7 +8,6 @@ import {
   MessageCircle,
   Car,
   FileText,
-  Shield,
   LogOut,
 } from "lucide-react";
 import Link from "next/link";

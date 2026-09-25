@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
+import { refreshPublicSiteOrNotify } from "@/lib/public-site";
 
 interface Notice {
   id: string;
@@ -68,6 +69,7 @@ export default function NoticesPage() {
     if (error) {
       setLoadError("변경을 저장하지 못했습니다.");
     } else {
+      refreshPublicSiteOrNotify();
       setNotices(
         notices.map((n) =>
           n.id === id ? { ...n, is_pinned: !currentStatus } : n,
@@ -89,6 +91,7 @@ export default function NoticesPage() {
     if (error) {
       setLoadError("삭제하지 못했습니다.");
     } else {
+      refreshPublicSiteOrNotify();
       setNotices(notices.filter((n) => n.id !== id));
     }
   };

@@ -23,6 +23,7 @@ import {
   Hash,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { refreshPublicSiteOrNotify } from "@/lib/public-site";
 
 export default function VehiclesPage() {
   const [cars, setCars] = useState<Car[]>([]);
@@ -224,6 +225,7 @@ export default function VehiclesPage() {
         "차량 저장에 실패했습니다. 입력값과 권한을 확인해주세요.",
       );
     }
+    refreshPublicSiteOrNotify();
     fetchData();
     setIsModalOpen(false);
     setEditingCar(null);
@@ -241,6 +243,7 @@ export default function VehiclesPage() {
         setError("삭제하지 못했습니다. 연결된 데이터를 확인해주세요.");
         return;
       }
+      refreshPublicSiteOrNotify();
       fetchData();
     }
   };
@@ -288,6 +291,7 @@ export default function VehiclesPage() {
         return false;
       }
 
+      refreshPublicSiteOrNotify();
       await fetchData();
       setSuccess(
         `${selectedCars.length}개 모델의 실물 차량 ${unitCount}대를 '${VEHICLE_LABELS[status]}' 상태로 변경했습니다.`,

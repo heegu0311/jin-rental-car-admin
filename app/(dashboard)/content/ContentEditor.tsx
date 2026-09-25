@@ -9,6 +9,7 @@ import {
 } from "@/lib/domain/contracts";
 import { PageHeading, Feedback } from "@/components/shared/feedback";
 import { saveContent } from "./actions";
+import { PUBLIC_SITE_DELAY_NOTICE } from "@/lib/public-site";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import {
   CONTENT_GUIDES,
@@ -92,7 +93,8 @@ export function ContentEditor({ initial }: { initial: SiteContent }) {
   const [draft, setDraft] = useState(initial),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
-    [saved, setSaved] = useState(false);
+    [saved, setSaved] = useState(false),
+    [siteRefreshed, setSiteRefreshed] = useState(true);
   const lock = useRef(false);
   const slug = draft.slug as ContentSlug;
   const guide = CONTENT_GUIDES[slug];
@@ -116,7 +118,10 @@ export function ContentEditor({ initial }: { initial: SiteContent }) {
         try {
           const r = await saveContent(draft);
           if (r.error) setError(r.error);
-          else setSaved(true);
+          else {
+            setSiteRefreshed(r.siteRefreshed !== false);
+            setSaved(true);
+          }
         } catch {
           setError("저장 요청에 실패했습니다. 다시 시도해주세요.");
         } finally {
@@ -142,9 +147,11 @@ export function ContentEditor({ initial }: { initial: SiteContent }) {
       <Feedback
         tone="success"
         message={
-          saved
-            ? "저장되었습니다. 공개 상태와 웹사이트 내용을 확인해주세요."
-            : ""
+          !saved
+            ? ""
+            : siteRefreshed
+              ? "저장되었습니다. 공개 상태와 웹사이트 내용을 확인해주세요."
+              : PUBLIC_SITE_DELAY_NOTICE
         }
       />
       <fieldset
@@ -184,7 +191,8 @@ export function ContentEditor({ initial }: { initial: SiteContent }) {
         </label>
         <div className="text-sm font-semibold">
           <span className="flex items-center gap-2">
-            <ImageIcon size={16} className="text-blue-600" aria-hidden="true" /> 대표 이미지
+            <ImageIcon size={16} className="text-blue-600" aria-hidden="true" />{" "}
+            대표 이미지
           </span>
           <FieldGuide guide={guide.fields.image} />
           <div className="mt-2">

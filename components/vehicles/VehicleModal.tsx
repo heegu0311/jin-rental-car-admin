@@ -7,10 +7,7 @@ import { Car, VehicleUnit, Category } from "./types";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { uploadAdminImage } from "@/lib/storage/upload-image";
-import {
-  VEHICLE_OPTIONS,
-  vehicleOptions,
-} from "@/lib/domain/contracts";
+import { VEHICLE_OPTIONS, vehicleOptions } from "@/lib/domain/contracts";
 import {
   Car as CarIcon,
   X,
@@ -21,6 +18,7 @@ import {
   Hash,
   AlertCircle,
 } from "lucide-react";
+import { refreshPublicSiteOrNotify } from "@/lib/public-site";
 
 const RichEditor = dynamic(
   () => import("@/components/admin/RichEditor").then((mod) => mod.RichEditor),
@@ -104,6 +102,7 @@ export function VehicleModal({
 
     if (!error) {
       setNewPlate("");
+      refreshPublicSiteOrNotify();
       fetchUnits(car.id);
     } else {
       alert("이미 등록된 번호이거나 오류가 발생했습니다.");
@@ -119,6 +118,7 @@ export function VehicleModal({
       .eq("id", unitId);
 
     if (!error && car?.id) {
+      refreshPublicSiteOrNotify();
       fetchUnits(car.id);
     }
   };
@@ -632,6 +632,7 @@ export function VehicleModal({
                                     alert("상태 변경에 실패했습니다.");
                                     return;
                                   }
+                                  refreshPublicSiteOrNotify();
                                   setUnits((prev) =>
                                     prev.map((u) =>
                                       u.id === unit.id ? { ...u, status } : u,

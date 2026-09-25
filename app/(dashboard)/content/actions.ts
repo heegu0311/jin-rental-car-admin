@@ -2,6 +2,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { CONTENT_PAGES, type SiteContent } from "@/lib/domain/contracts";
 import { revalidatePath } from "next/cache";
+import { refreshPublicSite } from "@/lib/web-revalidate";
 export async function saveContent(value: SiteContent) {
   const { db } = await requireAdmin();
   if (
@@ -55,5 +56,6 @@ export async function saveContent(value: SiteContent) {
     return { error: "저장하지 못했습니다. 연결 상태와 권한을 확인해주세요." };
   revalidatePath("/content");
   revalidatePath(`/content/${value.slug}`);
-  return { success: true };
+  const site = await refreshPublicSite();
+  return { success: true, siteRefreshed: site.ok };
 }

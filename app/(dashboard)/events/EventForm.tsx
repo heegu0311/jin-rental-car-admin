@@ -27,6 +27,7 @@ const RichEditor = dynamic(
 import { cn } from "@/lib/utils";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import { uploadAdminImage } from "@/lib/storage/upload-image";
+import { refreshPublicSiteOrNotify } from "@/lib/public-site";
 
 interface EventFormProps {
   initialData?: {
@@ -121,6 +122,7 @@ export function EventForm({ initialData }: EventFormProps) {
         if (error) throw error;
       }
 
+      await refreshPublicSiteOrNotify();
       router.push("/events");
       router.refresh();
     } catch (err: unknown) {
@@ -209,10 +211,10 @@ export function EventForm({ initialData }: EventFormProps) {
               <label className="text-sm font-bold text-slate-700">
                 이벤트 상세 내용
               </label>
-                <RichEditor
-                  content={description}
-                  onChange={setDescription}
-                  onImageUpload={handleEditorImageUpload}
+              <RichEditor
+                content={description}
+                onChange={setDescription}
+                onImageUpload={handleEditorImageUpload}
                 placeholder="이벤트 상세 내용을 입력하세요. 이미지, 링크 등을 활용할 수 있습니다."
               />
             </div>

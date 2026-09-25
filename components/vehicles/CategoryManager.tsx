@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { X, Plus, Trash2, Tag } from "lucide-react";
+import { refreshPublicSiteOrNotify } from "@/lib/public-site";
 
 interface Category {
   id: string;
@@ -38,6 +39,7 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
 
     if (!error) {
       setNewCategory("");
+      refreshPublicSiteOrNotify();
       fetchCategories();
       onCategoryChange?.();
     } else {
@@ -60,6 +62,7 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
       .eq("id", id);
 
     if (!error) {
+      refreshPublicSiteOrNotify();
       fetchCategories();
       onCategoryChange?.();
     }

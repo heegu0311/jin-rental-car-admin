@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { uploadAdminImage } from "@/lib/storage/upload-image";
 import { cn } from "@/lib/utils";
+import { refreshPublicSiteOrNotify } from "@/lib/public-site";
 
 const RichEditor = dynamic(
   () => import("@/components/admin/RichEditor").then((mod) => mod.RichEditor),
@@ -87,6 +88,7 @@ export function NoticeForm({ initialData }: NoticeFormProps) {
         if (error) throw error;
       }
 
+      await refreshPublicSiteOrNotify();
       router.push("/notices");
       router.refresh();
     } catch (err: unknown) {

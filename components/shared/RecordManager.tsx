@@ -4,6 +4,7 @@ import { Dialog } from "radix-ui";
 import { DataTable } from "./DataTable";
 import { ReservationDetail } from "./ReservationDetail";
 import { StatusChips } from "./StatusChips";
+import { ReceiptMonthFilter } from "./ReceiptMonthFilter";
 import { toast } from "sonner";
 import { Phone } from "lucide-react";
 import { PageHeading, StatusBadge } from "./feedback";
@@ -34,8 +35,7 @@ export function RecordManager({
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("all"),
     [category, setCategory] = useState<string>(initialCategory),
-    [fromMonth, setFromMonth] = useState(""),
-    [toMonth, setToMonth] = useState(""),
+    [receiptMonth, setReceiptMonth] = useState(""),
     [page, setPage] = useState(0),
     [selected, setSelected] = useState<RecordRow | null>(
       initial.find((row) => row.id === initialSelectedId) || null,
@@ -76,18 +76,12 @@ export function RecordManager({
           : ("title" in r &&
               (r.title.match(/^\[([^\]]+)\]/)?.[1] || "일반 문의")) ===
             category)) &&
-      (!fromMonth ||
+      (!receiptMonth ||
         new Date(r.created_at)
           .toLocaleDateString("sv-SE", {
             timeZone: "Asia/Seoul",
           })
-          .slice(0, 7) >= fromMonth) &&
-      (!toMonth ||
-        new Date(r.created_at)
-          .toLocaleDateString("sv-SE", {
-            timeZone: "Asia/Seoul",
-          })
-          .slice(0, 7) <= toMonth) &&
+          .slice(0, 7) === receiptMonth) &&
       `${r.user_name} ${r.user_phone} ${"car_name" in r ? r.car_name : r.title}`
         .toLowerCase()
         .includes(query.toLowerCase()),
@@ -204,34 +198,13 @@ export function RecordManager({
             </select>
           </label>
         )}
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          접수 시작월
-          <input
-            aria-label="접수 시작월"
-            type="month"
-            value={fromMonth}
-            max={toMonth || undefined}
-            onChange={(e) => {
-              setFromMonth(e.target.value);
-              setPage(0);
-            }}
-            className="h-11 rounded-lg border border-slate-200 px-2"
-          />
-        </label>
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          접수 종료월
-          <input
-            aria-label="접수 종료월"
-            type="month"
-            value={toMonth}
-            min={fromMonth || undefined}
-            onChange={(e) => {
-              setToMonth(e.target.value);
-              setPage(0);
-            }}
-            className="h-11 rounded-lg border border-slate-200 px-2"
-          />
-        </label>
+        <ReceiptMonthFilter
+          value={receiptMonth}
+          onChange={(value) => {
+            setReceiptMonth(value);
+            setPage(0);
+          }}
+        />
       </div>
       <p className="text-sm text-slate-500">총 {filtered.length}건</p>
       <DataTable<RecordRow>

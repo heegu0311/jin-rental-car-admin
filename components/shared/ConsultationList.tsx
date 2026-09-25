@@ -7,6 +7,7 @@ import { INQUIRY_LABELS, RESERVATION_LABELS } from "@/lib/domain/contracts";
 import { DataTable } from "./DataTable";
 import { PageHeading, StatusBadge } from "./feedback";
 import { StatusChips } from "./StatusChips";
+import { ReceiptMonthFilter } from "./ReceiptMonthFilter";
 
 type Row =
   | {
@@ -33,8 +34,7 @@ export function ConsultationList({
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState("all");
   const [status, setStatus] = useState("all");
-  const [fromMonth, setFromMonth] = useState("");
-  const [toMonth, setToMonth] = useState("");
+  const [receiptMonth, setReceiptMonth] = useState("");
   const [page, setPage] = useState(0);
   const rows: Row[] = [
     ...reservations.map((record): Row => ({
@@ -63,8 +63,7 @@ export function ConsultationList({
     return (
       (kind === "all" || row.kind === kind) &&
       (status === "all" || row.record.status === status) &&
-      (!fromMonth || month >= fromMonth) &&
-      (!toMonth || month <= toMonth) &&
+      (!receiptMonth || month === receiptMonth) &&
       search.includes(query.toLowerCase())
     );
   });
@@ -110,28 +109,10 @@ export function ConsultationList({
           ]}
           onChange={(value) => changeFilter(setStatus, value)}
         />
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          접수 시작월{" "}
-          <input
-            aria-label="접수 시작월"
-            type="month"
-            value={fromMonth}
-            max={toMonth || undefined}
-            onChange={(e) => changeFilter(setFromMonth, e.target.value)}
-            className="h-11 rounded-lg border border-slate-200 px-2"
-          />
-        </label>
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          접수 종료월{" "}
-          <input
-            aria-label="접수 종료월"
-            type="month"
-            value={toMonth}
-            min={fromMonth || undefined}
-            onChange={(e) => changeFilter(setToMonth, e.target.value)}
-            className="h-11 rounded-lg border border-slate-200 px-2"
-          />
-        </label>
+        <ReceiptMonthFilter
+          value={receiptMonth}
+          onChange={(value) => changeFilter(setReceiptMonth, value)}
+        />
       </div>
       <p className="text-sm text-slate-500">총 {filtered.length}건</p>
       <DataTable<Row>

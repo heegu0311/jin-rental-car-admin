@@ -7,9 +7,10 @@ import {
   type ContentSlug,
   type SiteContent,
 } from "@/lib/domain/contracts";
-import { PageHeading, Feedback } from "@/components/shared/feedback";
+import { toast } from "sonner";
+import { PageHeading } from "@/components/shared/feedback";
 import { saveContent } from "./actions";
-import { PUBLIC_SITE_DELAY_NOTICE } from "@/lib/public-site";
+import { notifySaved } from "@/lib/public-site";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import {
   CONTENT_GUIDES,
@@ -91,20 +92,14 @@ function LocationGuide({ guide }: { guide: ContentGuide }) {
 
 export function ContentEditor({ initial }: { initial: SiteContent }) {
   const [draft, setDraft] = useState(initial),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState(""),
-    [saved, setSaved] = useState(false),
-    [siteRefreshed, setSiteRefreshed] = useState(true);
+    [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const slug = draft.slug as ContentSlug;
   const guide = CONTENT_GUIDES[slug];
   const label = CONTENT_PAGES[slug];
   const input =
     "mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
-  const update = (next: SiteContent) => {
-    setDraft(next);
-    setSaved(false);
-  };
+  const update = (next: SiteContent) => setDraft(next);
   return (
     <form
       className="max-w-5xl space-y-8"
@@ -113,17 +108,16 @@ export function ContentEditor({ initial }: { initial: SiteContent }) {
         if (lock.current) return;
         lock.current = true;
         setBusy(true);
-        setError("");
-        setSaved(false);
         try {
           const r = await saveContent(draft);
-          if (r.error) setError(r.error);
-          else {
-            setSiteRefreshed(r.siteRefreshed !== false);
-            setSaved(true);
-          }
+          if (r.error) toast.error(r.error);
+          else
+            notifySaved(
+              "저장되었습니다. 공개 상태와 웹사이트 내용을 확인해주세요.",
+              r.siteRefreshed !== false,
+            );
         } catch {
-          setError("저장 요청에 실패했습니다. 다시 시도해주세요.");
+          toast.error("저장 요청에 실패했습니다. 다시 시도해주세요.");
         } finally {
           lock.current = false;
           setBusy(false);
@@ -143,17 +137,6 @@ export function ContentEditor({ initial }: { initial: SiteContent }) {
         }
       />
       <LocationGuide guide={guide} />
-      <Feedback message={error} />
-      <Feedback
-        tone="success"
-        message={
-          !saved
-            ? ""
-            : siteRefreshed
-              ? "저장되었습니다. 공개 상태와 웹사이트 내용을 확인해주세요."
-              : PUBLIC_SITE_DELAY_NOTICE
-        }
-      />
       <fieldset
         disabled={busy}
         className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6"

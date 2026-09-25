@@ -8,7 +8,6 @@ import {
   Save,
   Image as ImageIcon,
   Calendar as CalendarIcon,
-  AlertCircle,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -27,6 +26,7 @@ const RichEditor = dynamic(
 import { cn } from "@/lib/utils";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import { uploadAdminImage } from "@/lib/storage/upload-image";
+import { toast } from "sonner";
 import { refreshPublicSiteOrNotify } from "@/lib/public-site";
 
 interface EventFormProps {
@@ -47,7 +47,6 @@ export function EventForm({ initialData }: EventFormProps) {
   const supabase = createClient();
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const [title, setTitle] = useState(initialData?.title || "");
   const [description, setDescription] = useState(
@@ -77,16 +76,15 @@ export function EventForm({ initialData }: EventFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     if (!title) {
-      setError("제목을 입력해주세요.");
+      toast.error("제목을 입력해주세요.");
       setLoading(false);
       return;
     }
 
     if (startDate && endDate && startDate > endDate) {
-      setError("종료일은 시작일 이후여야 합니다.");
+      toast.error("종료일은 시작일 이후여야 합니다.");
       setLoading(false);
       return;
     }
@@ -122,12 +120,12 @@ export function EventForm({ initialData }: EventFormProps) {
         if (error) throw error;
       }
 
-      await refreshPublicSiteOrNotify();
+      await refreshPublicSiteOrNotify("이벤트를 저장했습니다.");
       router.push("/events");
       router.refresh();
     } catch (err: unknown) {
       console.error("Error saving event:", err);
-      setError(
+      toast.error(
         err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
       );
     } finally {
@@ -181,13 +179,6 @@ export function EventForm({ initialData }: EventFormProps) {
           </button>
         </div>
       </div>
-
-      {error && (
-        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-start gap-3 text-rose-700">
-          <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
-          <div className="text-sm font-medium">{error}</div>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Bell, BellOff, BellRing } from "lucide-react";
-import { Feedback } from "@/components/shared/feedback";
+import { toast } from "sonner";
 import {
   pushPublicKey,
   registerPush,
@@ -39,10 +39,6 @@ export function PushToggle() {
   );
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<{
-    text: string;
-    tone: "error" | "success" | "info";
-  } | null>(null);
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -78,22 +74,17 @@ export function PushToggle() {
 
   async function enable() {
     setBusy(true);
-    setMessage(null);
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        setMessage({
-          text: "알림 권한이 허용되지 않았습니다. 브라우저 설정에서 이 사이트의 알림을 허용해주세요.",
-          tone: "error",
-        });
+        toast.error(
+          "알림 권한이 허용되지 않았습니다. 브라우저 설정에서 이 사이트의 알림을 허용해주세요.",
+        );
         return;
       }
       const key = await pushPublicKey();
       if (!key.publicKey) {
-        setMessage({
-          text: key.error ?? "알림 서버 설정이 완료되지 않았습니다.",
-          tone: "error",
-        });
+        toast.error(key.error ?? "알림 서버 설정이 완료되지 않았습니다.");
         return;
       }
       const reg = await navigator.serviceWorker.ready;
@@ -106,19 +97,13 @@ export function PushToggle() {
       const saved = await registerPush(sub.toJSON(), navigator.userAgent);
       if (saved.error) {
         await sub.unsubscribe();
-        setMessage({ text: saved.error, tone: "error" });
+        toast.error(saved.error);
         return;
       }
       setSubscription(sub);
-      setMessage({
-        text: "이 기기에서 새 상담·문의 알림을 받습니다.",
-        tone: "success",
-      });
+      toast.success("이 기기에서 새 상담·문의 알림을 받습니다.");
     } catch {
-      setMessage({
-        text: "알림을 켜지 못했습니다. 잠시 후 다시 시도해주세요.",
-        tone: "error",
-      });
+      toast.error("알림을 켜지 못했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setBusy(false);
     }
@@ -126,39 +111,31 @@ export function PushToggle() {
   async function disable() {
     if (!subscription) return;
     setBusy(true);
-    setMessage(null);
     try {
       const removed = await removePush(subscription.endpoint);
       if (removed.error) {
-        setMessage({ text: removed.error, tone: "error" });
+        toast.error(removed.error);
         return;
       }
       await subscription.unsubscribe();
       setSubscription(null);
-      setMessage({ text: "이 기기의 알림을 해제했습니다.", tone: "info" });
+      toast.info("이 기기의 알림을 해제했습니다.");
     } catch {
-      setMessage({
-        text: "알림을 해제하지 못했습니다. 다시 시도해주세요.",
-        tone: "error",
-      });
+      toast.error("알림을 해제하지 못했습니다. 다시 시도해주세요.");
     } finally {
       setBusy(false);
     }
   }
   async function test() {
     setBusy(true);
-    setMessage(null);
     const result = await sendTestPush().catch(() => ({
       error: "테스트 알림 요청에 실패했습니다.",
     }));
-    setMessage(
-      result.error
-        ? { text: result.error, tone: "error" }
-        : {
-            text: "테스트 알림을 요청했습니다. 잠시 후 이 기기에 도착하는지 확인해주세요.",
-            tone: "info",
-          },
-    );
+    if (result.error) toast.error(result.error);
+    else
+      toast.info(
+        "테스트 알림을 요청했습니다. 잠시 후 이 기기에 도착하는지 확인해주세요.",
+      );
     setBusy(false);
   }
 
@@ -219,7 +196,6 @@ export function PushToggle() {
               </div>
             </>
           )}
-          <Feedback message={message?.text} tone={message?.tone} />
         </div>
       )}
     </div>

@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
+import { toast } from "sonner";
 import { refreshPublicSiteOrNotify } from "@/lib/public-site";
 
 interface Event {
@@ -67,9 +68,9 @@ export default function EventsPage() {
       .single();
 
     if (error) {
-      setLoadError("변경을 저장하지 못했습니다.");
+      toast.error("변경을 저장하지 못했습니다.");
     } else {
-      refreshPublicSiteOrNotify();
+      refreshPublicSiteOrNotify("노출 상태를 변경했습니다.");
       setEvents(
         events.map((e) =>
           e.id === id ? { ...e, is_active: !currentStatus } : e,
@@ -89,9 +90,9 @@ export default function EventsPage() {
       .single();
 
     if (error) {
-      setLoadError("삭제하지 못했습니다.");
+      toast.error("삭제하지 못했습니다.");
     } else {
-      refreshPublicSiteOrNotify();
+      refreshPublicSiteOrNotify("이벤트를 삭제했습니다.");
       setEvents(events.filter((e) => e.id !== id));
     }
   };

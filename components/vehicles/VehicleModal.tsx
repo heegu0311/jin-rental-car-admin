@@ -18,6 +18,7 @@ import {
   Hash,
   AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 import { refreshPublicSiteOrNotify } from "@/lib/public-site";
 
 const RichEditor = dynamic(
@@ -102,10 +103,10 @@ export function VehicleModal({
 
     if (!error) {
       setNewPlate("");
-      refreshPublicSiteOrNotify();
+      refreshPublicSiteOrNotify("차량 번호를 추가했습니다.");
       fetchUnits(car.id);
     } else {
-      alert("이미 등록된 번호이거나 오류가 발생했습니다.");
+      toast.error("이미 등록된 번호이거나 오류가 발생했습니다.");
     }
     setIsAddingUnit(false);
   };
@@ -117,8 +118,12 @@ export function VehicleModal({
       .delete()
       .eq("id", unitId);
 
-    if (!error && car?.id) {
-      refreshPublicSiteOrNotify();
+    if (error) {
+      toast.error("차량 번호를 삭제하지 못했습니다. 다시 시도해주세요.");
+      return;
+    }
+    if (car?.id) {
+      refreshPublicSiteOrNotify("차량 번호를 삭제했습니다.");
       fetchUnits(car.id);
     }
   };
@@ -130,7 +135,7 @@ export function VehicleModal({
       !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
       file.size > 5 * 1024 * 1024
     ) {
-      alert("5MB 이하 JPG, PNG, WebP 이미지를 선택해주세요.");
+      toast.error("5MB 이하 JPG, PNG, WebP 이미지를 선택해주세요.");
       return;
     }
 
@@ -140,7 +145,7 @@ export function VehicleModal({
       setFormData({ ...formData, image: publicUrl });
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert("이미지 업로드 중 오류가 발생했습니다.");
+      toast.error("이미지 업로드 중 오류가 발생했습니다.");
     } finally {
       setIsUploading(false);
     }
@@ -166,7 +171,7 @@ export function VehicleModal({
         price: (formData.pricePolicy?.monthly || 0).toLocaleString(),
       } as Car);
     } catch (error) {
-      alert(
+      toast.error(
         error instanceof Error ? error.message : "차량을 저장하지 못했습니다.",
       );
     } finally {
@@ -629,10 +634,12 @@ export function VehicleModal({
                                     .select("id")
                                     .single();
                                   if (error) {
-                                    alert("상태 변경에 실패했습니다.");
+                                    toast.error("상태 변경에 실패했습니다.");
                                     return;
                                   }
-                                  refreshPublicSiteOrNotify();
+                                  refreshPublicSiteOrNotify(
+                                    `${unit.plate_number} 상태를 변경했습니다.`,
+                                  );
                                   setUnits((prev) =>
                                     prev.map((u) =>
                                       u.id === unit.id ? { ...u, status } : u,

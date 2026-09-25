@@ -2,7 +2,8 @@
 import { useRef, useState } from "react";
 import { Dialog } from "radix-ui";
 import { DataTable } from "./DataTable";
-import { Feedback, PageHeading, StatusBadge } from "./feedback";
+import { toast } from "sonner";
+import { PageHeading, StatusBadge } from "./feedback";
 import {
   type Reservation,
   type Inquiry,
@@ -25,7 +26,6 @@ export function RecordManager({
     [selected, setSelected] = useState<RecordRow | null>(null),
     [answer, setAnswer] = useState(""),
     [status, setStatus] = useState("pending"),
-    [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const labels: Record<string, string> =
@@ -48,13 +48,12 @@ export function RecordManager({
       return;
     lock.current = true;
     setBusy(true);
-    setError("");
     try {
       const result = remove
         ? await deleteRecord(kind, selected.id)
         : await updateRecord(kind, selected.id, status, answer);
       if (result.error) {
-        setError(result.error);
+        toast.error(result.error);
         return;
       }
       setRows((prev) =>
@@ -72,8 +71,11 @@ export function RecordManager({
       );
       setSelected(null);
       setPage(0);
+      toast.success(
+        remove ? "내역을 삭제했습니다." : "처리 상태를 저장했습니다.",
+      );
     } catch {
-      setError("요청을 처리하지 못했습니다. 다시 시도해주세요.");
+      toast.error("요청을 처리하지 못했습니다. 다시 시도해주세요.");
     } finally {
       setBusy(false);
       lock.current = false;
@@ -163,7 +165,6 @@ export function RecordManager({
                   setAnswer(
                     "answer_content" in r ? r.answer_content || "" : "",
                   );
-                  setError("");
                 }}
               >
                 상세 보기
@@ -265,7 +266,6 @@ export function RecordManager({
                 </span>
               </label>
             )}
-            <Feedback message={error} />
             <div className="flex justify-between gap-3">
               <button
                 disabled={busy}

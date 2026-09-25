@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { X, Plus, Trash2, Tag } from "lucide-react";
+import { toast } from "sonner";
 import { refreshPublicSiteOrNotify } from "@/lib/public-site";
 
 interface Category {
@@ -26,7 +27,7 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
       .from("vehicle_categories")
       .select("*")
       .order("created_at", { ascending: true });
-    if (error) alert("카테고리를 불러오지 못했습니다.");
+    if (error) toast.error("카테고리를 불러오지 못했습니다.");
     if (data) setCategories(data);
   };
 
@@ -39,11 +40,11 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
 
     if (!error) {
       setNewCategory("");
-      refreshPublicSiteOrNotify();
+      refreshPublicSiteOrNotify("카테고리를 추가했습니다.");
       fetchCategories();
       onCategoryChange?.();
     } else {
-      alert("카테고리 추가에 실패했습니다. (중복된 이름일 수 있습니다)");
+      toast.error("카테고리 추가에 실패했습니다. (중복된 이름일 수 있습니다)");
     }
     setIsAdding(false);
   };
@@ -61,11 +62,13 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
       .delete()
       .eq("id", id);
 
-    if (!error) {
-      refreshPublicSiteOrNotify();
-      fetchCategories();
-      onCategoryChange?.();
+    if (error) {
+      toast.error("카테고리를 삭제하지 못했습니다. 다시 시도해주세요.");
+      return;
     }
+    refreshPublicSiteOrNotify("카테고리를 삭제했습니다.");
+    fetchCategories();
+    onCategoryChange?.();
   };
 
   return (

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 const noto = Noto_Sans_KR({
   subsets: ["latin"],
@@ -29,6 +30,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans overflow-x-hidden">
         {children}
+        <Toaster />
       </body>
     </html>
   );

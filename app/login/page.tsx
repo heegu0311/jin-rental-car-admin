@@ -4,8 +4,10 @@ import { useState, Suspense } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { LogIn, Mail, Lock, Chrome, Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { login } from "./actions";
 
 function LoginContent() {
@@ -14,17 +16,15 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [error, setError] = useState<string | null>(
+  const error =
     searchParams.get("error") === "unauthorized"
       ? "관리자 권한이 없는 계정입니다. 관리자에게 문의하세요."
-      : null,
-  );
+      : null;
 
   const supabase = createClient();
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
-    setError(null);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -32,7 +32,7 @@ function LoginContent() {
       },
     });
     if (error) {
-      setError(error.message);
+      toast.error(error.message);
       setIsGoogleLoading(false);
     }
   };
@@ -40,7 +40,6 @@ function LoginContent() {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
 
     const formData = new FormData();
     formData.append("email", email);
@@ -48,7 +47,7 @@ function LoginContent() {
 
     const result = await login(formData);
     if (result?.error) {
-      setError(result.error);
+      toast.error(result.error);
       setIsLoading(false);
     }
   };
@@ -62,9 +61,14 @@ function LoginContent() {
         className="w-full max-w-md bg-white border border-slate-200 p-8 rounded-xl shadow-sm"
       >
         <div className="flex flex-col items-center mb-10">
-          <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mb-4 text-slate-600">
-            <LogIn size={24} />
-          </div>
+          <Image
+            src="/jintrental-logo.jpeg"
+            width={180}
+            height={84}
+            alt="진렌트카"
+            priority
+            className="mb-4 h-[84px] w-[180px] object-contain"
+          />
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             진렌트카 관리자
           </h1>

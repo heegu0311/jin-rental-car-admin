@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { ImagePlus, LoaderCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -35,7 +36,7 @@ export function ImageUploadField({
     try {
       onChange(await uploadAdminImage(createClient(), file, folder));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "이미지를 업로드하지 못했습니다.");
+      toast.error(cause instanceof Error ? cause.message : "이미지를 업로드하지 못했습니다.");
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";

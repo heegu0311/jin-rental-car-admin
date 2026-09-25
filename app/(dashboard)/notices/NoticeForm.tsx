@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, AlertCircle, Pin, Check } from "lucide-react";
+import { ArrowLeft, Save, Pin, Check } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { uploadAdminImage } from "@/lib/storage/upload-image";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { refreshPublicSiteOrNotify } from "@/lib/public-site";
 
 const RichEditor = dynamic(
@@ -36,7 +37,6 @@ export function NoticeForm({ initialData }: NoticeFormProps) {
     uploadAdminImage(supabase, file, "notice-content");
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const [title, setTitle] = useState(initialData?.title || "");
   const [content, setContent] = useState(initialData?.content || "");
@@ -45,16 +45,15 @@ export function NoticeForm({ initialData }: NoticeFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     if (!title) {
-      setError("제목을 입력해주세요.");
+      toast.error("제목을 입력해주세요.");
       setLoading(false);
       return;
     }
 
     if (!content || content === "<p></p>") {
-      setError("내용을 입력해주세요.");
+      toast.error("내용을 입력해주세요.");
       setLoading(false);
       return;
     }
@@ -88,12 +87,12 @@ export function NoticeForm({ initialData }: NoticeFormProps) {
         if (error) throw error;
       }
 
-      await refreshPublicSiteOrNotify();
+      await refreshPublicSiteOrNotify("공지사항을 저장했습니다.");
       router.push("/notices");
       router.refresh();
     } catch (err: unknown) {
       console.error("Error saving notice:", err);
-      setError(
+      toast.error(
         err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
       );
     } finally {
@@ -141,13 +140,6 @@ export function NoticeForm({ initialData }: NoticeFormProps) {
           </button>
         </div>
       </div>
-
-      {error && (
-        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-start gap-3 text-rose-700">
-          <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
-          <div className="text-sm font-medium">{error}</div>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">

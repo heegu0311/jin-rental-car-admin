@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { toast } from 'sonner'
 
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -122,7 +123,7 @@ export function RichEditor({ content, onChange, placeholder = "내용을 입력�
       const url = await onImageUpload(file)
       editor.chain().focus().setImage({ src: url }).run()
     } catch (error) {
-      alert(error instanceof Error ? error.message : '이미지 업로드에 실패했습니다.')
+      toast.error(error instanceof Error ? error.message : '이미지 업로드에 실패했습니다.')
     } finally {
       setIsUploading(false)
       e.target.value = ''

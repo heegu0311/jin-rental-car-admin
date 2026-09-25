@@ -23,6 +23,7 @@ import {
   Hash,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { refreshPublicSiteOrNotify } from "@/lib/public-site";
 
 export default function VehiclesPage() {
@@ -30,7 +31,6 @@ export default function VehiclesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
@@ -211,7 +211,6 @@ export default function VehiclesPage() {
     ) {
       throw new Error("차량명, 연식 및 0 이상의 정수 요금을 입력해주세요.");
     }
-    setError("");
     const result = editingCar
       ? await supabase
           .from("vehicles")
@@ -225,7 +224,9 @@ export default function VehiclesPage() {
         "차량 저장에 실패했습니다. 입력값과 권한을 확인해주세요.",
       );
     }
-    refreshPublicSiteOrNotify();
+    refreshPublicSiteOrNotify(
+      editingCar ? "차량 정보를 저장했습니다." : "차량을 등록했습니다.",
+    );
     fetchData();
     setIsModalOpen(false);
     setEditingCar(null);
@@ -240,10 +241,10 @@ export default function VehiclesPage() {
         .select("id")
         .single();
       if (error) {
-        setError("삭제하지 못했습니다. 연결된 데이터를 확인해주세요.");
+        toast.error("삭제하지 못했습니다. 연결된 데이터를 확인해주세요.");
         return;
       }
-      refreshPublicSiteOrNotify();
+      refreshPublicSiteOrNotify("차량을 삭제했습니다.");
       fetchData();
     }
   };
@@ -263,10 +264,8 @@ export default function VehiclesPage() {
       0,
     );
 
-    setError("");
-    setSuccess("");
     if (unitCount === 0) {
-      setError("선택한 모델에 상태를 변경할 실물 차량이 없습니다.");
+      toast.error("선택한 모델에 상태를 변경할 실물 차량이 없습니다.");
       return false;
     }
 
@@ -284,21 +283,20 @@ export default function VehiclesPage() {
         .select("id");
 
       if (result.error || result.data?.length !== unitCount) {
-        setError(
+        toast.error(
           "선택한 차량의 상태를 모두 변경하지 못했습니다. 새로고침 후 현재 상태를 확인해주세요.",
         );
         await fetchData();
         return false;
       }
 
-      refreshPublicSiteOrNotify();
-      await fetchData();
-      setSuccess(
+      refreshPublicSiteOrNotify(
         `${selectedCars.length}개 모델의 실물 차량 ${unitCount}대를 '${VEHICLE_LABELS[status]}' 상태로 변경했습니다.`,
       );
+      await fetchData();
       return true;
     } catch {
-      setError(
+      toast.error(
         "선택한 차량의 상태를 모두 변경하지 못했습니다. 새로고침 후 현재 상태를 확인해주세요.",
       );
       await fetchData();
@@ -311,7 +309,6 @@ export default function VehiclesPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <Feedback message={error} />
-      <Feedback message={success} tone="success" />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

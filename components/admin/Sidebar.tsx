@@ -3,7 +3,6 @@ import {
   Table2,
   Settings,
   CalendarCheck,
-  Users,
   CircleAlert,
   MessageCircle,
   Car,
@@ -15,26 +14,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/app/login/actions";
 const menu = [
-  ["/", "대시보드"],
-  ["/vehicles", "차량 관리"],
-  ["/reservations", "예약 상담"],
-  ["/new-car", "신차 상담"],
-  ["/events", "이벤트 관리"],
-  ["/notices", "공지사항"],
-  ["/inquiries", "1:1 문의"],
-  ["/content", "웹사이트 콘텐츠"],
-  ["/settings", "사이트 설정"],
+  { href: "/", label: "대시보드", icon: Table2 },
+  { href: "/vehicles", label: "차량 관리", icon: Car },
+  { href: "/events", label: "이벤트 관리", icon: CircleAlert },
+  { href: "/notices", label: "공지사항", icon: FileText },
+  { href: "/content", label: "웹사이트 콘텐츠", icon: FileText },
+  { href: "/settings", label: "사이트 설정", icon: Settings },
 ];
-const icons = [
-  Table2,
-  Settings,
-  CalendarCheck,
-  Car,
-  Users,
-  CircleAlert,
-  MessageCircle,
-  FileText,
-  Settings,
+const consultationMenu = [
+  { href: "/reservations", label: "기간 렌트", icon: CalendarCheck },
+  { href: "/new-car", label: "신차 장기", icon: Car },
+  { href: "/inquiries", label: "1:1 문의", icon: MessageCircle },
 ];
 export function Sidebar({
   isOpen,
@@ -71,8 +61,7 @@ export function Sidebar({
         </button>
       </div>
       <nav aria-label="관리자 메뉴" className="overflow-y-auto py-0">
-        {menu.map(([href, label], i) => {
-          const Icon = icons[i];
+        {menu.slice(0, 2).map(({ href, label, icon: Icon }) => {
           const active = href === "/" ? path === "/" : path.startsWith(href);
           return (
             <Link
@@ -90,6 +79,52 @@ export function Sidebar({
             </Link>
           );
         })}
+        <div className="mt-3 border-t border-slate-800 pt-3">
+          <p className="flex items-center gap-3 px-6 py-2 text-xs font-bold tracking-wide text-slate-300">
+            <CalendarCheck size={20} aria-hidden="true" />
+            예약/문의 관리
+          </p>
+          <div className="ml-8 border-l border-slate-700">
+            {consultationMenu.map(({ href, label, icon: Icon }) => {
+              const active = path === href || path.startsWith(`${href}/`);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setIsOpen?.(false)}
+                  aria-current={active ? "page" : undefined}
+                  className={`relative flex items-center gap-3 py-2.5 pl-5 pr-6 text-sm transition ${active ? "bg-slate-800 font-semibold text-white" : "hover:bg-slate-800/70 hover:text-white"}`}
+                >
+                  <Icon size={17} aria-hidden="true" />
+                  {active && (
+                    <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded bg-sky-400" />
+                  )}
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+        <div className="mt-3 border-t border-slate-800 pt-3">
+          {menu.slice(2).map(({ href, label, icon: Icon }) => {
+            const active = path === href || path.startsWith(`${href}/`);
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setIsOpen?.(false)}
+                aria-current={active ? "page" : undefined}
+                className={`relative flex items-center gap-3 px-6 py-3 text-sm transition ${active ? "bg-slate-800 text-white" : "hover:bg-slate-800/70 hover:text-white"}`}
+              >
+                <Icon size={22} aria-hidden="true" />
+                {active && (
+                  <span className="absolute right-6 h-4 w-1 rounded bg-sky-400" />
+                )}
+                {label}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
       <div className="mt-auto border-t border-slate-800 p-5">
         <button

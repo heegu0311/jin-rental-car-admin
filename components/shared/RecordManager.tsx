@@ -167,6 +167,7 @@ export function RecordManager({
         {kind === "reservations" ? (
           <StatusChips
             label="상담 유형으로 보기"
+            group="type"
             value={category}
             options={[
               { value: "all", label: "전체 상담" },

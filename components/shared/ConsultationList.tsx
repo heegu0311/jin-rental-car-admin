@@ -88,6 +88,7 @@ export function ConsultationList({
         />
         <StatusChips
           label="접수 유형으로 보기"
+          group="type"
           value={kind}
           options={[
             { value: "all", label: "전체 유형" },

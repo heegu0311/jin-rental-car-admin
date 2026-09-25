@@ -128,6 +128,16 @@ export function RecordManager({
         caption={title}
         rows={filtered.slice(page * 20, (page + 1) * 20)}
         columns={[
+          ...(kind === "reservations"
+            ? [{
+                key: "consultationType",
+                label: "상담 구분",
+                render: (r: RecordRow) =>
+                  "car_name" in r && r.car_name.startsWith("[신차]")
+                    ? "신차 상담"
+                    : "예약 상담",
+              }]
+            : []),
           {
             key: "status",
             label: "상태",

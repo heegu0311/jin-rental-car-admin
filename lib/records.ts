@@ -44,6 +44,7 @@ export async function updateRecord(
   if (error)
     return { error: "저장하지 못했습니다. 데이터 또는 권한을 확인해주세요." };
   revalidatePath(`/${kind}`);
+  if (kind === "reservations") revalidatePath("/new-car");
   revalidatePath("/");
   return { success: true };
 }
@@ -65,5 +66,6 @@ export async function deleteRecord(
     .single();
   if (error) return { error: "삭제에 실패했습니다." };
   revalidatePath(`/${kind}`);
+  if (kind === "reservations") revalidatePath("/new-car");
   return { success: true };
 }

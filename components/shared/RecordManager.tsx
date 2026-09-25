@@ -17,9 +17,13 @@ type RecordRow = Reservation | Inquiry;
 export function RecordManager({
   kind,
   initial,
+  title: customTitle,
+  description = "최근 500건을 조회합니다. 고객 정보와 요청 내용을 확인하고 처리 상태를 관리하세요.",
 }: {
   kind: "reservations" | "inquiries";
   initial: RecordRow[];
+  title?: string;
+  description?: string;
 }) {
   const [rows, setRows] = useState(initial),
     [query, setQuery] = useState(""),
@@ -83,13 +87,12 @@ export function RecordManager({
       lock.current = false;
     }
   }
-  const title = kind === "reservations" ? "예약 상담 관리" : "1:1 문의 관리";
+  const title =
+    customTitle ??
+    (kind === "reservations" ? "예약 상담 관리" : "1:1 문의 관리");
   return (
     <div className="space-y-6">
-      <PageHeading
-        title={title}
-        description="최근 500건을 조회합니다. 고객 정보와 요청 내용을 확인하고 처리 상태를 관리하세요."
-      />
+      <PageHeading title={title} description={description} />
       <div className="flex flex-wrap gap-4 rounded-xl border border-slate-200 bg-white p-4">
         <label className="flex-1">
           <span className="sr-only">이름, 연락처, 내용 검색</span>

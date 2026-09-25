@@ -80,10 +80,15 @@ export function Sidebar({
           );
         })}
         <div className="mt-3 border-t border-slate-800 pt-3">
-          <p className="flex items-center gap-3 px-6 py-2 text-xs font-bold tracking-wide text-slate-300">
+          <Link
+            href="/consultations"
+            onClick={() => setIsOpen?.(false)}
+            aria-current={path === "/consultations" ? "page" : undefined}
+            className={`flex items-center gap-3 px-6 py-2 text-xs font-bold tracking-wide transition ${path === "/consultations" ? "bg-slate-800 text-white" : "text-slate-300 hover:bg-slate-800/70 hover:text-white"}`}
+          >
             <CalendarCheck size={20} aria-hidden="true" />
             예약/문의 관리
-          </p>
+          </Link>
           <div className="ml-8 border-l border-slate-700">
             {consultationMenu.map(({ href, label, icon: Icon }) => {
               const active = path === href || path.startsWith(`${href}/`);

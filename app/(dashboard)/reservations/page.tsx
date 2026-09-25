@@ -1,7 +1,12 @@
 import { requireAdmin } from "@/lib/auth";
 import { RecordManager } from "@/components/shared/RecordManager";
 import type { Reservation } from "@/lib/domain/contracts";
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ record?: string }>;
+}) {
+  const { record } = await searchParams;
   const { db } = await requireAdmin();
   const { data, error } = await db
     .from("reservations")
@@ -12,6 +17,9 @@ export default async function Page() {
   return (
     <RecordManager
       kind="reservations"
+      key="reservations"
+      initialCategory="rental"
+      initialSelectedId={record}
       initial={(data || []) as Reservation[]}
     />
   );

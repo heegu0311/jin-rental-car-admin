@@ -18,23 +18,36 @@ export function RecordManager({
   kind,
   initial,
   title: customTitle,
+  initialCategory = "all",
+  initialSelectedId,
   description = "최근 500건을 조회합니다. 고객 정보와 요청 내용을 확인하고 처리 상태를 관리하세요.",
 }: {
   kind: "reservations" | "inquiries";
   initial: RecordRow[];
   title?: string;
+  initialCategory?: "all" | "new-car" | "rental";
+  initialSelectedId?: string;
   description?: string;
 }) {
   const [rows, setRows] = useState(initial),
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("all"),
-    [category, setCategory] = useState("all"),
+    [category, setCategory] = useState<string>(initialCategory),
     [fromDate, setFromDate] = useState(""),
     [toDate, setToDate] = useState(""),
     [page, setPage] = useState(0),
-    [selected, setSelected] = useState<RecordRow | null>(null),
-    [answer, setAnswer] = useState(""),
-    [status, setStatus] = useState("pending"),
+    [selected, setSelected] = useState<RecordRow | null>(
+      initial.find((row) => row.id === initialSelectedId) || null,
+    ),
+    [answer, setAnswer] = useState(
+      (
+        initial.find((row) => row.id === initialSelectedId) as
+          Inquiry | undefined
+      )?.answer_content || "",
+    ),
+    [status, setStatus] = useState<string>(
+      initial.find((row) => row.id === initialSelectedId)?.status || "pending",
+    ),
     [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const labels: Record<string, string> =

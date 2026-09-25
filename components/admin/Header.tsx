@@ -11,6 +11,7 @@ const titles: Record<string, string> = {
   "/events": "이벤트 관리",
   "/notices": "공지사항 관리",
   "/inquiries": "문의 관리",
+  "/consultations": "예약/문의 통합 관리",
   "/content": "웹사이트 콘텐츠 관리",
   "/settings": "사이트 설정",
   "/accident": "사고대차 안내 관리",

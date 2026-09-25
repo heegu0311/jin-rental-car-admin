@@ -1,7 +1,12 @@
 import { requireAdmin } from "@/lib/auth";
 import { RecordManager } from "@/components/shared/RecordManager";
 import type { Inquiry } from "@/lib/domain/contracts";
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ record?: string }>;
+}) {
+  const { record } = await searchParams;
   const { db } = await requireAdmin();
   const { data, error } = await db
     .from("inquiries")
@@ -9,5 +14,11 @@ export default async function Page() {
     .order("created_at", { ascending: false })
     .limit(500);
   if (error) throw new Error("조회 실패");
-  return <RecordManager kind="inquiries" initial={(data || []) as Inquiry[]} />;
+  return (
+    <RecordManager
+      kind="inquiries"
+      initialSelectedId={record}
+      initial={(data || []) as Inquiry[]}
+    />
+  );
 }

@@ -6,8 +6,10 @@ import { toast } from "sonner";
 import { ImagePlus, LoaderCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
-  ADMIN_IMAGE_MAX_BYTES,
+  ADMIN_IMAGE_ACCEPT,
+  imageGuide,
   uploadAdminImage,
+  type ImagePreset,
 } from "@/lib/storage/upload-image";
 
 interface ImageUploadFieldProps {
@@ -16,6 +18,7 @@ interface ImageUploadFieldProps {
   folder: string;
   label?: string;
   preview?: boolean;
+  preset?: ImagePreset;
 }
 
 export function ImageUploadField({
@@ -24,6 +27,7 @@ export function ImageUploadField({
   folder,
   label = "이미지 URL",
   preview = false,
+  preset = "thumbnail",
 }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -34,7 +38,7 @@ export function ImageUploadField({
     setError("");
     setUploading(true);
     try {
-      onChange(await uploadAdminImage(createClient(), file, folder));
+      onChange(await uploadAdminImage(createClient(), file, folder, preset));
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "이미지를 업로드하지 못했습니다.");
     } finally {
@@ -85,12 +89,12 @@ export function ImageUploadField({
         <input
           ref={inputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept={ADMIN_IMAGE_ACCEPT}
           className="sr-only"
           onChange={(event) => void handleFile(event.target.files?.[0])}
         />
       </div>
-      <p className="text-xs text-slate-500">JPG, PNG, WebP · 최대 {ADMIN_IMAGE_MAX_BYTES / (1024 * 1024)}MB</p>
+      <p className="text-xs leading-relaxed text-slate-500">{imageGuide(preset)}</p>
       {error ? <p role="alert" className="text-xs font-medium text-rose-600">{error}</p> : null}
     </div>
   );

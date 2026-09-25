@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   formatWon,
+  mobileImageVariant,
   rentalPeriod,
   rentalType,
   validPhone,
@@ -31,4 +32,21 @@ test("차량 옵션은 허용 목록 순서로 중복 없이 정규화", () => {
     vehicleOptions(["HUD", "열선시트", "HUD", "임의 옵션", null]),
     ["열선시트", "HUD"],
   );
+});
+test("관리자 업로드 이미지의 모바일 사본 주소만 계산", () => {
+  const base =
+    "https://x.supabase.co/storage/v1/object/public/site-assets/events";
+  const id = "0f8fad5b-d9cb-469f-a165-70867728950e";
+  assert.equal(
+    mobileImageVariant(`${base}/desktop/${id}.webp`),
+    `${base}/mobile/${id}.webp`,
+  );
+  assert.equal(mobileImageVariant(`${base}/${id}.webp`), null);
+  assert.equal(mobileImageVariant(`${base}/desktop/${id}.webp?x=1`), null);
+  assert.equal(
+    mobileImageVariant(`http://x.supabase.co/storage/v1/object/public/site-assets/events/desktop/${id}.webp`),
+    null,
+  );
+  assert.equal(mobileImageVariant("/empty.jpeg"), null);
+  assert.equal(mobileImageVariant(null), null);
 });

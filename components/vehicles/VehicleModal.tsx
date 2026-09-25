@@ -6,7 +6,12 @@ import dynamic from "next/dynamic";
 import { Car, VehicleUnit, Category } from "./types";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { uploadAdminImage } from "@/lib/storage/upload-image";
+import {
+  ADMIN_IMAGE_ACCEPT,
+  IMAGE_PRESETS,
+  imageGuide,
+  uploadAdminImage,
+} from "@/lib/storage/upload-image";
 import { VEHICLE_OPTIONS, vehicleOptions } from "@/lib/domain/contracts";
 import {
   Car as CarIcon,
@@ -129,36 +134,26 @@ export function VehicleModal({
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
-    if (
-      !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
-      file.size > 5 * 1024 * 1024
-    ) {
-      toast.error("5MB 이하 JPG, PNG, WebP 이미지를 선택해주세요.");
-      return;
-    }
 
     setIsUploading(true);
     try {
-      const publicUrl = await uploadAdminImage(supabase, file, "vehicles");
-      setFormData({ ...formData, image: publicUrl });
+      const publicUrl = await uploadAdminImage(supabase, file, "vehicles", "thumbnail");
+      setFormData((current) => ({ ...current, image: publicUrl }));
     } catch (error) {
-      console.error("Error uploading image:", error);
-      toast.error("이미지 업로드 중 오류가 발생했습니다.");
+      toast.error(
+        error instanceof Error ? error.message : "이미지 업로드 중 오류가 발생했습니다.",
+      );
     } finally {
       setIsUploading(false);
+      input.value = "";
     }
   };
 
-  const handleEditorImageUpload = async (file: File): Promise<string> => {
-    if (
-      !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
-      file.size > 5 * 1024 * 1024
-    )
-      throw new Error("5MB 이하 이미지만 업로드 가능합니다.");
-    return uploadAdminImage(supabase, file, "vehicle-content");
-  };
+  const handleEditorImageUpload = (file: File): Promise<string> =>
+    uploadAdminImage(supabase, file, "vehicle-content");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -306,7 +301,7 @@ export function VehicleModal({
                 </label>
                 <div className="relative group">
                   {formData.image ? (
-                    <div className="relative h-48 w-full rounded-2xl overflow-hidden border border-slate-200">
+                    <div className="relative aspect-[3/2] w-full rounded-2xl overflow-hidden border border-slate-200">
                       <Image
                         src={formData.image}
                         alt="Preview"
@@ -320,7 +315,7 @@ export function VehicleModal({
                           <input
                             type="file"
                             className="hidden"
-                            accept="image/*"
+                            accept={ADMIN_IMAGE_ACCEPT}
                             onChange={handleImageUpload}
                             disabled={isUploading}
                           />
@@ -339,7 +334,7 @@ export function VehicleModal({
                   ) : (
                     <label
                       className={cn(
-                        "flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-2xl cursor-pointer transition-all",
+                        "flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed rounded-2xl cursor-pointer transition-all",
                         isUploading
                           ? "bg-slate-50 border-slate-200"
                           : "bg-slate-50 border-slate-200 hover:border-blue-400 hover:bg-blue-50/30",
@@ -362,7 +357,8 @@ export function VehicleModal({
                               클릭하여 이미지 업로드
                             </p>
                             <p className="text-[10px] text-slate-400 mt-1">
-                              PNG, JPG, WebP (최대 5MB)
+                              권장 비율 {IMAGE_PRESETS.thumbnail.ratio} (예:{" "}
+                              {IMAGE_PRESETS.thumbnail.example})
                             </p>
                           </div>
                         </div>
@@ -370,13 +366,16 @@ export function VehicleModal({
                       <input
                         type="file"
                         className="hidden"
-                        accept="image/*"
+                        accept={ADMIN_IMAGE_ACCEPT}
                         onChange={handleImageUpload}
                         disabled={isUploading}
                       />
                     </label>
                   )}
                 </div>
+                <p className="ml-1 text-[11px] leading-relaxed text-slate-400">
+                  {imageGuide("thumbnail")}
+                </p>
               </div>
 
               <div className="space-y-1.5 pt-4">

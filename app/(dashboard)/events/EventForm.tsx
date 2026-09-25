@@ -288,7 +288,7 @@ export function EventForm({ initialData }: EventFormProps) {
             <div className="space-y-4">
               <div
                 className={cn(
-                  "relative aspect-video rounded-xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden bg-slate-50 group",
+                  "relative aspect-[3/2] rounded-xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden bg-slate-50 group",
                   imageUrl
                     ? "border-solid border-slate-200"
                     : "border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition-all",
@@ -299,7 +299,7 @@ export function EventForm({ initialData }: EventFormProps) {
                     <Image
                       unoptimized
                       width={1200}
-                      height={600}
+                      height={800}
                       src={imageUrl}
                       alt="Thumbnail preview"
                       className="w-full h-full object-cover"
@@ -332,6 +332,7 @@ export function EventForm({ initialData }: EventFormProps) {
                 value={imageUrl}
                 onChange={setImageUrl}
                 folder="events"
+                preset="thumbnail"
               />
             </div>
           </div>

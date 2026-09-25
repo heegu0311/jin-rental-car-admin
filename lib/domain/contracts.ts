@@ -136,3 +136,15 @@ export function vehicleOptions(values: readonly unknown[]): VehicleOption[] {
   );
   return VEHICLE_OPTIONS.filter((option) => selected.has(option));
 }
+/**
+ * 관리자 업로드 이미지는 site-assets/{folder}/desktop/{uuid}.{webp|jpg}와
+ * 같은 이름의 mobile/ 사본으로 저장한다. DB에는 desktop URL만 저장한다.
+ */
+export const IMAGE_VARIANTS = ["desktop", "mobile"] as const;
+export type ImageVariant = (typeof IMAGE_VARIANTS)[number];
+const variantImagePattern =
+  /^(https:\/\/[^/?#]+\/storage\/v1\/object\/public\/site-assets\/[a-z0-9-]+\/)desktop(\/[0-9a-f-]{36}\.(?:webp|jpg))$/i;
+export function mobileImageVariant(url: string | null | undefined) {
+  const match = url?.match(variantImagePattern);
+  return match ? `${match[1]}mobile${match[2]}` : null;
+}

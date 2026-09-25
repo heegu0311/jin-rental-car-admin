@@ -183,6 +183,7 @@ export function ContentEditor({ initial }: { initial: SiteContent }) {
               value={draft.image_url}
               onChange={(image_url) => update({ ...draft, image_url })}
               folder={`content-${slug}`}
+              preset="banner"
               preview
             />
           </div>

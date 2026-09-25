@@ -34,7 +34,7 @@ export function ConsultationList({
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState("all");
   const [status, setStatus] = useState("all");
-  const [receiptMonth, setReceiptMonth] = useState("");
+  const [receiptMonth, setReceiptMonth] = useState(() => new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }).slice(0, 7));
   const [page, setPage] = useState(0);
   const rows: Row[] = [
     ...reservations.map((record): Row => ({

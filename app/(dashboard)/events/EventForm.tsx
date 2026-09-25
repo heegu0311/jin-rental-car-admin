@@ -2,12 +2,12 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { addMonths } from "date-fns";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Save,
   Image as ImageIcon,
-  Calendar as CalendarIcon,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -24,6 +24,7 @@ const RichEditor = dynamic(
   },
 );
 import { cn } from "@/lib/utils";
+import { AdminCalendarField } from "@/components/shared/AdminCalendarField";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import { uploadAdminImage } from "@/lib/storage/upload-image";
 import { toast } from "sonner";
@@ -58,14 +59,14 @@ export function EventForm({ initialData }: EventFormProps) {
       ? new Date(initialData.start_date).toLocaleDateString("en-CA", {
           timeZone: "Asia/Seoul",
         })
-      : "",
+      : new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Seoul" }),
   );
   const [endDate, setEndDate] = useState(
     initialData?.end_date
       ? new Date(initialData.end_date).toLocaleDateString("en-CA", {
           timeZone: "Asia/Seoul",
         })
-      : "",
+      : addMonths(new Date(), 1).toLocaleDateString("en-CA", { timeZone: "Asia/Seoul" }),
   );
   const [isPopup, setIsPopup] = useState(initialData?.is_popup ?? false);
   const [isActive, setIsActive] = useState(initialData?.is_active ?? true);
@@ -248,33 +249,11 @@ export function EventForm({ initialData }: EventFormProps) {
                 공개 기간
               </div>
               <div className="grid grid-cols-1 gap-4">
-                <div className="relative">
-                  <CalendarIcon
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                    size={16}
-                  />
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                  />
-                </div>
+                <AdminCalendarField value={startDate} onChange={setStartDate} label="공개 시작일" />
                 <div className="flex items-center justify-center text-slate-400 font-bold">
                   ~
                 </div>
-                <div className="relative">
-                  <CalendarIcon
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                    size={16}
-                  />
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                  />
-                </div>
+                <AdminCalendarField value={endDate} onChange={setEndDate} label="공개 종료일" />
               </div>
             </div>
           </div>

@@ -35,7 +35,7 @@ export function RecordManager({
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("all"),
     [category, setCategory] = useState<string>(initialCategory),
-    [receiptMonth, setReceiptMonth] = useState(""),
+    [receiptMonth, setReceiptMonth] = useState(() => new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }).slice(0, 7)),
     [page, setPage] = useState(0),
     [selected, setSelected] = useState<RecordRow | null>(
       initial.find((row) => row.id === initialSelectedId) || null,

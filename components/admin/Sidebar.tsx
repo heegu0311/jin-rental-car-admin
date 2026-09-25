@@ -10,6 +10,7 @@ import {
   FileText,
   LogOut,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/app/login/actions";
@@ -48,16 +49,17 @@ export function Sidebar({
       className={`fixed inset-y-0 left-0 z-50 flex w-[260px] shrink-0 flex-col bg-slate-900 text-slate-400 transition-transform lg:relative lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
     >
       <div className="flex items-center justify-between border-b border-slate-800 p-6">
-        <Link
-          href="/"
-          className="flex items-center gap-2.5 text-base font-extrabold text-white"
-        >
-          <span className="size-8 shrink-0 rounded-lg bg-blue-900" />
-          <span>
-            JIN RENTAL CAR
-            <span className="mt-1 block text-[10px] tracking-widest text-sky-400">
-              ADMIN SYSTEM
-            </span>
+        <Link href="/" aria-label="진렌트카 관리자 홈" className="block">
+          <Image
+            src="/jintrental-logo-white.png"
+            width={136}
+            height={64}
+            alt="진렌트카"
+            priority
+            className="h-16 w-[136px] object-contain"
+          />
+          <span className="block pl-3 text-[10px] font-extrabold tracking-widest text-sky-400">
+            ADMIN SYSTEM
           </span>
         </Link>
         <button

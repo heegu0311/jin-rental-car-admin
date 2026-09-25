@@ -1,5 +1,5 @@
-import { NoticeForm } from '../NoticeForm'
+import { NoticeForm } from "../NoticeForm";
 
 export default function NewNoticePage() {
-  return <NoticeForm />
+  return <NoticeForm />;
 }

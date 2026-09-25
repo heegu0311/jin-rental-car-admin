@@ -1,20 +1,20 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Image from 'next/image'
+import { useState } from "react";
+import Image from "next/image";
 
 interface VehicleImageProps {
-  src?: string
-  alt: string
-  priority?: boolean
+  src?: string;
+  alt: string;
+  priority?: boolean;
 }
 
 export function VehicleImage({ src, alt, priority }: VehicleImageProps) {
-  const [error, setError] = useState(false)
+  const [error, setError] = useState(false);
 
   return (
     <Image
-      src={error || !src ? '/empty.jpeg' : src}
+      src={error || !src ? "/empty.jpeg" : src}
       alt={alt}
       fill
       className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -22,5 +22,5 @@ export function VehicleImage({ src, alt, priority }: VehicleImageProps) {
       priority={priority}
       onError={() => setError(true)}
     />
-  )
+  );
 }

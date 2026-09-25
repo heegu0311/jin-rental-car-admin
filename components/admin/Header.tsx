@@ -2,6 +2,7 @@
 import { usePathname } from "next/navigation";
 import { UserRound } from "lucide-react";
 import { PushToggle } from "@/components/admin/PushToggle";
+import { InstallGuide } from "@/components/admin/InstallGuide";
 const titles: Record<string, string> = {
   "/": "대시보드 개요",
   "/vehicles": "차량 관리",
@@ -26,15 +27,16 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
       >
         메뉴
       </button>
-      <p className="text-lg font-bold text-slate-900">
+      <p className="min-w-0 truncate text-lg font-bold text-slate-900">
         {titles[key] || "진렌트카 운영 관리"}
       </p>
-      <div className="ml-auto flex items-center gap-3 text-xs">
+      <div className="ml-auto flex shrink-0 items-center gap-2 text-xs sm:gap-3">
+        <InstallGuide />
         <PushToggle />
         <span className="grid size-8 place-items-center rounded-full bg-slate-100 text-slate-500">
           <UserRound size={16} />
         </span>
-        <strong>관리자</strong>
+        <strong className="hidden sm:inline">관리자</strong>
         <span className="hidden text-slate-500 sm:inline">운영 관리</span>
       </div>
     </header>

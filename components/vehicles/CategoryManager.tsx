@@ -66,7 +66,7 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
   };
 
   return (
-    <>
+    <div>
       <button
         onClick={() => {
           setIsOpen(true);
@@ -141,6 +141,6 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

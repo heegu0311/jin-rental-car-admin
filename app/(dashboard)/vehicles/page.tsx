@@ -364,7 +364,7 @@ export default function VehiclesPage() {
 
       {/* Category Tabs */}
       {categories.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 -mb-2 no-scrollbar">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 -mb-1 no-scrollbar">
           <button
             onClick={() => setSelectedCategoryId(null)}
             className={cn(

@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { Dialog } from "radix-ui";
 import { DataTable } from "./DataTable";
+import { ReservationDetail } from "./ReservationDetail";
 import { toast } from "sonner";
 import { PageHeading, StatusBadge } from "./feedback";
 import {
@@ -209,18 +210,7 @@ export function RecordManager({
             </Dialog.Description>
             {selected &&
               ("car_name" in selected ? (
-                <dl className="grid grid-cols-[90px_1fr] gap-3 rounded-xl bg-slate-50 p-4 text-sm">
-                  <dt>희망 차량</dt>
-                  <dd>{selected.car_name}</dd>
-                  <dt>시작일</dt>
-                  <dd>{selected.start_date}</dd>
-                  <dt>이용 기간</dt>
-                  <dd>{selected.period}</dd>
-                  <dt>추가 요청</dt>
-                  <dd className="whitespace-pre-wrap">
-                    {selected.options?.join("\n") || "없음"}
-                  </dd>
-                </dl>
+                <ReservationDetail reservation={selected} />
               ) : (
                 <div className="space-y-3 rounded-xl bg-slate-50 p-4">
                   <h3 className="font-semibold">{selected.title}</h3>

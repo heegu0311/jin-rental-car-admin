@@ -4,6 +4,7 @@ import { Dialog } from "radix-ui";
 import { DataTable } from "./DataTable";
 import { ReservationDetail } from "./ReservationDetail";
 import { toast } from "sonner";
+import { Phone } from "lucide-react";
 import { PageHeading, StatusBadge } from "./feedback";
 import {
   type Reservation,
@@ -205,8 +206,16 @@ export function RecordManager({
             <Dialog.Title className="text-xl font-bold">
               {title} 상세
             </Dialog.Title>
-            <Dialog.Description className="text-sm text-slate-500">
-              {selected?.user_name} · {selected?.user_phone}
+            <Dialog.Description asChild>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-slate-500">신청자</p>
+                  <p className="mt-0.5 text-lg font-bold text-slate-900">
+                    {selected?.user_name}
+                  </p>
+                </div>
+                {selected && <PhoneLink phone={selected.user_phone} />}
+              </div>
             </Dialog.Description>
             {selected &&
               ("car_name" in selected ? (
@@ -284,5 +293,26 @@ export function RecordManager({
         </Dialog.Portal>
       </Dialog.Root>
     </div>
+  );
+}
+
+function PhoneLink({ phone }: { phone: string }) {
+  const digits = phone.replace(/\D/g, "");
+  const display =
+    digits.length === 11
+      ? `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+      : digits.length === 10
+        ? `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`
+        : phone;
+  if (!digits) return <span className="text-sm text-slate-500">{phone}</span>;
+  return (
+    <a
+      href={`tel:${digits}`}
+      aria-label={`${display}로 전화 걸기`}
+      className="inline-flex h-11 items-center gap-2 rounded-lg bg-blue-50 px-4 text-base font-bold tabular-nums text-blue-700 hover:bg-blue-100"
+    >
+      <Phone aria-hidden className="size-4" />
+      {display}
+    </a>
   );
 }

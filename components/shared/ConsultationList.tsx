@@ -85,19 +85,19 @@ export function ConsultationList({
           onChange={(e) => changeFilter(setQuery, e.target.value)}
           className="h-11 min-w-48 flex-1 rounded-lg border border-slate-200 px-4 text-sm"
         />
-        <select
-          aria-label="접수 유형"
-          value={kind}
-          onChange={(e) => changeFilter(setKind, e.target.value)}
-          className="h-11 rounded-lg border border-slate-200 px-3 text-sm"
-        >
-          <option value="all">전체 유형</option>
-          <option value="rental">기간 렌트</option>
-          <option value="new-car">신차 장기</option>
-          <option value="inquiry">1:1 문의</option>
-        </select>
         <StatusChips
-          label="처리 상태 필터"
+          label="접수 유형으로 보기"
+          value={kind}
+          options={[
+            { value: "all", label: "전체 유형" },
+            { value: "rental", label: "기간 렌트" },
+            { value: "new-car", label: "신차 장기" },
+            { value: "inquiry", label: "1:1 문의" },
+          ]}
+          onChange={(value) => changeFilter(setKind, value)}
+        />
+        <StatusChips
+          label="처리 상태로 보기"
           value={status}
           options={[
             { value: "all", label: "전체 상태" },

@@ -152,7 +152,7 @@ export function RecordManager({
           />
         </label>
         <StatusChips
-          label="처리 상태 필터"
+          label="처리 상태로 보기"
           value={filter}
           options={[
             { value: "all", label: "전체 상태" },
@@ -166,31 +166,40 @@ export function RecordManager({
             setPage(0);
           }}
         />
-        <select
-          aria-label={kind === "reservations" ? "상담 구분" : "문의 분류"}
-          value={category}
-          onChange={(e) => {
-            setCategory(e.target.value);
-            setPage(0);
-          }}
-          className="h-11 rounded-lg border border-slate-200 px-4 text-sm"
-        >
-          <option value="all">
-            {kind === "reservations" ? "전체 상담" : "전체 문의"}
-          </option>
-          {kind === "reservations" ? (
-            <>
-              <option value="new-car">신차 상담</option>
-              <option value="rental">예약 상담</option>
-            </>
-          ) : (
-            inquiryCategories.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))
-          )}
-        </select>
+        {kind === "reservations" ? (
+          <StatusChips
+            label="상담 유형으로 보기"
+            value={category}
+            options={[
+              { value: "all", label: "전체 상담" },
+              { value: "rental", label: "기간 렌트" },
+              { value: "new-car", label: "신차 장기" },
+            ]}
+            onChange={(value) => {
+              setCategory(value);
+              setPage(0);
+            }}
+          />
+        ) : (
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-700">
+            문의 분류로 보기
+            <select
+              value={category}
+              onChange={(e) => {
+                setCategory(e.target.value);
+                setPage(0);
+              }}
+              className="h-11 rounded-lg border border-slate-200 px-4 text-sm font-normal"
+            >
+              <option value="all">전체 문의</option>
+              {inquiryCategories.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="flex items-center gap-2 text-sm text-slate-600">
           접수 시작
           <input
@@ -348,7 +357,7 @@ export function RecordManager({
             <div className="space-y-2 text-sm font-semibold">
               <p>처리 상태</p>
               <StatusChips
-                label="처리 상태 변경"
+                label="처리 상태 선택 · 저장을 눌러 반영"
                 value={status}
                 options={Object.entries(labels).map(([value, label]) => ({
                   value,

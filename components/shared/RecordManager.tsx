@@ -28,6 +28,9 @@ export function RecordManager({
   const [rows, setRows] = useState(initial),
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("all"),
+    [category, setCategory] = useState("all"),
+    [fromDate, setFromDate] = useState(""),
+    [toDate, setToDate] = useState(""),
     [page, setPage] = useState(0),
     [selected, setSelected] = useState<RecordRow | null>(null),
     [answer, setAnswer] = useState(""),
@@ -36,9 +39,37 @@ export function RecordManager({
   const lock = useRef(false);
   const labels: Record<string, string> =
     kind === "reservations" ? RESERVATION_LABELS : INQUIRY_LABELS;
+  const inquiryCategories =
+    kind === "inquiries"
+      ? Array.from(
+          new Set(
+            rows.flatMap((r) => {
+              if (!("title" in r)) return [];
+              const match = r.title.match(/^\[([^\]]+)\]/);
+              return match ? [match[1]] : ["일반 문의"];
+            }),
+          ),
+        ).sort()
+      : [];
   const filtered = rows.filter(
     (r) =>
       (filter === "all" || r.status === filter) &&
+      (category === "all" ||
+        (kind === "reservations"
+          ? ("car_name" in r && r.car_name.startsWith("[신차]")
+              ? "new-car"
+              : "rental") === category
+          : ("title" in r &&
+              (r.title.match(/^\[([^\]]+)\]/)?.[1] || "일반 문의")) ===
+            category)) &&
+      (!fromDate ||
+        new Date(r.created_at).toLocaleDateString("sv-SE", {
+          timeZone: "Asia/Seoul",
+        }) >= fromDate) &&
+      (!toDate ||
+        new Date(r.created_at).toLocaleDateString("sv-SE", {
+          timeZone: "Asia/Seoul",
+        }) <= toDate) &&
       `${r.user_name} ${r.user_phone} ${"car_name" in r ? r.car_name : r.title}`
         .toLowerCase()
         .includes(query.toLowerCase()),
@@ -122,6 +153,59 @@ export function RecordManager({
             </option>
           ))}
         </select>
+        <select
+          aria-label={kind === "reservations" ? "상담 구분" : "문의 분류"}
+          value={category}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            setPage(0);
+          }}
+          className="h-11 rounded-lg border border-slate-200 px-4 text-sm"
+        >
+          <option value="all">
+            {kind === "reservations" ? "전체 상담" : "전체 문의"}
+          </option>
+          {kind === "reservations" ? (
+            <>
+              <option value="new-car">신차 상담</option>
+              <option value="rental">예약 상담</option>
+            </>
+          ) : (
+            inquiryCategories.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))
+          )}
+        </select>
+        <label className="flex items-center gap-2 text-sm text-slate-600">
+          접수 시작
+          <input
+            aria-label="접수 시작일"
+            type="date"
+            value={fromDate}
+            max={toDate || undefined}
+            onChange={(e) => {
+              setFromDate(e.target.value);
+              setPage(0);
+            }}
+            className="h-11 rounded-lg border border-slate-200 px-2"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm text-slate-600">
+          접수 종료
+          <input
+            aria-label="접수 종료일"
+            type="date"
+            value={toDate}
+            min={fromDate || undefined}
+            onChange={(e) => {
+              setToDate(e.target.value);
+              setPage(0);
+            }}
+            className="h-11 rounded-lg border border-slate-200 px-2"
+          />
+        </label>
       </div>
       <p className="text-sm text-slate-500">총 {filtered.length}건</p>
       <DataTable<RecordRow>
@@ -129,14 +213,16 @@ export function RecordManager({
         rows={filtered.slice(page * 20, (page + 1) * 20)}
         columns={[
           ...(kind === "reservations"
-            ? [{
-                key: "consultationType",
-                label: "상담 구분",
-                render: (r: RecordRow) =>
-                  "car_name" in r && r.car_name.startsWith("[신차]")
-                    ? "신차 상담"
-                    : "예약 상담",
-              }]
+            ? [
+                {
+                  key: "consultationType",
+                  label: "상담 구분",
+                  render: (r: RecordRow) =>
+                    "car_name" in r && r.car_name.startsWith("[신차]")
+                      ? "신차 상담"
+                      : "예약 상담",
+                },
+              ]
             : []),
           {
             key: "status",

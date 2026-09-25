@@ -34,6 +34,7 @@ export default function VehiclesPage() {
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
+  const [unitFilter, setUnitFilter] = useState("all");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
   );
@@ -134,7 +135,13 @@ export default function VehiclesPage() {
     const matchesCategory = selectedCategoryId
       ? car.category_id === selectedCategoryId
       : true;
-    return matchesSearch && matchesBadge && matchesCategory;
+    const matchesUnits =
+      unitFilter === "all" ||
+      (unitFilter === "available" && (car.availableCount || 0) > 0) ||
+      (unitFilter === "rented" && (car.rentedCount || 0) > 0) ||
+      (unitFilter === "maintenance" && (car.maintenanceCount || 0) > 0) ||
+      (unitFilter === "none" && (car.unitCount || 0) === 0);
+    return matchesSearch && matchesBadge && matchesCategory && matchesUnits;
   });
 
   const totalUnits = cars.reduce((acc, car) => acc + (car.unitCount || 0), 0);
@@ -410,6 +417,18 @@ export default function VehiclesPage() {
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
             />
           </div>
+          <select
+            aria-label="실차 상태"
+            value={unitFilter}
+            onChange={(e) => setUnitFilter(e.target.value)}
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+          >
+            <option value="all">전체 실차 상태</option>
+            <option value="available">대여 가능 차량 있음</option>
+            <option value="rented">대여 중 차량 있음</option>
+            <option value="maintenance">정비 중 차량 있음</option>
+            <option value="none">등록된 실차 없음</option>
+          </select>
 
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth">
             <button

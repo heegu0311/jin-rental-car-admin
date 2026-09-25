@@ -38,6 +38,7 @@ export default function EventsPage() {
   const [loadError, setLoadError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
+  const [schedule, setSchedule] = useState("all");
   const supabase = createClient();
 
   useEffect(() => {
@@ -98,6 +99,9 @@ export default function EventsPage() {
   };
 
   const filteredEvents = events.filter((event) => {
+    const today = new Date().toLocaleDateString("sv-SE", {
+      timeZone: "Asia/Seoul",
+    });
     const matchesSearch = event.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
@@ -107,7 +111,14 @@ export default function EventsPage() {
         : filter === "active"
           ? event.is_active
           : !event.is_active;
-    return matchesSearch && matchesFilter;
+    const matchesSchedule =
+      schedule === "all" ||
+      (schedule === "upcoming" && event.start_date > today) ||
+      (schedule === "current" &&
+        event.start_date <= today &&
+        event.end_date >= today) ||
+      (schedule === "ended" && event.end_date < today);
+    return matchesSearch && matchesFilter && matchesSchedule;
   });
 
   return (
@@ -151,7 +162,18 @@ export default function EventsPage() {
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            aria-label="이벤트 기간"
+            value={schedule}
+            onChange={(e) => setSchedule(e.target.value)}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+          >
+            <option value="all">전체 기간</option>
+            <option value="upcoming">시작 전</option>
+            <option value="current">기간 중</option>
+            <option value="ended">기간 종료</option>
+          </select>
           <button
             onClick={() => setFilter("all")}
             className={cn(

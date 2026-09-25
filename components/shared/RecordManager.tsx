@@ -34,8 +34,8 @@ export function RecordManager({
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("all"),
     [category, setCategory] = useState<string>(initialCategory),
-    [fromDate, setFromDate] = useState(""),
-    [toDate, setToDate] = useState(""),
+    [fromMonth, setFromMonth] = useState(""),
+    [toMonth, setToMonth] = useState(""),
     [page, setPage] = useState(0),
     [selected, setSelected] = useState<RecordRow | null>(
       initial.find((row) => row.id === initialSelectedId) || null,
@@ -76,14 +76,18 @@ export function RecordManager({
           : ("title" in r &&
               (r.title.match(/^\[([^\]]+)\]/)?.[1] || "일반 문의")) ===
             category)) &&
-      (!fromDate ||
-        new Date(r.created_at).toLocaleDateString("sv-SE", {
-          timeZone: "Asia/Seoul",
-        }) >= fromDate) &&
-      (!toDate ||
-        new Date(r.created_at).toLocaleDateString("sv-SE", {
-          timeZone: "Asia/Seoul",
-        }) <= toDate) &&
+      (!fromMonth ||
+        new Date(r.created_at)
+          .toLocaleDateString("sv-SE", {
+            timeZone: "Asia/Seoul",
+          })
+          .slice(0, 7) >= fromMonth) &&
+      (!toMonth ||
+        new Date(r.created_at)
+          .toLocaleDateString("sv-SE", {
+            timeZone: "Asia/Seoul",
+          })
+          .slice(0, 7) <= toMonth) &&
       `${r.user_name} ${r.user_phone} ${"car_name" in r ? r.car_name : r.title}`
         .toLowerCase()
         .includes(query.toLowerCase()),
@@ -201,28 +205,28 @@ export function RecordManager({
           </label>
         )}
         <label className="flex items-center gap-2 text-sm text-slate-600">
-          접수 시작
+          접수 시작월
           <input
-            aria-label="접수 시작일"
-            type="date"
-            value={fromDate}
-            max={toDate || undefined}
+            aria-label="접수 시작월"
+            type="month"
+            value={fromMonth}
+            max={toMonth || undefined}
             onChange={(e) => {
-              setFromDate(e.target.value);
+              setFromMonth(e.target.value);
               setPage(0);
             }}
             className="h-11 rounded-lg border border-slate-200 px-2"
           />
         </label>
         <label className="flex items-center gap-2 text-sm text-slate-600">
-          접수 종료
+          접수 종료월
           <input
-            aria-label="접수 종료일"
-            type="date"
-            value={toDate}
-            min={fromDate || undefined}
+            aria-label="접수 종료월"
+            type="month"
+            value={toMonth}
+            min={fromMonth || undefined}
             onChange={(e) => {
-              setToDate(e.target.value);
+              setToMonth(e.target.value);
               setPage(0);
             }}
             className="h-11 rounded-lg border border-slate-200 px-2"

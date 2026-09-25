@@ -57,5 +57,5 @@ export async function saveContent(value: SiteContent) {
   revalidatePath("/content");
   revalidatePath(`/content/${value.slug}`);
   const site = await refreshPublicSite();
-  return { success: true, siteRefreshed: site.ok };
+  return { success: true, site };
 }

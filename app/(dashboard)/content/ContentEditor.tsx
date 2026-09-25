@@ -110,11 +110,11 @@ export function ContentEditor({ initial }: { initial: SiteContent }) {
         setBusy(true);
         try {
           const r = await saveContent(draft);
-          if (r.error) toast.error(r.error);
+          if (r.error || !r.site) toast.error(r.error);
           else
             notifySaved(
               "저장되었습니다. 공개 상태와 웹사이트 내용을 확인해주세요.",
-              r.siteRefreshed !== false,
+              r.site,
             );
         } catch {
           toast.error("저장 요청에 실패했습니다. 다시 시도해주세요.");

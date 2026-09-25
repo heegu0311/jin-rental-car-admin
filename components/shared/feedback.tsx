@@ -76,7 +76,7 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex rounded-md px-2.5 py-1 text-xs font-semibold",
+        "inline-flex shrink-0 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-semibold",
         ["answered", "confirmed", "available", "published"].includes(tone)
           ? "bg-emerald-50 text-emerald-700"
           : ["cancelled", "maintenance"].includes(tone)

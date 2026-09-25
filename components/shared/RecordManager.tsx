@@ -163,7 +163,7 @@ export function RecordManager({
             label: "관리",
             render: (r) => (
               <button
-                className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-blue-600"
+                className="whitespace-nowrap rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-blue-600"
                 onClick={() => {
                   setSelected(r);
                   setStatus(r.status);

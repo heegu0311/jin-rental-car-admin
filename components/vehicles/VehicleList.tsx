@@ -338,10 +338,10 @@ export function VehicleList({
                 </td>
                 <td className="px-6 py-4 text-center">
                   <div className="flex flex-col items-center gap-1">
-                    <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                    <span className="whitespace-nowrap text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
                       {car.year}
                     </span>
-                    <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                    <span className="whitespace-nowrap text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
                       {car.fuel}
                     </span>
                   </div>
@@ -352,7 +352,7 @@ export function VehicleList({
                   </span>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <div className="inline-flex flex-col gap-1 rounded-lg bg-slate-100 px-3 py-2 text-left text-[11px] font-semibold">
+                  <div className="inline-flex flex-col gap-1 whitespace-nowrap rounded-lg bg-slate-100 px-3 py-2 text-left text-[11px] font-semibold">
                     <span className="text-emerald-700">
                       대여 가능 {car.availableCount ?? 0}대
                     </span>
@@ -366,7 +366,7 @@ export function VehicleList({
                 </td>
                 <td className="px-6 py-4 text-center">
                   {car.badge ? (
-                    <span className="inline-block px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                    <span className="inline-block whitespace-nowrap px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
                       {car.badge}
                     </span>
                   ) : (

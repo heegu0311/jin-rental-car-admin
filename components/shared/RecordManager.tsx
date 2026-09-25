@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { Dialog } from "radix-ui";
 import { DataTable } from "./DataTable";
 import { ReservationDetail } from "./ReservationDetail";
+import { StatusChips } from "./StatusChips";
 import { toast } from "sonner";
 import { Phone } from "lucide-react";
 import { PageHeading, StatusBadge } from "./feedback";
@@ -150,22 +151,21 @@ export function RecordManager({
             className="h-11 w-full min-w-48 rounded-lg border border-slate-200 px-4 text-sm"
           />
         </label>
-        <select
-          aria-label="처리 상태"
+        <StatusChips
+          label="처리 상태 필터"
           value={filter}
-          onChange={(e) => {
-            setFilter(e.target.value);
+          options={[
+            { value: "all", label: "전체 상태" },
+            ...Object.entries(labels).map(([value, label]) => ({
+              value,
+              label,
+            })),
+          ]}
+          onChange={(value) => {
+            setFilter(value);
             setPage(0);
           }}
-          className="rounded-lg border border-slate-200 px-4 text-sm"
-        >
-          <option value="all">전체 상태</option>
-          {Object.entries(labels).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v}
-            </option>
-          ))}
-        </select>
+        />
         <select
           aria-label={kind === "reservations" ? "상담 구분" : "문의 분류"}
           value={category}
@@ -345,21 +345,19 @@ export function RecordManager({
                   )}
                 </div>
               ))}
-            <label className="block space-y-2 text-sm font-semibold">
-              처리 상태
-              <select
-                disabled={busy}
+            <div className="space-y-2 text-sm font-semibold">
+              <p>처리 상태</p>
+              <StatusChips
+                label="처리 상태 변경"
                 value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="mt-2 block h-11 w-full rounded-lg border border-slate-200 px-3"
-              >
-                {Object.entries(labels).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v}
-                  </option>
-                ))}
-              </select>
-            </label>
+                options={Object.entries(labels).map(([value, label]) => ({
+                  value,
+                  label,
+                }))}
+                onChange={setStatus}
+                disabled={busy}
+              />
+            </div>
             {kind === "inquiries" && (
               <label className="block text-sm font-semibold">
                 답변 / 처리 기록

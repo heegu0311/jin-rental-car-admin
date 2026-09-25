@@ -6,6 +6,7 @@ import type { Inquiry, Reservation } from "@/lib/domain/contracts";
 import { INQUIRY_LABELS, RESERVATION_LABELS } from "@/lib/domain/contracts";
 import { DataTable } from "./DataTable";
 import { PageHeading, StatusBadge } from "./feedback";
+import { StatusChips } from "./StatusChips";
 
 type Row =
   | {
@@ -95,18 +96,18 @@ export function ConsultationList({
           <option value="new-car">신차 장기</option>
           <option value="inquiry">1:1 문의</option>
         </select>
-        <select
-          aria-label="처리 상태"
+        <StatusChips
+          label="처리 상태 필터"
           value={status}
-          onChange={(e) => changeFilter(setStatus, e.target.value)}
-          className="h-11 rounded-lg border border-slate-200 px-3 text-sm"
-        >
-          <option value="all">전체 상태</option>
-          <option value="pending">대기중</option>
-          <option value="confirmed">상담완료</option>
-          <option value="cancelled">취소</option>
-          <option value="answered">답변완료</option>
-        </select>
+          options={[
+            { value: "all", label: "전체 상태" },
+            { value: "pending", label: "대기중" },
+            { value: "confirmed", label: "상담완료" },
+            { value: "cancelled", label: "취소" },
+            { value: "answered", label: "답변완료" },
+          ]}
+          onChange={(value) => changeFilter(setStatus, value)}
+        />
         <label className="flex items-center gap-2 text-sm text-slate-600">
           접수 시작{" "}
           <input

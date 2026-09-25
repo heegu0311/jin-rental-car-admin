@@ -1,6 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import { UserRound } from "lucide-react";
+import { PushToggle } from "@/components/admin/PushToggle";
 const titles: Record<string, string> = {
   "/": "대시보드 개요",
   "/vehicles": "차량 관리",
@@ -29,6 +30,7 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
         {titles[key] || "진렌트카 운영 관리"}
       </p>
       <div className="ml-auto flex items-center gap-3 text-xs">
+        <PushToggle />
         <span className="grid size-8 place-items-center rounded-full bg-slate-100 text-slate-500">
           <UserRound size={16} />
         </span>

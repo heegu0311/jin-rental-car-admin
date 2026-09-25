@@ -63,3 +63,7 @@ Wireframe 네이비·블루 기준. Figma [개발용 컴포넌트·작업 맵](h
 - Supabase 보안 진단에서 기존 함수 `handle_new_user`, `handle_updated_at`의 [search_path 경고](https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable), `handle_new_user`·`rls_auto_enable`의 [SECURITY DEFINER 실행 권한 경고](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable), [유출 비밀번호 보호 비활성](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)이 남아 있다. 이번 마이그레이션에서 새로 만든 함수는 없다. 별도 인증 운영 점검 대상으로 기록한다.
 
 실행: web에서 `pnpm dev --port 3100`, admin에서 `pnpm dev --port 3101`. 현재 미리보기는 [웹](http://localhost:3100) / [어드민](http://localhost:3101). 외부 배포 주소가 아니다.
+
+## 33 — 관리자 PWA 푸시 알림 (2026-09-25)
+
+예약·신차 상담과 고객 문의 접수 시 관리자 기기로 Web Push. DB 트리거 → pg_net → Edge Function `admin-push` → web-push. 운영 Supabase에 마이그레이션 2개와 Edge Function 적용. web 코드·계약 변경 없음. 상세는 `docs/features/33-admin-push.md`.

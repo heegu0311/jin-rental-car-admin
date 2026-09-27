@@ -6,7 +6,13 @@ import {
 import { StatusBadge } from "./feedback";
 
 // web의 submitConsultation이 message 앞뒤에 붙이는 라벨만 구조화한다.
-const LABELED_LINES = ["고객 유형", "생년월일"] as const;
+const LABELED_LINES = [
+  "고객 유형",
+  "생년월일",
+  "반납일시",
+  "수령 방식",
+  "대여 및 반납장소",
+] as const;
 
 function splitOptions(options: string[] | null | undefined) {
   const vehicle: string[] = [],
@@ -41,17 +47,29 @@ export function ReservationDetail({
   reservation: Reservation;
 }) {
   const { vehicle, fields, memo } = splitOptions(reservation.options);
+  const isNewCar = reservation.car_name.startsWith("[신차]");
+  const end = fields.find((f) => f.label === "반납일시");
   const summary = [
-    { label: "희망 시작일", value: reservation.start_date },
+    {
+      label: isNewCar
+        ? "출고 희망 시기"
+        : reservation.start_date.includes("T")
+          ? "대여 시작일시"
+          : "대여 시작일",
+      value: reservation.start_date.replace("T", " "),
+    },
+    ...(end ? [{ label: "반납일시", value: end.value.replace("T", " ") }] : []),
     { label: "이용 기간", value: reservation.period },
     { label: "약정 거리", value: reservation.package_km },
-    ...fields.map((f) => ({
-      label: f.label,
-      value:
-        f.label === "생년월일"
-          ? formatBirthdate(f.value)
-          : f.value.replace(/\s*\([A-Za-z]+\)$/, ""),
-    })),
+    ...fields
+      .filter((f) => f !== end)
+      .map((f) => ({
+        label: f.label,
+        value:
+          f.label === "생년월일"
+            ? formatBirthdate(f.value)
+            : f.value.replace(/\s*\([A-Za-z]+\)$/, ""),
+      })),
   ].filter((f) => f.value);
   return (
     <div className="space-y-4">

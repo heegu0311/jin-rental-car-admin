@@ -3,7 +3,7 @@ import {
   INSURANCE_CONTENT_SLUG,
   parseInsuranceConfig,
 } from "@/lib/domain/contracts";
-import { DEFAULT_INSURANCE } from "./defaults";
+import { DEFAULT_INSURANCE, fillMissingDetails } from "./defaults";
 import { InsuranceEditor } from "./InsuranceEditor";
 
 export default async function InsurancePage() {
@@ -22,9 +22,11 @@ export default async function InsurancePage() {
   } catch {
     saved = null;
   }
+  const { config, filled } = fillMissingDetails(saved ?? DEFAULT_INSURANCE);
   return (
     <InsuranceEditor
-      initial={saved ?? DEFAULT_INSURANCE}
+      initial={config}
+      filledDetails={saved ? filled : 0}
       initialPublished={Boolean(data?.is_published)}
       hasSaved={Boolean(saved)}
     />

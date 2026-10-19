@@ -24,10 +24,12 @@ export function InsuranceEditor({
   initial,
   initialPublished,
   hasSaved,
+  filledDetails,
 }: {
   initial: InsuranceConfig;
   initialPublished: boolean;
   hasSaved: boolean;
+  filledDetails: number;
 }) {
   const [draft, setDraft] = useState(initial);
   const [published, setPublished] = useState(initialPublished);
@@ -89,6 +91,12 @@ export function InsuranceEditor({
         <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
           아직 저장된 설정이 없습니다. 아래 요금표를 확인한 뒤 공개를 켜고
           저장해야 웹사이트에 표시됩니다.
+        </p>
+      )}
+      {filledDetails > 0 && (
+        <p className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+          상세 조건이 비어 있던 보험 {filledDetails}개에 등급별 기본 보장 내용을
+          채웠습니다. 내용을 확인한 뒤 저장해야 웹사이트에 반영됩니다.
         </p>
       )}
       <fieldset disabled={busy} className="space-y-6">
@@ -208,7 +216,9 @@ export function InsuranceEditor({
                   <div className="mt-3 space-y-2">
                     <p className="text-xs font-semibold text-slate-600">
                       선택 시 보이는 상세 조건{" "}
-                      <span className="font-normal text-slate-400">(선택)</span>
+                      <span className="font-normal text-slate-400">
+                        (필수, 고객이 보험을 고르면 표시)
+                      </span>
                     </p>
                     {plan.details.map((d, k) => (
                       <div key={k} className="flex gap-2">

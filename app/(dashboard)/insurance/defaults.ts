@@ -22,6 +22,23 @@ const TIER_DETAILS = {
   프리미엄자차: details("1000만원", SOLO_300),
 };
 type Tier = keyof typeof TIER_DETAILS;
+/** 상세 조건이 빈 보험에 보험명 앞부분(등급)이 일치하는 기본 보장 내용을 채운다. 채운 개수를 함께 반환한다. */
+export function fillMissingDetails(config: InsuranceConfig) {
+  let filled = 0;
+  const next = structuredClone(config);
+  for (const unit of Object.values(next))
+    for (const plans of Object.values(unit.plans))
+      for (const plan of plans) {
+        const tier = (Object.keys(TIER_DETAILS) as Tier[]).find((t) =>
+          plan.name.startsWith(t),
+        );
+        if (!plan.details.length && tier) {
+          plan.details = TIER_DETAILS[tier].map((d) => ({ ...d }));
+          filled++;
+        }
+      }
+  return { config: next, filled };
+}
 const TIERS = Object.keys(TIER_DETAILS) as Tier[];
 
 function unit(

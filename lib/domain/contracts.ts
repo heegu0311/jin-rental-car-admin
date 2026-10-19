@@ -15,6 +15,7 @@ export const VEHICLE_OPTIONS = [
   "통풍시트",
   "어라운드뷰",
   "HUD",
+  "자동문",
 ] as const;
 export type VehicleOption = (typeof VEHICLE_OPTIONS)[number];
 export interface Vehicle {
@@ -135,6 +136,38 @@ export function vehicleOptions(values: readonly unknown[]): VehicleOption[] {
     ),
   );
   return VEHICLE_OPTIONS.filter((option) => selected.has(option));
+}
+/** 자차보험 선택. 금액은 원 단위 추가 요금이며 상담 접수 시 라벨로 저장한다. */
+export const INSURANCE_AGE_GROUPS = ["만 26세 이상", "만 26세 미만"] as const;
+export type InsuranceAgeGroup = (typeof INSURANCE_AGE_GROUPS)[number];
+export const INSURANCE_NONE = "선택 안함";
+export const INSURANCE_PLANS: Record<
+  InsuranceAgeGroup,
+  readonly { name: string; price: number }[]
+> = {
+  "만 26세 이상": [
+    { name: "일반자차 26세", price: 10000 },
+    { name: "플러스자차 26세", price: 15000 },
+    { name: "프리미엄자차 26세", price: 20000 },
+  ],
+  "만 26세 미만": [
+    { name: "일반자차 21세", price: 20000 },
+    { name: "플러스자차 21세", price: 30000 },
+    { name: "프리미엄자차 21세", price: 40000 },
+  ],
+};
+export function formatSurcharge(value: number) {
+  return `+${new Intl.NumberFormat("ko-KR").format(value)}원`;
+}
+/** 허용된 연령·보험 조합만 "만 26세 이상 · 일반자차 26세 (+10,000원)" 형태로 반환한다. */
+export function insuranceSelection(age: unknown, plan: unknown): string | null {
+  if (!(INSURANCE_AGE_GROUPS as readonly unknown[]).includes(age)) return null;
+  const group = age as InsuranceAgeGroup;
+  if (plan === INSURANCE_NONE) return `${group} · ${INSURANCE_NONE}`;
+  const found = INSURANCE_PLANS[group].find((p) => p.name === plan);
+  return found
+    ? `${group} · ${found.name} (${formatSurcharge(found.price)})`
+    : null;
 }
 /**
  * 관리자 업로드 이미지는 site-assets/{folder}/desktop/{uuid}.{webp|jpg}와

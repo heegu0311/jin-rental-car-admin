@@ -12,6 +12,7 @@ const LABELED_LINES = [
   "반납일시",
   "수령 방식",
   "대여 및 반납장소",
+  "자차보험",
 ] as const;
 
 function splitOptions(options: string[] | null | undefined) {

@@ -15,7 +15,7 @@ function details(limit: string, solo: string): InsuranceDetail[] {
   ];
 }
 const SOLO_300 = "단독 사고 시 보험 수리 한도 300만원까지";
-// 등급별 보장 내용. 연령대(26세/21세)와 무관하게 같다.
+// 등급별 보장 내용. 렌트 단위·연령대와 무관하게 같다.
 const TIER_DETAILS = {
   일반자차: details("500만원", "불가"),
   플러스자차: details("500만원", SOLO_300),
@@ -28,38 +28,23 @@ function unit(
   required: boolean,
   over26: [number, number, number],
   under26: [number, number, number],
-  // 고객사가 상세 조건을 확인해 준 등급만 채운다.
-  detailed: (tier: Tier, under26: boolean) => boolean,
 ): InsuranceUnit {
-  const plans = (age: string, prices: number[], isUnder26: boolean) =>
+  const plans = (age: string, prices: number[]) =>
     TIERS.map((tier, i): InsurancePlan => ({
       name: `${tier} ${age}`,
       price: prices[i],
-      details: detailed(tier, isUnder26) ? TIER_DETAILS[tier] : [],
+      details: TIER_DETAILS[tier],
     }));
   return {
     required,
     plans: {
-      "만 26세 이상": plans("26세", over26, false),
-      "만 26세 미만": plans("21세", under26, true),
+      "만 26세 이상": plans("26세", over26),
+      "만 26세 미만": plans("21세", under26),
     },
   };
 }
-const ALL = () => true;
-const GENERAL_21_ONLY = (tier: Tier, under26: boolean) =>
-  under26 && tier === "일반자차";
 export const DEFAULT_INSURANCE: InsuranceConfig = {
-  daily: unit(false, [10000, 15000, 20000], [20000, 30000, 40000], ALL),
-  weekly: unit(
-    true,
-    [40000, 60000, 80000],
-    [80000, 120000, 160000],
-    GENERAL_21_ONLY,
-  ),
-  monthly: unit(
-    false,
-    [100000, 150000, 200000],
-    [200000, 300000, 400000],
-    GENERAL_21_ONLY,
-  ),
+  daily: unit(false, [10000, 15000, 20000], [20000, 30000, 40000]),
+  weekly: unit(true, [40000, 60000, 80000], [80000, 120000, 160000]),
+  monthly: unit(false, [100000, 150000, 200000], [200000, 300000, 400000]),
 };

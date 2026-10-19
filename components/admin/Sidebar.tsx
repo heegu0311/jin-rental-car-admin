@@ -8,6 +8,7 @@ import {
   Car,
   FileText,
   LogOut,
+  ShieldCheck,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,6 +20,7 @@ const menu = [
   { href: "/events", label: "이벤트 관리", icon: CircleAlert },
   { href: "/notices", label: "공지사항", icon: FileText },
   { href: "/content", label: "웹사이트 콘텐츠", icon: FileText },
+  { href: "/insurance", label: "자차보험 설정", icon: ShieldCheck },
   { href: "/settings", label: "사이트 설정", icon: Settings },
 ];
 const consultationMenu = [

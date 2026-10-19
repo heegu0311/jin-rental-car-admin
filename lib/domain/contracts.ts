@@ -137,36 +137,132 @@ export function vehicleOptions(values: readonly unknown[]): VehicleOption[] {
   );
   return VEHICLE_OPTIONS.filter((option) => selected.has(option));
 }
-/** 자차보험 선택. 금액은 원 단위 추가 요금이며 상담 접수 시 라벨로 저장한다. */
+/**
+ * 자차보험. 차종과 무관하고 렌트 단위(일/주/월)별로 다르다. 관리자가 /insurance에서
+ * site_content(slug "insurance")의 sections[0].body에 JSON으로 저장한다(스키마 변경 없음).
+ * 상담 접수 시 선택 결과를 "자차보험: ..." 라벨로 reservations.options에 남긴다.
+ */
+export const INSURANCE_CONTENT_SLUG = "insurance";
 export const INSURANCE_AGE_GROUPS = ["만 26세 이상", "만 26세 미만"] as const;
 export type InsuranceAgeGroup = (typeof INSURANCE_AGE_GROUPS)[number];
 export const INSURANCE_NONE = "선택 안함";
-export const INSURANCE_PLANS: Record<
-  InsuranceAgeGroup,
-  readonly { name: string; price: number }[]
-> = {
-  "만 26세 이상": [
-    { name: "일반자차 26세", price: 10000 },
-    { name: "플러스자차 26세", price: 15000 },
-    { name: "프리미엄자차 26세", price: 20000 },
-  ],
-  "만 26세 미만": [
-    { name: "일반자차 21세", price: 20000 },
-    { name: "플러스자차 21세", price: 30000 },
-    { name: "프리미엄자차 21세", price: 40000 },
-  ],
+export const RENTAL_UNIT_LABELS: Record<RentalType, string> = {
+  daily: "일단위",
+  weekly: "주단위",
+  monthly: "월단위",
 };
+export interface InsuranceDetail {
+  label: string;
+  value: string;
+}
+export interface InsurancePlan {
+  name: string;
+  price: number;
+  details: InsuranceDetail[];
+}
+export interface InsuranceUnit {
+  required: boolean;
+  plans: Record<InsuranceAgeGroup, InsurancePlan[]>;
+}
+export type InsuranceConfig = Record<RentalType, InsuranceUnit>;
+export const INSURANCE_LIMITS = {
+  plans: 10,
+  details: 10,
+  name: 40,
+  detailLabel: 40,
+  detailValue: 80,
+  price: 10_000_000,
+} as const;
+function validText(value: unknown, max: number): value is string {
+  return (
+    typeof value === "string" && value.trim().length > 0 && value.length <= max
+  );
+}
+/** 저장/조회한 값을 엄격히 검증한다. 하나라도 어긋나면 null. */
+export function parseInsuranceConfig(value: unknown): InsuranceConfig | null {
+  if (!value || typeof value !== "object") return null;
+  const result = {} as InsuranceConfig;
+  for (const type of ["daily", "weekly", "monthly"] as const) {
+    const unit = (value as Record<string, unknown>)[type] as
+      Record<string, unknown> | undefined;
+    if (!unit || typeof unit.required !== "boolean") return null;
+    const rawPlans = unit.plans as Record<string, unknown> | undefined;
+    if (!rawPlans || typeof rawPlans !== "object") return null;
+    const plans = {} as Record<InsuranceAgeGroup, InsurancePlan[]>;
+    for (const age of INSURANCE_AGE_GROUPS) {
+      const list = rawPlans[age];
+      if (!Array.isArray(list) || list.length > INSURANCE_LIMITS.plans)
+        return null;
+      const parsed: InsurancePlan[] = [];
+      for (const plan of list as Record<string, unknown>[]) {
+        if (
+          !plan ||
+          !validText(plan.name, INSURANCE_LIMITS.name) ||
+          plan.name.trim() === INSURANCE_NONE ||
+          !Number.isInteger(plan.price) ||
+          (plan.price as number) < 0 ||
+          (plan.price as number) > INSURANCE_LIMITS.price ||
+          !Array.isArray(plan.details) ||
+          plan.details.length > INSURANCE_LIMITS.details
+        )
+          return null;
+        const details: InsuranceDetail[] = [];
+        for (const d of plan.details as Record<string, unknown>[]) {
+          if (
+            !d ||
+            !validText(d.label, INSURANCE_LIMITS.detailLabel) ||
+            !validText(d.value, INSURANCE_LIMITS.detailValue)
+          )
+            return null;
+          details.push({ label: d.label.trim(), value: d.value.trim() });
+        }
+        parsed.push({
+          name: plan.name.trim(),
+          price: plan.price as number,
+          details,
+        });
+      }
+      if (new Set(parsed.map((p) => p.name)).size !== parsed.length)
+        return null;
+      plans[age] = parsed;
+    }
+    if (unit.required && INSURANCE_AGE_GROUPS.some((age) => !plans[age].length))
+      return null;
+    result[type] = { required: unit.required, plans };
+  }
+  return result;
+}
+/** 공개된 site_content 행에서 보험 설정을 읽는다. 없거나 형식이 틀리면 null. */
+export function insuranceConfigFromContent(
+  row: Pick<SiteContent, "sections" | "is_published"> | null | undefined,
+): InsuranceConfig | null {
+  const body = row?.is_published ? row.sections?.[0]?.body : undefined;
+  if (!body) return null;
+  try {
+    return parseInsuranceConfig(JSON.parse(body));
+  } catch {
+    return null;
+  }
+}
 export function formatSurcharge(value: number) {
   return `+${new Intl.NumberFormat("ko-KR").format(value)}원`;
 }
-/** 허용된 연령·보험 조합만 "만 26세 이상 · 일반자차 26세 (+10,000원)" 형태로 반환한다. */
-export function insuranceSelection(age: unknown, plan: unknown): string | null {
+/** 허용된 단위·연령·보험 조합만 "주단위 · 만 26세 이상 · 일반자차 26세 (+40,000원)" 형태로 반환한다. */
+export function insuranceSelection(
+  config: InsuranceConfig,
+  type: RentalType,
+  age: unknown,
+  plan: unknown,
+): string | null {
   if (!(INSURANCE_AGE_GROUPS as readonly unknown[]).includes(age)) return null;
   const group = age as InsuranceAgeGroup;
-  if (plan === INSURANCE_NONE) return `${group} · ${INSURANCE_NONE}`;
-  const found = INSURANCE_PLANS[group].find((p) => p.name === plan);
+  const { required, plans } = config[type];
+  const prefix = `${RENTAL_UNIT_LABELS[type]} · ${group}`;
+  if (plan === INSURANCE_NONE)
+    return required ? null : `${prefix} · ${INSURANCE_NONE}`;
+  const found = plans[group].find((p) => p.name === plan);
   return found
-    ? `${group} · ${found.name} (${formatSurcharge(found.price)})`
+    ? `${prefix} · ${found.name} (${formatSurcharge(found.price)})`
     : null;
 }
 /**

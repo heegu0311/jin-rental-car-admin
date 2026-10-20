@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { compareCategory } from "@/lib/domain/contracts";
 import { X, Plus, Trash2, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { refreshPublicSiteOrNotify } from "@/lib/public-site";
@@ -28,7 +29,10 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
       .select("*")
       .order("created_at", { ascending: true });
     if (error) toast.error("카테고리를 불러오지 못했습니다.");
-    if (data) setCategories(data);
+    if (data)
+      setCategories(
+        [...data].sort((a, b) => compareCategory(a.name, b.name)),
+      );
   };
 
   const handleAdd = async () => {

@@ -124,6 +124,23 @@ export function vehiclePrice(car: Vehicle, type: RentalType) {
 export function categoryName(car: Vehicle) {
   return car.vehicle_categories?.name || car.type;
 }
+export const CATEGORY_ORDER = [
+  "경차",
+  "소형",
+  "중형",
+  "대형",
+  "승합",
+  "SUV",
+  "전기",
+] as const;
+function categoryRank(name: string) {
+  const key = name.trim().toUpperCase();
+  const i = CATEGORY_ORDER.findIndex((c) => key.startsWith(c));
+  return i < 0 ? CATEGORY_ORDER.length : i;
+}
+export function compareCategory(a: string, b: string) {
+  return categoryRank(a) - categoryRank(b) || a.localeCompare(b, "ko");
+}
 export function validPhone(value: string) {
   return /^0\d{8,10}$/.test(value.replace(/[\s-]/g, ""));
 }

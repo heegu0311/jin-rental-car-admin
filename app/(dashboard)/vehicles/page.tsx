@@ -8,6 +8,7 @@ import { Feedback } from "@/components/shared/feedback";
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { compareCategory } from "@/lib/domain/contracts";
 import type { Car, Category } from "@/components/vehicles/types";
 import { VehicleList } from "@/components/vehicles/VehicleList";
 import { VehicleModal } from "@/components/vehicles/VehicleModal";
@@ -99,7 +100,11 @@ export default function VehiclesPage() {
       }
 
       if (!categoriesRes.error && categoriesRes.data) {
-        setCategories(categoriesRes.data);
+        setCategories(
+          [...categoriesRes.data].sort((a, b) =>
+            compareCategory(a.name, b.name),
+          ),
+        );
       }
 
       if (vehiclesRes.error || categoriesRes.error)

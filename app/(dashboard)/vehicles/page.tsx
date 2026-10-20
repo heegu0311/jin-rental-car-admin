@@ -6,7 +6,7 @@ import {
 } from "@/lib/domain/contracts";
 import { Feedback } from "@/components/shared/feedback";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   compareCategory,
@@ -15,6 +15,11 @@ import {
 } from "@/lib/domain/contracts";
 import type { Car, Category } from "@/components/vehicles/types";
 import { VehicleList } from "@/components/vehicles/VehicleList";
+import {
+  VehicleSheet,
+  applyVehiclePatch,
+  type VehicleSheetPatch,
+} from "@/components/vehicles/VehicleSheet";
 import { VehicleModal } from "@/components/vehicles/VehicleModal";
 import { CategoryManager } from "@/components/vehicles/CategoryManager";
 import {
@@ -26,6 +31,7 @@ import {
   LayoutGrid,
   List,
   Hash,
+  Sheet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -45,7 +51,8 @@ export default function VehiclesPage() {
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCar, setEditingCar] = useState<Car | null>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "table" | "sheet">("grid");
+  const siteRefreshTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const [supabase] = useState(createClient);
 
@@ -273,6 +280,31 @@ export default function VehiclesPage() {
     fetchData();
     setIsModalOpen(false);
     setEditingCar(null);
+  };
+
+  /** 표 편집 셀 저장. 고객 사이트 갱신은 연속 입력이 끝난 뒤 한 번만 요청한다. */
+  const handlePatchCar = async (id: string, patch: VehicleSheetPatch) => {
+    const payload: VehicleSheetPatch & { type?: string } = { ...patch };
+    if ("category_id" in patch)
+      payload.type =
+        categories.find((c) => c.id === patch.category_id)?.name || "일반";
+    const { error } = await supabase
+      .from("vehicles")
+      .update(payload)
+      .eq("id", id)
+      .select("id")
+      .single();
+    if (error)
+      throw new Error("저장에 실패했습니다. 입력값과 권한을 확인해주세요.");
+    setCars((prev) =>
+      prev.map((car) =>
+        car.id === id ? applyVehiclePatch(car, patch, categories) : car,
+      ),
+    );
+    clearTimeout(siteRefreshTimer.current);
+    siteRefreshTimer.current = setTimeout(() => {
+      refreshPublicSiteOrNotify("차량 정보를 저장했습니다.");
+    }, 1500);
   };
 
   const handleDeleteCar = async (id: string) => {
@@ -523,6 +555,19 @@ export default function VehiclesPage() {
               <List size={18} />
               <span>목록</span>
             </button>
+            <button
+              aria-label="표 편집"
+              onClick={() => setViewMode("sheet")}
+              className={cn(
+                "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold transition-all",
+                viewMode === "sheet"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700",
+              )}
+            >
+              <Sheet size={18} />
+              <span>표 편집</span>
+            </button>
           </div>
           <div className="h-6 w-px bg-slate-200 mx-1" />
         </div>
@@ -535,6 +580,13 @@ export default function VehiclesPage() {
             차량 데이터를 불러오는 중...
           </p>
         </div>
+      ) : viewMode === "sheet" ? (
+        <VehicleSheet
+          cars={filteredCars}
+          categories={categories}
+          onPatch={handlePatchCar}
+          onEdit={handleEditClick}
+        />
       ) : (
         <VehicleList
           cars={filteredCars}

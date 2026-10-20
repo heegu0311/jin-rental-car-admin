@@ -8,7 +8,7 @@ import { Feedback } from "@/components/shared/feedback";
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { compareCategory } from "@/lib/domain/contracts";
+import { compareCategory, INSURANCE_LIMITS } from "@/lib/domain/contracts";
 import type { Car, Category } from "@/components/vehicles/types";
 import { VehicleList } from "@/components/vehicles/VehicleList";
 import { VehicleModal } from "@/components/vehicles/VehicleModal";
@@ -90,6 +90,8 @@ export default function VehiclesPage() {
           options: v.options || [],
           manufacturer: v.manufacturer || "",
           seats: v.seats || 5,
+          displacement_cc: v.displacement_cc ?? null,
+          is_van: Boolean(v.is_van),
           rentedCount:
             v.vehicle_units?.filter((u) => u.status === "rented").length || 0,
           maintenanceCount:
@@ -210,6 +212,8 @@ export default function VehiclesPage() {
       options: (carData.options || []).map((s) => s.trim()).filter(Boolean),
       manufacturer: carData.manufacturer || "",
       seats: carData.seats || 5,
+      displacement_cc: carData.displacement_cc ?? null,
+      is_van: Boolean(carData.is_van),
     };
 
     if (
@@ -219,9 +223,15 @@ export default function VehiclesPage() {
       payload.year > 2100 ||
       [payload.price_daily, payload.price_weekly, payload.price_monthly].some(
         (p) => !Number.isInteger(p) || p < 0,
-      )
+      ) ||
+      (payload.displacement_cc !== null &&
+        (!Number.isInteger(payload.displacement_cc) ||
+          payload.displacement_cc < 0 ||
+          payload.displacement_cc > INSURANCE_LIMITS.cc))
     ) {
-      throw new Error("차량명, 연식 및 0 이상의 정수 요금을 입력해주세요.");
+      throw new Error(
+        "차량명, 연식, 0 이상의 정수 요금과 배기량(0~20,000cc)을 입력해주세요.",
+      );
     }
     const result = editingCar
       ? await supabase

@@ -20,6 +20,9 @@ export interface Car {
   options?: string[];
   manufacturer?: string;
   seats?: number;
+  /** 배기량(cc). 빈 값이면 null. */
+  displacement_cc?: number | null;
+  is_van?: boolean;
   rentedCount?: number;
   maintenanceCount?: number;
 }

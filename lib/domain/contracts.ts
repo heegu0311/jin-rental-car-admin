@@ -36,6 +36,10 @@ export interface Vehicle {
   options?: string[];
   seats?: number;
   manufacturer?: string;
+  /** 배기량(cc). 자차보험 요금 구간에 쓴다. 미입력이면 null. */
+  displacement_cc?: number | null;
+  /** 승합차면 배기량과 별도 자차보험 요금을 적용한다. */
+  is_van?: boolean;
   vehicle_categories?: { name: string } | null;
   vehicle_units?: { id: string; status: VehicleStatus }[];
 }
@@ -155,8 +159,9 @@ export function vehicleOptions(values: readonly unknown[]): VehicleOption[] {
   return VEHICLE_OPTIONS.filter((option) => selected.has(option));
 }
 /**
- * 자차보험. 차종과 무관하고 렌트 단위(일/주/월)별로 다르다. 관리자가 /insurance에서
- * site_content(slug "insurance")의 sections[0].body에 JSON으로 저장한다(스키마 변경 없음).
+ * 자차보험. 렌트 단위(일/주/월)·연령별 보험 목록이 있고, 요금은 차량 배기량 구간별로 다르며
+ * 승합차(vehicles.is_van)는 배기량과 별도 요금을 쓴다. 배기량 구간 상한(ccLimits)은 단위 공통이다.
+ * 관리자가 /insurance에서 site_content(slug "insurance")의 sections[0].body에 JSON으로 저장한다.
  * 상담 접수 시 선택 결과를 "자차보험: ..." 라벨로 reservations.options에 남긴다.
  */
 export const INSURANCE_CONTENT_SLUG = "insurance";
@@ -172,16 +177,27 @@ export interface InsuranceDetail {
   label: string;
   value: string;
 }
+/** cc[i]는 배기량 구간 i의 요금(길이 = ccLimits.length + 1), van은 승합차 요금. */
+export interface InsurancePrices {
+  cc: number[];
+  van: number;
+}
 export interface InsurancePlan {
   name: string;
-  price: number;
+  prices: InsurancePrices;
   details: InsuranceDetail[];
 }
 export interface InsuranceUnit {
   required: boolean;
   plans: Record<InsuranceAgeGroup, InsurancePlan[]>;
 }
-export type InsuranceConfig = Record<RentalType, InsuranceUnit>;
+export interface InsuranceConfig {
+  /** 오름차순 배기량 구간 상한(cc, 포함). 마지막 구간은 마지막 상한 초과. */
+  ccLimits: number[];
+  units: Record<RentalType, InsuranceUnit>;
+}
+/** 차량의 보험 요금 구분. 숫자는 배기량 구간 번호. */
+export type InsuranceClass = number | "van";
 export const INSURANCE_LIMITS = {
   plans: 10,
   details: 10,
@@ -189,19 +205,106 @@ export const INSURANCE_LIMITS = {
   detailLabel: 40,
   detailValue: 80,
   price: 10_000_000,
+  ccLimits: 8,
+  cc: 20_000,
 } as const;
+const RENTAL_TYPES = ["daily", "weekly", "monthly"] as const;
 function validText(value: unknown, max: number): value is string {
   return (
     typeof value === "string" && value.trim().length > 0 && value.length <= max
   );
 }
+function validPrice(value: unknown): value is number {
+  return (
+    Number.isInteger(value) &&
+    (value as number) >= 0 &&
+    (value as number) <= INSURANCE_LIMITS.price
+  );
+}
+function cc(value: number) {
+  return `${new Intl.NumberFormat("ko-KR").format(value)}cc`;
+}
+/** 구간 i의 이름. 예: [1600, 2000] → "1,600cc 이하", "1,601~2,000cc", "2,000cc 초과". */
+export function insuranceClassLabel(
+  ccLimits: readonly number[],
+  cls: InsuranceClass,
+) {
+  if (cls === "van") return "승합";
+  if (!ccLimits.length) return "전 배기량";
+  if (cls === 0) return `${cc(ccLimits[0])} 이하`;
+  if (cls >= ccLimits.length)
+    return `${cc(ccLimits[ccLimits.length - 1])} 초과`;
+  return `${new Intl.NumberFormat("ko-KR").format(ccLimits[cls - 1] + 1)}~${cc(ccLimits[cls])}`;
+}
+export function insuranceClasses(
+  ccLimits: readonly number[],
+): InsuranceClass[] {
+  return [...ccLimits.map((_, i) => i), ccLimits.length, "van"];
+}
+/** 승합이면 "van", 배기량이 있으면 해당 구간, 배기량을 모르면 null. */
+export function insuranceClassOf(
+  ccLimits: readonly number[],
+  vehicle: Pick<Vehicle, "displacement_cc" | "is_van"> | null | undefined,
+): InsuranceClass | null {
+  if (!vehicle) return null;
+  if (vehicle.is_van) return "van";
+  const value = vehicle.displacement_cc;
+  if (value == null || !Number.isInteger(value) || value < 0) return null;
+  const i = ccLimits.findIndex((limit) => value <= limit);
+  return i < 0 ? ccLimits.length : i;
+}
+export function insurancePrice(plan: InsurancePlan, cls: InsuranceClass) {
+  return cls === "van" ? plan.prices.van : plan.prices.cc[cls];
+}
+/** 차량 구분을 모를 때 보여줄 최소·최대 요금. */
+export function insurancePriceRange(plan: InsurancePlan) {
+  const all = [...plan.prices.cc, plan.prices.van];
+  return { min: Math.min(...all), max: Math.max(...all) };
+}
+function parsePrices(
+  plan: Record<string, unknown>,
+  bands: number,
+): InsurancePrices | null {
+  // 배기량 구분 이전에 저장된 단일 요금(price)은 모든 구간·승합에 같은 값으로 읽는다.
+  if (plan.prices === undefined && validPrice(plan.price))
+    return { cc: Array(bands).fill(plan.price), van: plan.price };
+  const prices = plan.prices as Record<string, unknown> | undefined;
+  if (
+    !prices ||
+    !Array.isArray(prices.cc) ||
+    prices.cc.length !== bands ||
+    !prices.cc.every(validPrice) ||
+    !validPrice(prices.van)
+  )
+    return null;
+  return { cc: [...prices.cc], van: prices.van };
+}
 /** 저장/조회한 값을 엄격히 검증한다. 하나라도 어긋나면 null. */
 export function parseInsuranceConfig(value: unknown): InsuranceConfig | null {
   if (!value || typeof value !== "object") return null;
-  const result = {} as InsuranceConfig;
-  for (const type of ["daily", "weekly", "monthly"] as const) {
-    const unit = (value as Record<string, unknown>)[type] as
-      Record<string, unknown> | undefined;
+  const root = value as Record<string, unknown>;
+  // 이전 형식은 루트에 daily/weekly/monthly가 있고 배기량 구간이 없다.
+  const legacy = !("units" in root);
+  const ccLimits = legacy ? [] : root.ccLimits;
+  const rawUnits = (legacy ? root : root.units) as
+    Record<string, unknown> | undefined;
+  if (
+    !Array.isArray(ccLimits) ||
+    ccLimits.length > INSURANCE_LIMITS.ccLimits ||
+    !ccLimits.every(
+      (limit, i) =>
+        Number.isInteger(limit) &&
+        limit > 0 &&
+        limit <= INSURANCE_LIMITS.cc &&
+        (i === 0 || limit > ccLimits[i - 1]),
+    ) ||
+    !rawUnits ||
+    typeof rawUnits !== "object"
+  )
+    return null;
+  const units = {} as Record<RentalType, InsuranceUnit>;
+  for (const type of RENTAL_TYPES) {
+    const unit = rawUnits[type] as Record<string, unknown> | undefined;
     if (!unit || typeof unit.required !== "boolean") return null;
     const rawPlans = unit.plans as Record<string, unknown> | undefined;
     if (!rawPlans || typeof rawPlans !== "object") return null;
@@ -216,13 +319,12 @@ export function parseInsuranceConfig(value: unknown): InsuranceConfig | null {
           !plan ||
           !validText(plan.name, INSURANCE_LIMITS.name) ||
           plan.name.trim() === INSURANCE_NONE ||
-          !Number.isInteger(plan.price) ||
-          (plan.price as number) < 0 ||
-          (plan.price as number) > INSURANCE_LIMITS.price ||
           !Array.isArray(plan.details) ||
           plan.details.length > INSURANCE_LIMITS.details
         )
           return null;
+        const prices = parsePrices(plan, ccLimits.length + 1);
+        if (!prices) return null;
         const details: InsuranceDetail[] = [];
         for (const d of plan.details as Record<string, unknown>[]) {
           if (
@@ -233,11 +335,7 @@ export function parseInsuranceConfig(value: unknown): InsuranceConfig | null {
             return null;
           details.push({ label: d.label.trim(), value: d.value.trim() });
         }
-        parsed.push({
-          name: plan.name.trim(),
-          price: plan.price as number,
-          details,
-        });
+        parsed.push({ name: plan.name.trim(), prices, details });
       }
       if (new Set(parsed.map((p) => p.name)).size !== parsed.length)
         return null;
@@ -245,9 +343,9 @@ export function parseInsuranceConfig(value: unknown): InsuranceConfig | null {
     }
     if (unit.required && INSURANCE_AGE_GROUPS.some((age) => !plans[age].length))
       return null;
-    result[type] = { required: unit.required, plans };
+    units[type] = { required: unit.required, plans };
   }
-  return result;
+  return { ccLimits: [...ccLimits], units };
 }
 /** 공개된 site_content 행에서 보험 설정을 읽는다. 없거나 형식이 틀리면 null. */
 export function insuranceConfigFromContent(
@@ -264,23 +362,39 @@ export function insuranceConfigFromContent(
 export function formatSurcharge(value: number) {
   return `+${new Intl.NumberFormat("ko-KR").format(value)}원`;
 }
-/** 허용된 단위·연령·보험 조합만 "주단위 · 만 26세 이상 · 일반자차 26세 (+40,000원)" 형태로 반환한다. */
+/** 차량 구분이 있으면 그 요금, 없으면 "+10,000~20,000원" 범위. */
+export function formatInsurancePrice(
+  plan: InsurancePlan,
+  cls: InsuranceClass | null,
+) {
+  if (cls !== null) return formatSurcharge(insurancePrice(plan, cls));
+  const { min, max } = insurancePriceRange(plan);
+  return min === max
+    ? formatSurcharge(min)
+    : `+${new Intl.NumberFormat("ko-KR").format(min)}~${new Intl.NumberFormat("ko-KR").format(max)}원`;
+}
+/**
+ * 허용된 단위·연령·보험 조합만 "주단위 · 만 26세 이상 · 1,601~2,000cc · 일반자차 26세 (+40,000원)"
+ * 형태로 반환한다. 차량 구분을 모르면 구간 없이 요금 범위를 남긴다.
+ */
 export function insuranceSelection(
   config: InsuranceConfig,
   type: RentalType,
   age: unknown,
   plan: unknown,
+  cls: InsuranceClass | null = null,
 ): string | null {
   if (!(INSURANCE_AGE_GROUPS as readonly unknown[]).includes(age)) return null;
   const group = age as InsuranceAgeGroup;
-  const { required, plans } = config[type];
+  const { required, plans } = config.units[type];
   const prefix = `${RENTAL_UNIT_LABELS[type]} · ${group}`;
   if (plan === INSURANCE_NONE)
     return required ? null : `${prefix} · ${INSURANCE_NONE}`;
   const found = plans[group].find((p) => p.name === plan);
-  return found
-    ? `${prefix} · ${found.name} (${formatSurcharge(found.price)})`
-    : null;
+  if (!found) return null;
+  const classLabel =
+    cls === null ? "" : ` · ${insuranceClassLabel(config.ccLimits, cls)}`;
+  return `${prefix}${classLabel} · ${found.name} (${formatInsurancePrice(found, cls)})`;
 }
 /**
  * 관리자 업로드 이미지는 site-assets/{folder}/desktop/{uuid}.{webp|jpg}와

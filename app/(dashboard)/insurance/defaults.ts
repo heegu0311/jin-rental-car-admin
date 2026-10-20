@@ -26,7 +26,7 @@ type Tier = keyof typeof TIER_DETAILS;
 export function fillMissingDetails(config: InsuranceConfig) {
   let filled = 0;
   const next = structuredClone(config);
-  for (const unit of Object.values(next))
+  for (const unit of Object.values(next.units))
     for (const plans of Object.values(unit.plans))
       for (const plan of plans) {
         const tier = (Object.keys(TIER_DETAILS) as Tier[]).find((t) =>
@@ -49,7 +49,8 @@ function unit(
   const plans = (age: string, prices: number[]) =>
     TIERS.map((tier, i): InsurancePlan => ({
       name: `${tier} ${age}`,
-      price: prices[i],
+      // 배기량 구간이 없는 초기값이므로 전 배기량·승합에 같은 요금을 둔다.
+      prices: { cc: [prices[i]], van: prices[i] },
       details: TIER_DETAILS[tier],
     }));
   return {
@@ -61,7 +62,10 @@ function unit(
   };
 }
 export const DEFAULT_INSURANCE: InsuranceConfig = {
-  daily: unit(false, [10000, 15000, 20000], [20000, 30000, 40000]),
-  weekly: unit(true, [40000, 60000, 80000], [80000, 120000, 160000]),
-  monthly: unit(false, [100000, 150000, 200000], [200000, 300000, 400000]),
+  ccLimits: [],
+  units: {
+    daily: unit(false, [10000, 15000, 20000], [20000, 30000, 40000]),
+    weekly: unit(true, [40000, 60000, 80000], [80000, 120000, 160000]),
+    monthly: unit(false, [100000, 150000, 200000], [200000, 300000, 400000]),
+  },
 };

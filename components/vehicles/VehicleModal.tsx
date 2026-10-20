@@ -12,7 +12,11 @@ import {
   imageGuide,
   uploadAdminImage,
 } from "@/lib/storage/upload-image";
-import { VEHICLE_OPTIONS, vehicleOptions } from "@/lib/domain/contracts";
+import {
+  INSURANCE_LIMITS,
+  VEHICLE_OPTIONS,
+  vehicleOptions,
+} from "@/lib/domain/contracts";
 import {
   Car as CarIcon,
   X,
@@ -498,6 +502,50 @@ export function VehicleModal({
                 }
                 placeholder="현대, 기아, 제네시스 등"
               />
+            </label>
+            <label className="block text-sm font-semibold">
+              배기량(cc)
+              <input
+                form="vehicle-form"
+                className="mt-2 w-full rounded-lg border p-3"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={INSURANCE_LIMITS.cc}
+                step={1}
+                value={formData.displacement_cc ?? ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    displacement_cc:
+                      e.target.value === ""
+                        ? null
+                        : Math.trunc(Number(e.target.value)),
+                  })
+                }
+                placeholder="예: 1598 (전기차는 0)"
+              />
+              <span className="mt-1 block text-xs font-normal text-slate-500">
+                자차보험 요금 구간에 사용합니다. 비워두면 고객에게 요금 범위로
+                안내됩니다.
+              </span>
+            </label>
+            <label className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 text-sm">
+              <input
+                form="vehicle-form"
+                type="checkbox"
+                className="mt-0.5 size-4"
+                checked={Boolean(formData.is_van)}
+                onChange={(e) =>
+                  setFormData({ ...formData, is_van: e.target.checked })
+                }
+              />
+              <span>
+                <strong className="block font-semibold">승합차</strong>
+                <span className="mt-1 block text-xs text-slate-500">
+                  켜면 배기량과 관계없이 자차보험 설정의 승합 요금을 적용합니다.
+                </span>
+              </span>
             </label>
             <label className="block text-sm font-semibold">
               승차 인원

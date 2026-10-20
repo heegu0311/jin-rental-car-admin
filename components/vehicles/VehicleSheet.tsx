@@ -354,7 +354,7 @@ export function VehicleSheet({
           </caption>
           <thead className="sticky top-0 z-20">
             <tr>
-              <th className="sticky left-0 z-30 w-12 border-b border-r border-slate-200 bg-slate-100 px-2 py-2 text-center text-[11px] font-bold text-slate-500">
+              <th className="sticky left-0 z-30 w-12 min-w-12 max-w-12 whitespace-nowrap border-b border-r border-slate-200 bg-slate-100 px-2 py-2 text-center text-[11px] font-bold text-slate-500">
                 저장
               </th>
               {COLUMNS.map((column, c) => (
@@ -385,7 +385,7 @@ export function VehicleSheet({
               const state = rowStates[car.id];
               return (
                 <tr key={car.id} className="group">
-                  <td className="sticky left-0 z-10 border-b border-r border-slate-100 bg-white px-2 text-center">
+                  <td className="sticky left-0 z-10 w-12 min-w-12 max-w-12 border-b border-r border-slate-100 bg-white px-2 text-center">
                     {state === "saving" ? (
                       <Loader2
                         size={14}

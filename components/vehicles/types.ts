@@ -23,6 +23,8 @@ export interface Car {
   /** 배기량(cc). 빈 값이면 null. */
   displacement_cc?: number | null;
   is_van?: boolean;
+  /** 100km당 초과 주행 요금(원). 빈 값이면 null. */
+  extra_km_fee?: number | null;
   rentedCount?: number;
   maintenanceCount?: number;
 }

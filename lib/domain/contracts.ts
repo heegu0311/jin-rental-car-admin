@@ -40,6 +40,8 @@ export interface Vehicle {
   displacement_cc?: number | null;
   /** 승합차면 배기량과 별도 자차보험 요금을 적용한다. */
   is_van?: boolean;
+  /** 약정 주행거리 초과 시 100km당 추가 요금(원). 미입력이면 null. */
+  extra_km_fee?: number | null;
   vehicle_categories?: { name: string } | null;
   vehicle_units?: { id: string; status: VehicleStatus }[];
 }

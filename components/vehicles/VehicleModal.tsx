@@ -530,6 +530,33 @@ export function VehicleModal({
                 안내됩니다.
               </span>
             </label>
+            <label className="block text-sm font-semibold">
+              초과 주행 요금(100km당, 원)
+              <input
+                form="vehicle-form"
+                className="mt-2 w-full rounded-lg border p-3"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={INSURANCE_LIMITS.price}
+                step={1}
+                value={formData.extra_km_fee ?? ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    extra_km_fee:
+                      e.target.value === ""
+                        ? null
+                        : Math.trunc(Number(e.target.value)),
+                  })
+                }
+                placeholder="예: 20000"
+              />
+              <span className="mt-1 block text-xs font-normal text-slate-500">
+                약정 주행거리 초과 시 차량 상세에 안내됩니다. 비워두면 차종별
+                범위(1만~3만원)로 안내됩니다.
+              </span>
+            </label>
             <label className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 text-sm">
               <input
                 form="vehicle-form"

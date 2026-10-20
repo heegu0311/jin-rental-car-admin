@@ -92,6 +92,7 @@ export default function VehiclesPage() {
           seats: v.seats || 5,
           displacement_cc: v.displacement_cc ?? null,
           is_van: Boolean(v.is_van),
+          extra_km_fee: v.extra_km_fee ?? null,
           rentedCount:
             v.vehicle_units?.filter((u) => u.status === "rented").length || 0,
           maintenanceCount:
@@ -214,6 +215,7 @@ export default function VehiclesPage() {
       seats: carData.seats || 5,
       displacement_cc: carData.displacement_cc ?? null,
       is_van: Boolean(carData.is_van),
+      extra_km_fee: carData.extra_km_fee ?? null,
     };
 
     if (
@@ -227,10 +229,14 @@ export default function VehiclesPage() {
       (payload.displacement_cc !== null &&
         (!Number.isInteger(payload.displacement_cc) ||
           payload.displacement_cc < 0 ||
-          payload.displacement_cc > INSURANCE_LIMITS.cc))
+          payload.displacement_cc > INSURANCE_LIMITS.cc)) ||
+      (payload.extra_km_fee !== null &&
+        (!Number.isInteger(payload.extra_km_fee) ||
+          payload.extra_km_fee < 0 ||
+          payload.extra_km_fee > INSURANCE_LIMITS.price))
     ) {
       throw new Error(
-        "차량명, 연식, 0 이상의 정수 요금과 배기량(0~20,000cc)을 입력해주세요.",
+        "차량명, 연식, 0 이상의 정수 요금·초과 주행 요금과 배기량(0~20,000cc)을 입력해주세요.",
       );
     }
     const result = editingCar

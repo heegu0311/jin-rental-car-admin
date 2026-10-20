@@ -8,7 +8,11 @@ import { Feedback } from "@/components/shared/feedback";
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { compareCategory, INSURANCE_LIMITS } from "@/lib/domain/contracts";
+import {
+  compareCategory,
+  INCLUDED_KM_MAX,
+  INSURANCE_LIMITS,
+} from "@/lib/domain/contracts";
 import type { Car, Category } from "@/components/vehicles/types";
 import { VehicleList } from "@/components/vehicles/VehicleList";
 import { VehicleModal } from "@/components/vehicles/VehicleModal";
@@ -93,6 +97,9 @@ export default function VehiclesPage() {
           displacement_cc: v.displacement_cc ?? null,
           is_van: Boolean(v.is_van),
           extra_km_fee: v.extra_km_fee ?? null,
+          km_daily: v.km_daily ?? null,
+          km_weekly: v.km_weekly ?? null,
+          km_monthly: v.km_monthly ?? null,
           rentedCount:
             v.vehicle_units?.filter((u) => u.status === "rented").length || 0,
           maintenanceCount:
@@ -216,6 +223,9 @@ export default function VehiclesPage() {
       displacement_cc: carData.displacement_cc ?? null,
       is_van: Boolean(carData.is_van),
       extra_km_fee: carData.extra_km_fee ?? null,
+      km_daily: carData.km_daily ?? null,
+      km_weekly: carData.km_weekly ?? null,
+      km_monthly: carData.km_monthly ?? null,
     };
 
     if (
@@ -233,10 +243,15 @@ export default function VehiclesPage() {
       (payload.extra_km_fee !== null &&
         (!Number.isInteger(payload.extra_km_fee) ||
           payload.extra_km_fee < 0 ||
-          payload.extra_km_fee > INSURANCE_LIMITS.price))
+          payload.extra_km_fee > INSURANCE_LIMITS.price)) ||
+      [payload.km_daily, payload.km_weekly, payload.km_monthly].some(
+        (km) =>
+          km !== null &&
+          (!Number.isInteger(km) || km < 0 || km > INCLUDED_KM_MAX),
+      )
     ) {
       throw new Error(
-        "차량명, 연식, 0 이상의 정수 요금·초과 주행 요금과 배기량(0~20,000cc)을 입력해주세요.",
+        "차량명, 연식, 0 이상의 정수 요금·약정 주행거리·초과 주행 요금과 배기량(0~20,000cc)을 입력해주세요.",
       );
     }
     const result = editingCar

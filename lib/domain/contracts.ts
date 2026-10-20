@@ -42,6 +42,10 @@ export interface Vehicle {
   is_van?: boolean;
   /** 약정 주행거리 초과 시 100km당 추가 요금(원). 미입력이면 null. */
   extra_km_fee?: number | null;
+  /** 일/주/월 대여료에 포함된 기본 약정 주행거리(km). 미입력이면 null. */
+  km_daily?: number | null;
+  km_weekly?: number | null;
+  km_monthly?: number | null;
   vehicle_categories?: { name: string } | null;
   vehicle_units?: { id: string; status: VehicleStatus }[];
 }
@@ -123,6 +127,12 @@ export function rentalType(value: string): RentalType | null {
 export function rentalPeriod(value: string | null): number {
   const n = Number(value ?? 1);
   return Number.isInteger(n) && n >= 1 && n <= 365 ? n : 1;
+}
+export const INCLUDED_KM_MAX = 100_000;
+export function includedKmLabel(value: number | null | undefined) {
+  return value != null && Number.isInteger(value) && value > 0
+    ? `기본 ${new Intl.NumberFormat("ko-KR").format(value)}km 포함`
+    : "주행거리 상담 문의";
 }
 export function vehiclePrice(car: Vehicle, type: RentalType) {
   return car[`price_${type}`];

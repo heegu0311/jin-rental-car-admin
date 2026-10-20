@@ -25,6 +25,10 @@ export interface Car {
   is_van?: boolean;
   /** 100km당 초과 주행 요금(원). 빈 값이면 null. */
   extra_km_fee?: number | null;
+  /** 일/주/월 기본 약정 주행거리(km). 빈 값이면 null. */
+  km_daily?: number | null;
+  km_weekly?: number | null;
+  km_monthly?: number | null;
   rentedCount?: number;
   maintenanceCount?: number;
 }

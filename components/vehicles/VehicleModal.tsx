@@ -13,6 +13,7 @@ import {
   uploadAdminImage,
 } from "@/lib/storage/upload-image";
 import {
+  INCLUDED_KM_MAX,
   INSURANCE_LIMITS,
   VEHICLE_OPTIONS,
   vehicleOptions,
@@ -485,6 +486,44 @@ export function VehicleModal({
                     원
                   </div>
                 </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {(
+                  [
+                    ["km_daily", "일 약정 거리(km)"],
+                    ["km_weekly", "주 약정 거리(km)"],
+                    ["km_monthly", "월 약정 거리(km)"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <div key={key} className="space-y-1">
+                    <label
+                      htmlFor={`vehicle-${key}`}
+                      className="text-[10px] font-bold text-slate-400 ml-1"
+                    >
+                      {label}
+                    </label>
+                    <input
+                      id={`vehicle-${key}`}
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      max={INCLUDED_KM_MAX}
+                      step={1}
+                      value={formData[key] ?? ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          [key]:
+                            e.target.value === ""
+                              ? null
+                              : Math.trunc(Number(e.target.value)),
+                        })
+                      }
+                      placeholder="비우면 상담"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </form>

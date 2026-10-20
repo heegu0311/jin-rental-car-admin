@@ -435,7 +435,7 @@ export function VehicleSheet({
                       <td
                         key={column.key}
                         className={cn(
-                          "border-b border-r border-slate-100 bg-white p-0 group-hover:bg-slate-50/60",
+                          "border-b border-r border-slate-100 bg-white p-0 group-hover:bg-slate-50",
                           c === 0 && "sticky left-12 z-10",
                         )}
                       >

@@ -7,6 +7,13 @@ import { Car, VehicleUnit, Category } from "./types";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   ADMIN_IMAGE_ACCEPT,
   IMAGE_PRESETS,
   imageGuide,
@@ -30,6 +37,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { refreshPublicSiteOrNotify } from "@/lib/public-site";
+
+const NO_CATEGORY = "__none__";
 
 const RichEditor = dynamic(
   () => import("@/components/admin/RichEditor").then((mod) => mod.RichEditor),
@@ -213,20 +222,31 @@ export function VehicleModal({
                 <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
                   카테고리
                 </label>
-                <select
+                <Select
                   value={formData.category_id || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category_id: e.target.value })
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      category_id: value === NO_CATEGORY ? "" : value,
+                    })
                   }
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                 >
-                  <option value="">카테고리 선택 (예: 소형, 중형)</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger
+                    size="lg"
+                    aria-label="카테고리"
+                    className="w-full rounded-xl bg-slate-50"
+                  >
+                    <SelectValue placeholder="카테고리 선택 (예: 소형, 중형)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_CATEGORY}>미지정</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -733,13 +753,10 @@ export function VehicleModal({
                                       : "bg-red-500",
                                 )}
                               />
-                              <select
-                                aria-label={`${unit.plate_number} 차량 상태`}
+                              <Select
                                 value={unit.status}
-                                className="rounded border border-slate-200 bg-white p-1 text-xs"
-                                onChange={async (e) => {
-                                  const status = e.target
-                                    .value as VehicleUnit["status"];
+                                onValueChange={async (value) => {
+                                  const status = value as VehicleUnit["status"];
                                   const { error } = await supabase
                                     .from("vehicle_units")
                                     .update({ status })
@@ -760,10 +777,18 @@ export function VehicleModal({
                                   );
                                 }}
                               >
-                                <option value="available">대여 가능</option>
-                                <option value="rented">대여 중</option>
-                                <option value="maintenance">정비 중</option>
-                              </select>
+                                <SelectTrigger
+                                  size="xs"
+                                  aria-label={`${unit.plate_number} 차량 상태`}
+                                >
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="available">대여 가능</SelectItem>
+                                  <SelectItem value="rented">대여 중</SelectItem>
+                                  <SelectItem value="maintenance">정비 중</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
                           </div>
                         </div>

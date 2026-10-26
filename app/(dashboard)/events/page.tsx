@@ -16,6 +16,13 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { toast } from "sonner";
@@ -163,17 +170,17 @@ export default function EventsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <select
-            aria-label="이벤트 기간"
-            value={schedule}
-            onChange={(e) => setSchedule(e.target.value)}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
-          >
-            <option value="all">전체 기간</option>
-            <option value="upcoming">시작 전</option>
-            <option value="current">기간 중</option>
-            <option value="ended">기간 종료</option>
-          </select>
+          <Select value={schedule} onValueChange={setSchedule}>
+            <SelectTrigger aria-label="이벤트 기간" className="min-w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">전체 기간</SelectItem>
+              <SelectItem value="upcoming">시작 전</SelectItem>
+              <SelectItem value="current">기간 중</SelectItem>
+              <SelectItem value="ended">기간 종료</SelectItem>
+            </SelectContent>
+          </Select>
           <button
             onClick={() => setFilter("all")}
             className={cn(

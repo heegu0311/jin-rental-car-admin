@@ -6,6 +6,13 @@ import { VehicleImage } from "./VehicleImage";
 import type { VehicleStatus } from "@/lib/domain/contracts";
 import { VEHICLE_LABELS } from "@/lib/domain/contracts";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   CheckSquare2,
   Edit2,
   ExternalLink,
@@ -224,21 +231,25 @@ export function VehicleList({
           <label className="sr-only" htmlFor="bulk-vehicle-status">
             변경할 실물 차량 상태
           </label>
-          <select
-            id="bulk-vehicle-status"
+          <Select
             value={bulkStatus}
             disabled={bulkUpdating}
-            onChange={(event) =>
-              setBulkStatus(event.target.value as VehicleStatus)
-            }
-            className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 disabled:opacity-60"
+            onValueChange={(value) => setBulkStatus(value as VehicleStatus)}
           >
-            {VEHICLE_STATUS_OPTIONS.map(([status, label]) => (
-              <option key={status} value={status}>
-                {label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger
+              id="bulk-vehicle-status"
+              className="font-semibold"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {VEHICLE_STATUS_OPTIONS.map(([status, label]) => (
+                <SelectItem key={status} value={status}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <button
             type="button"
             disabled={!visibleSelectedIds.length || bulkUpdating}

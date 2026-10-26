@@ -34,6 +34,13 @@ import {
   Sheet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { refreshPublicSiteOrNotify } from "@/lib/public-site";
 
@@ -485,18 +492,18 @@ export default function VehiclesPage() {
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
             />
           </div>
-          <select
-            aria-label="실차 상태"
-            value={unitFilter}
-            onChange={(e) => setUnitFilter(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-          >
-            <option value="all">전체 실차 상태</option>
-            <option value="available">대여 가능 차량 있음</option>
-            <option value="rented">대여 중 차량 있음</option>
-            <option value="maintenance">정비 중 차량 있음</option>
-            <option value="none">등록된 실차 없음</option>
-          </select>
+          <Select value={unitFilter} onValueChange={setUnitFilter}>
+            <SelectTrigger aria-label="실차 상태" className="rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">전체 실차 상태</SelectItem>
+              <SelectItem value="available">대여 가능 차량 있음</SelectItem>
+              <SelectItem value="rented">대여 중 차량 있음</SelectItem>
+              <SelectItem value="maintenance">정비 중 차량 있음</SelectItem>
+              <SelectItem value="none">등록된 실차 없음</SelectItem>
+            </SelectContent>
+          </Select>
 
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth">
             <button

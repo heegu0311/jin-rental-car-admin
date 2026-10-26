@@ -25,7 +25,16 @@ import {
   type VehicleSheetKey,
 } from "@/lib/domain/vehicle-sheet";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Car, Category } from "./types";
+
+const NO_CATEGORY = "__none__";
 
 const COLUMNS = createVehicleSheetColumns({
   price: INSURANCE_LIMITS.price,
@@ -235,7 +244,7 @@ export function VehicleSheet({
   };
 
   const handleKeyDown = (
-    event: KeyboardEvent<HTMLInputElement | HTMLSelectElement>,
+    event: KeyboardEvent<HTMLElement>,
     car: Car,
     row: number,
     col: number,
@@ -255,7 +264,7 @@ export function VehicleSheet({
   };
 
   const handlePaste = (
-    event: ClipboardEvent<HTMLInputElement | HTMLSelectElement>,
+    event: ClipboardEvent<HTMLElement>,
     row: number,
     col: number,
   ) => {
@@ -413,17 +422,17 @@ export function VehicleSheet({
                       draft ?? baseValue(car, column.key, categories);
                     const error = errors[id];
                     const dirty = draft !== undefined;
+                    const handlers = {
+                      onKeyDown: (e: KeyboardEvent<HTMLElement>) =>
+                        handleKeyDown(e, car, r, c),
+                      onPaste: (e: ClipboardEvent<HTMLElement>) =>
+                        handlePaste(e, r, c),
+                    };
                     const common = {
                       "data-cell": `${r}:${c}`,
                       "aria-label": `${car.name} ${column.label}`,
                       "aria-invalid": Boolean(error),
                       title: error,
-                      onKeyDown: (
-                        e: KeyboardEvent<HTMLInputElement | HTMLSelectElement>,
-                      ) => handleKeyDown(e, car, r, c),
-                      onPaste: (
-                        e: ClipboardEvent<HTMLInputElement | HTMLSelectElement>,
-                      ) => handlePaste(e, r, c),
                       className: cn(
                         "h-9 w-full bg-transparent px-2 text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500",
                         column.kind === "int" && "text-right tabular-nums",
@@ -440,27 +449,58 @@ export function VehicleSheet({
                         )}
                       >
                         {column.kind === "category" ? (
-                          <select
-                            {...common}
-                            value={value}
-                            onChange={(e) =>
-                              saveRow(car, { [column.key]: e.target.value })
-                            }
+                          <div
+                            onKeyDown={(e) => {
+                              // 열린 목록 안의 키 입력은 셀 이동으로 처리하지 않는다.
+                              if (
+                                e.target === e.currentTarget.firstElementChild
+                              )
+                                handlers.onKeyDown(e);
+                            }}
+                            onPaste={handlers.onPaste}
                           >
-                            <option value="">미지정</option>
-                            {categories.map((cat) => (
-                              <option key={cat.id} value={cat.name}>
-                                {cat.name}
-                              </option>
-                            ))}
-                            {value &&
-                              !categories.some((cat) => cat.name === value) && (
-                                <option value={value}>{value}</option>
-                              )}
-                          </select>
+                            <Select
+                              value={value || NO_CATEGORY}
+                              onValueChange={(next) =>
+                                saveRow(car, {
+                                  [column.key]:
+                                    next === NO_CATEGORY ? "" : next,
+                                })
+                              }
+                            >
+                              <SelectTrigger
+                                {...common}
+                                className={cn(
+                                  common.className,
+                                  "rounded-none border-0 shadow-none hover:border-0 data-[state=open]:ring-2 data-[state=open]:ring-inset data-[state=open]:ring-blue-500",
+                                )}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value={NO_CATEGORY}>
+                                  미지정
+                                </SelectItem>
+                                {categories.map((cat) => (
+                                  <SelectItem key={cat.id} value={cat.name}>
+                                    {cat.name}
+                                  </SelectItem>
+                                ))}
+                                {value &&
+                                  !categories.some(
+                                    (cat) => cat.name === value,
+                                  ) && (
+                                    <SelectItem value={value}>
+                                      {value}
+                                    </SelectItem>
+                                  )}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         ) : (
                           <input
                             {...common}
+                            {...handlers}
                             type="text"
                             inputMode={
                               column.kind === "int" ? "numeric" : undefined

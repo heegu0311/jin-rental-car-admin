@@ -5,6 +5,13 @@ import { DataTable } from "./DataTable";
 import { ReservationDetail } from "./ReservationDetail";
 import { StatusChips } from "./StatusChips";
 import { ReceiptMonthFilter } from "./ReceiptMonthFilter";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { Phone } from "lucide-react";
 import { PageHeading, StatusBadge } from "./feedback";
@@ -180,24 +187,32 @@ export function RecordManager({
             }}
           />
         ) : (
-          <label className="flex flex-col gap-2 text-sm font-bold text-slate-700">
-            문의 분류로 보기
-            <select
+          <div className="flex flex-col gap-2 text-sm font-bold text-slate-700">
+            <span id="inquiry-category-label">문의 분류로 보기</span>
+            <Select
               value={category}
-              onChange={(e) => {
-                setCategory(e.target.value);
+              onValueChange={(value) => {
+                setCategory(value);
                 setPage(0);
               }}
-              className="h-11 rounded-lg border border-slate-200 px-4 text-sm font-normal"
             >
-              <option value="all">전체 문의</option>
-              {inquiryCategories.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
+              <SelectTrigger
+                size="lg"
+                aria-labelledby="inquiry-category-label"
+                className="min-w-44 font-normal"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전체 문의</SelectItem>
+                {inquiryCategories.map((name) => (
+                  <SelectItem key={name} value={name}>
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
         <ReceiptMonthFilter
           value={receiptMonth}

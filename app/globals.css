@@ -120,7 +120,7 @@
 
 /* iOS Safari zooms into focused fields below 16px; keep pinch-zoom enabled instead of locking the viewport. */
 @media (max-width: 767px) {
-  :where(input:not([type="checkbox"], [type="radio"]), textarea, select, [contenteditable="true"]) {
+  :where(input:not([type="checkbox"], [type="radio"]), textarea, select, [contenteditable="true"], [data-slot="select-trigger"]) {
     font-size: max(16px, 1em);
   }
 }

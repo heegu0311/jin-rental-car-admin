@@ -450,8 +450,8 @@ export function VehicleSheet({
                       >
                         {column.kind === "category" ? (
                           <div
-                            onKeyDown={(e) => {
-                              // 열린 목록 안의 키 입력은 셀 이동으로 처리하지 않는다.
+                            onKeyDownCapture={(e) => {
+                              // 트리거보다 먼저 받아 Enter는 행 이동으로 쓰고, 열린 목록 안의 키 입력은 넘긴다.
                               if (
                                 e.target === e.currentTarget.firstElementChild
                               )
@@ -472,7 +472,7 @@ export function VehicleSheet({
                                 {...common}
                                 className={cn(
                                   common.className,
-                                  "rounded-none border-0 shadow-none hover:border-0 data-[state=open]:ring-2 data-[state=open]:ring-inset data-[state=open]:ring-blue-500",
+                                  "rounded-none border-0 shadow-none hover:border-0 data-[size=default]:h-9 data-[state=open]:ring-2 data-[state=open]:ring-inset data-[state=open]:ring-blue-500",
                                 )}
                               >
                                 <SelectValue />

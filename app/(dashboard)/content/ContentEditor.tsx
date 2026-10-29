@@ -15,7 +15,7 @@ import { PageHeading } from "@/components/shared/feedback";
 import { saveContent } from "./actions";
 import { notifySaved } from "@/lib/public-site";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
-import { AboutBannerPreview } from "./AboutBannerPreview";
+import { IMAGE_PREVIEWS, ImagePreview } from "./ImagePreview";
 import {
   CONTENT_GUIDES,
   type ContentFieldGuide,
@@ -168,9 +168,13 @@ export function ContentEditor({
           onChange={(image_url) => update({ ...draft, image_url })}
           folder={`content-${slug}`}
           preset="banner"
-          preview={slug !== "about"}
         />
       </div>
+      {IMAGE_PREVIEWS[slug] ? (
+        <div className="mt-4">
+          <ImagePreview slug={slug} draft={draft} defaultImage={defaultImage} />
+        </div>
+      ) : null}
     </div>
   );
   return (
@@ -217,12 +221,6 @@ export function ContentEditor({
         {guide.fixedFields ? (
           <>
             {imageField}
-            {slug === "about" ? (
-              <AboutBannerPreview
-                image={draft.image_url}
-                defaultImage={defaultImage}
-              />
-            ) : null}
             <FixedFields
               draft={draft}
               fallbacks={fallbacks}

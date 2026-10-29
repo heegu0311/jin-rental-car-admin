@@ -1,21 +1,25 @@
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import {
-  ABOUT_DEFAULT_IMAGE,
   ABOUT_DEFAULTS,
   ABOUT_FIELDS,
   ABOUT_SETTING_KEYS,
+  CONTENT_DEFAULT_IMAGES,
   CONTENT_PAGES,
+  type ContentSlug,
   type AboutField,
   type SiteContent,
 } from "@/lib/domain/contracts";
 import { ContentEditor } from "../ContentEditor";
-/** 고객 사이트 주소(재검증 URL의 origin)로 운영 중인 회사소개 기본 배너 주소를 만든다. 비밀값은 넘기지 않는다. */
-function liveDefaultAboutImage() {
+/** 고객 사이트 주소(재검증 URL의 origin)로 운영 중인 기본 이미지 주소를 만든다. 비밀값은 넘기지 않는다. */
+function liveDefaultImage(slug: ContentSlug) {
+  const images: Partial<Record<ContentSlug, string>> = CONTENT_DEFAULT_IMAGES;
+  const path = images[slug];
+  if (!path) return undefined;
   try {
     const url = new URL(process.env.WEB_REVALIDATE_URL ?? "");
     if (url.protocol !== "https:" && url.protocol !== "http:") return "";
-    return new URL(ABOUT_DEFAULT_IMAGE, url.origin).toString();
+    return new URL(path, url.origin).toString();
   } catch {
     return "";
   }
@@ -71,7 +75,7 @@ export default async function EditContent({
   return (
     <ContentEditor
       fallbacks={fallbacks}
-      defaultImage={slug === "about" ? liveDefaultAboutImage() : undefined}
+      defaultImage={liveDefaultImage(slug as ContentSlug)}
       initial={initial}
     />
   );

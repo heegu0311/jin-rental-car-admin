@@ -151,6 +151,24 @@ export function ContentEditor({
   const input =
     "mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
   const update = (next: SiteContent) => setDraft(next);
+  const imageField = (
+    <div className="text-sm font-semibold">
+      <span className="flex items-center gap-2">
+        <ImageIcon size={16} className="text-blue-600" aria-hidden="true" />{" "}
+        대표 이미지
+      </span>
+      <FieldGuide guide={guide.fields.image} />
+      <div className="mt-2">
+        <ImageUploadField
+          value={draft.image_url}
+          onChange={(image_url) => update({ ...draft, image_url })}
+          folder={`content-${slug}`}
+          preset="banner"
+          preview
+        />
+      </div>
+    </div>
+  );
   return (
     <form
       className="max-w-5xl space-y-8"
@@ -193,12 +211,15 @@ export function ContentEditor({
         className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6"
       >
         {guide.fixedFields ? (
-          <FixedFields
-            draft={draft}
-            fallbacks={fallbacks}
-            input={input}
-            onChange={(sections) => update({ ...draft, sections })}
-          />
+          <>
+            {imageField}
+            <FixedFields
+              draft={draft}
+              fallbacks={fallbacks}
+              input={input}
+              onChange={(sections) => update({ ...draft, sections })}
+            />
+          </>
         ) : (
           <>
             <label className="block text-sm font-semibold">
@@ -233,26 +254,7 @@ export function ContentEditor({
                 onChange={(e) => update({ ...draft, subtitle: e.target.value })}
               />
             </label>
-            <div className="text-sm font-semibold">
-              <span className="flex items-center gap-2">
-                <ImageIcon
-                  size={16}
-                  className="text-blue-600"
-                  aria-hidden="true"
-                />{" "}
-                대표 이미지
-              </span>
-              <FieldGuide guide={guide.fields.image} />
-              <div className="mt-2">
-                <ImageUploadField
-                  value={draft.image_url}
-                  onChange={(image_url) => update({ ...draft, image_url })}
-                  folder={`content-${slug}`}
-                  preset="banner"
-                  preview
-                />
-              </div>
-            </div>
+            {imageField}
           </>
         )}
         <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">

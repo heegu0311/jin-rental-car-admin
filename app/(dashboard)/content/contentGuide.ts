@@ -63,10 +63,11 @@ export const CONTENT_GUIDES = {
   },
   about: {
     route: "/about",
-    placement: "회사소개 페이지의 대표 인사말 서명과 찾아오시는 길",
+    placement: "회사소개 페이지의 상단 배너, 대표 인사말 서명과 찾아오시는 길",
     summary:
-      "대표자 이름과 상호·주소·대표 전화·영업시간·배차 시간을 관리합니다. 인사말 문구와 배너는 고정입니다.",
+      "상단 배너 이미지, 대표자 이름과 상호·주소·대표 전화·영업시간·배차 시간을 관리합니다. 배너·인사말 문구는 고정입니다.",
     preview: [
+      "상단 배너 이미지",
       "대표 인사말 · 대표자",
       "찾아오시는 길 · 상호",
       "주소·전화·영업·배차 시간",
@@ -74,7 +75,9 @@ export const CONTENT_GUIDES = {
     fields: {
       title: hiddenField("회사소개에서는 제목을 사용하지 않습니다."),
       subtitle: hiddenField("회사소개 인사말 문구는 고정입니다."),
-      image: hiddenField("회사소개 배너 이미지는 고정입니다."),
+      image: visibleField(
+        "회사소개 페이지 상단 배너 배경으로 사용됩니다. 비워 두면 기본 이미지를 사용합니다.",
+      ),
       sections: visibleField(
         "비워 둔 항목은 사업자·상담 채널 설정의 값을 그대로 사용합니다.",
       ),

@@ -3,7 +3,10 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { Eye, ImageIcon, LayoutTemplate, MapPin, Type } from "lucide-react";
 import {
+  ABOUT_FIELD_MAX,
+  ABOUT_FIELDS,
   CONTENT_PAGES,
+  type AboutField,
   type ContentSlug,
   type SiteContent,
 } from "@/lib/domain/contracts";
@@ -90,12 +93,60 @@ function LocationGuide({ guide }: { guide: ContentGuide }) {
   );
 }
 
-export function ContentEditor({ initial }: { initial: SiteContent }) {
+function FixedFields({
+  draft,
+  fallbacks,
+  input,
+  onChange,
+}: {
+  draft: SiteContent;
+  fallbacks?: Partial<Record<AboutField, string>>;
+  input: string;
+  onChange: (sections: SiteContent["sections"]) => void;
+}) {
+  const valueOf = (field: AboutField) =>
+    draft.sections.find((s) => s.title === field)?.body ?? "";
+  return (
+    <div className="space-y-5">
+      {ABOUT_FIELDS.map((field) => (
+        <label key={field} className="block text-sm font-semibold">
+          {field}
+          <input
+            className={input}
+            maxLength={ABOUT_FIELD_MAX}
+            value={valueOf(field)}
+            placeholder={fallbacks?.[field] || undefined}
+            onChange={(e) =>
+              onChange(
+                ABOUT_FIELDS.map((f) => ({
+                  title: f,
+                  body: f === field ? e.target.value : valueOf(f),
+                })),
+              )
+            }
+          />
+        </label>
+      ))}
+      <p className="text-xs font-normal leading-6 text-slate-500">
+        흐린 글씨는 비워 두었을 때 표시되는 값입니다. 대표자·주소·대표
+        전화·영업시간을 비워 두면 사업자·상담 채널 설정과 같은 값이 유지됩니다.
+      </p>
+    </div>
+  );
+}
+
+export function ContentEditor({
+  initial,
+  fallbacks,
+}: {
+  initial: SiteContent;
+  fallbacks?: Partial<Record<AboutField, string>>;
+}) {
   const [draft, setDraft] = useState(initial),
     [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const slug = draft.slug as ContentSlug;
-  const guide = CONTENT_GUIDES[slug];
+  const guide: ContentGuide = CONTENT_GUIDES[slug];
   const label = CONTENT_PAGES[slug];
   const input =
     "mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
@@ -141,53 +192,69 @@ export function ContentEditor({ initial }: { initial: SiteContent }) {
         disabled={busy}
         className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6"
       >
-        <label className="block text-sm font-semibold">
-          <span className="flex items-center gap-2">
-            <Type size={16} className="text-blue-600" aria-hidden="true" /> 제목
-          </span>
-          <FieldGuide guide={guide.fields.title} />
-          <input
-            className={input}
-            required
-            maxLength={200}
-            value={draft.title}
-            onChange={(e) => update({ ...draft, title: e.target.value })}
+        {guide.fixedFields ? (
+          <FixedFields
+            draft={draft}
+            fallbacks={fallbacks}
+            input={input}
+            onChange={(sections) => update({ ...draft, sections })}
           />
-        </label>
-        <label className="block text-sm font-semibold">
-          <span className="flex items-center gap-2">
-            <LayoutTemplate
-              size={16}
-              className="text-blue-600"
-              aria-hidden="true"
-            />
-            소개 / 부제목
-          </span>
-          <FieldGuide guide={guide.fields.subtitle} />
-          <textarea
-            rows={3}
-            className={input}
-            maxLength={3000}
-            value={draft.subtitle}
-            onChange={(e) => update({ ...draft, subtitle: e.target.value })}
-          />
-        </label>
-        <div className="text-sm font-semibold">
-          <span className="flex items-center gap-2">
-            <ImageIcon size={16} className="text-blue-600" aria-hidden="true" />{" "}
-            대표 이미지
-          </span>
-          <FieldGuide guide={guide.fields.image} />
-          <div className="mt-2">
-            <ImageUploadField
-              value={draft.image_url}
-              onChange={(image_url) => update({ ...draft, image_url })}
-              folder={`content-${slug}`}
-              preset="banner"
-              preview
-            />
-          </div>
-        </div>
+        ) : (
+          <>
+            <label className="block text-sm font-semibold">
+              <span className="flex items-center gap-2">
+                <Type size={16} className="text-blue-600" aria-hidden="true" />{" "}
+                제목
+              </span>
+              <FieldGuide guide={guide.fields.title} />
+              <input
+                className={input}
+                required
+                maxLength={200}
+                value={draft.title}
+                onChange={(e) => update({ ...draft, title: e.target.value })}
+              />
+            </label>
+            <label className="block text-sm font-semibold">
+              <span className="flex items-center gap-2">
+                <LayoutTemplate
+                  size={16}
+                  className="text-blue-600"
+                  aria-hidden="true"
+                />
+                소개 / 부제목
+              </span>
+              <FieldGuide guide={guide.fields.subtitle} />
+              <textarea
+                rows={3}
+                className={input}
+                maxLength={3000}
+                value={draft.subtitle}
+                onChange={(e) => update({ ...draft, subtitle: e.target.value })}
+              />
+            </label>
+            <div className="text-sm font-semibold">
+              <span className="flex items-center gap-2">
+                <ImageIcon
+                  size={16}
+                  className="text-blue-600"
+                  aria-hidden="true"
+                />{" "}
+                대표 이미지
+              </span>
+              <FieldGuide guide={guide.fields.image} />
+              <div className="mt-2">
+                <ImageUploadField
+                  value={draft.image_url}
+                  onChange={(image_url) => update({ ...draft, image_url })}
+                  folder={`content-${slug}`}
+                  preset="banner"
+                  preview
+                />
+              </div>
+            </div>
+          </>
+        )}
         <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
           <input
             type="checkbox"
@@ -210,108 +277,110 @@ export function ContentEditor({ initial }: { initial: SiteContent }) {
           화면을 유지합니다. 연락처와 상담 채널은 실제 운영 정보를 입력해주세요.
         </p>
       </fieldset>
-      <fieldset disabled={busy} className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-bold">내용 섹션</h2>
-            <FieldGuide guide={guide.fields.sections} />
+      {guide.fixedFields ? null : (
+        <fieldset disabled={busy} className="space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold">내용 섹션</h2>
+              <FieldGuide guide={guide.fields.sections} />
+            </div>
+            <button
+              type="button"
+              disabled={
+                draft.sections.length >= 40 || !guide.fields.sections.isVisible
+              }
+              title={
+                guide.fields.sections.isVisible
+                  ? "내용 섹션 추가"
+                  : "이 화면에서는 내용 섹션을 사용하지 않습니다."
+              }
+              onClick={() =>
+                update({
+                  ...draft,
+                  sections: [...draft.sections, { title: "", body: "" }],
+                })
+              }
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              섹션 추가
+            </button>
           </div>
-          <button
-            type="button"
-            disabled={
-              draft.sections.length >= 40 || !guide.fields.sections.isVisible
-            }
-            title={
-              guide.fields.sections.isVisible
-                ? "내용 섹션 추가"
-                : "이 화면에서는 내용 섹션을 사용하지 않습니다."
-            }
-            onClick={() =>
-              update({
-                ...draft,
-                sections: [...draft.sections, { title: "", body: "" }],
-              })
-            }
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            섹션 추가
-          </button>
-        </div>
-        {draft.sections.map((s, i) => (
-          <section
-            key={i}
-            className="space-y-3 rounded-xl border border-slate-200 bg-white p-6"
-          >
-            <div className="flex justify-between">
-              <span className="text-xs font-bold text-blue-600">
-                SECTION {i + 1}
-              </span>
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  disabled={i === 0}
-                  className="text-xs disabled:opacity-30"
-                  onClick={() => {
-                    const sections = [...draft.sections];
-                    [sections[i - 1], sections[i]] = [
-                      sections[i],
-                      sections[i - 1],
-                    ];
-                    update({ ...draft, sections });
-                  }}
-                >
-                  위로
-                </button>
-                <button
-                  type="button"
-                  className="text-xs text-red-600"
-                  onClick={() =>
+          {draft.sections.map((s, i) => (
+            <section
+              key={i}
+              className="space-y-3 rounded-xl border border-slate-200 bg-white p-6"
+            >
+              <div className="flex justify-between">
+                <span className="text-xs font-bold text-blue-600">
+                  SECTION {i + 1}
+                </span>
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    disabled={i === 0}
+                    className="text-xs disabled:opacity-30"
+                    onClick={() => {
+                      const sections = [...draft.sections];
+                      [sections[i - 1], sections[i]] = [
+                        sections[i],
+                        sections[i - 1],
+                      ];
+                      update({ ...draft, sections });
+                    }}
+                  >
+                    위로
+                  </button>
+                  <button
+                    type="button"
+                    className="text-xs text-red-600"
+                    onClick={() =>
+                      update({
+                        ...draft,
+                        sections: draft.sections.filter((_, j) => j !== i),
+                      })
+                    }
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
+              <label className="block text-sm">
+                섹션 제목
+                <input
+                  className={input}
+                  maxLength={200}
+                  value={s.title}
+                  onChange={(e) =>
                     update({
                       ...draft,
-                      sections: draft.sections.filter((_, j) => j !== i),
+                      sections: draft.sections.map((v, j) =>
+                        j === i ? { ...v, title: e.target.value } : v,
+                      ),
                     })
                   }
-                >
-                  삭제
-                </button>
-              </div>
-            </div>
-            <label className="block text-sm">
-              섹션 제목
-              <input
-                className={input}
-                maxLength={200}
-                value={s.title}
-                onChange={(e) =>
-                  update({
-                    ...draft,
-                    sections: draft.sections.map((v, j) =>
-                      j === i ? { ...v, title: e.target.value } : v,
-                    ),
-                  })
-                }
-              />
-            </label>
-            <label className="block text-sm">
-              내용
-              <textarea
-                className={input}
-                rows={5}
-                maxLength={15000}
-                value={s.body}
-                onChange={(e) =>
-                  update({
-                    ...draft,
-                    sections: draft.sections.map((v, j) =>
-                      j === i ? { ...v, body: e.target.value } : v,
-                    ),
-                  })
-                }
-              />
-            </label>
-          </section>
-        ))}
-      </fieldset>
+                />
+              </label>
+              <label className="block text-sm">
+                내용
+                <textarea
+                  className={input}
+                  rows={5}
+                  maxLength={15000}
+                  value={s.body}
+                  onChange={(e) =>
+                    update({
+                      ...draft,
+                      sections: draft.sections.map((v, j) =>
+                        j === i ? { ...v, body: e.target.value } : v,
+                      ),
+                    })
+                  }
+                />
+              </label>
+            </section>
+          ))}
+        </fieldset>
+      )}
       <button
         disabled={busy}
         className="sticky bottom-4 rounded-xl bg-blue-600 px-8 py-3 font-semibold text-white shadow-lg disabled:opacity-50"

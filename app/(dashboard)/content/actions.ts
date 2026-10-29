@@ -1,6 +1,11 @@
 "use server";
 import { requireAdmin } from "@/lib/auth";
-import { CONTENT_PAGES, type SiteContent } from "@/lib/domain/contracts";
+import {
+  ABOUT_FIELD_MAX,
+  ABOUT_FIELDS,
+  CONTENT_PAGES,
+  type SiteContent,
+} from "@/lib/domain/contracts";
 import { revalidatePath } from "next/cache";
 import { refreshPublicSite } from "@/lib/web-revalidate";
 export async function saveContent(value: SiteContent) {
@@ -29,6 +34,17 @@ export async function saveContent(value: SiteContent) {
   )
     return { error: "섹션 제목 또는 내용이 너무 깁니다." };
   if (
+    value.slug === "about" &&
+    value.sections.some(
+      (s) =>
+        !(ABOUT_FIELDS as readonly string[]).includes(s.title) ||
+        s.body.length > ABOUT_FIELD_MAX,
+    )
+  )
+    return {
+      error: `회사소개 항목은 각각 ${ABOUT_FIELD_MAX}자 이내로 입력해주세요.`,
+    };
+  if (
     typeof value.image_url !== "string" ||
     value.image_url.length > 2000 ||
     (value.image_url &&
@@ -42,7 +58,10 @@ export async function saveContent(value: SiteContent) {
     slug: value.slug,
     title: value.title.trim(),
     subtitle: value.subtitle.trim(),
-    sections: value.sections,
+    sections:
+      value.slug === "about"
+        ? value.sections.map((s) => ({ title: s.title, body: s.body.trim() }))
+        : value.sections,
     image_url: value.image_url.trim(),
     is_published: value.is_published,
     updated_at: new Date().toISOString(),

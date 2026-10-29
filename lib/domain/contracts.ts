@@ -92,6 +92,7 @@ export interface SiteContent {
 export const CONTENT_PAGES = {
   home: "메인 배너",
   benefits: "홈 특장점",
+  about: "회사소개",
   info: "이용안내",
   accident: "사고대차",
   privacy: "개인정보처리방침",
@@ -101,6 +102,32 @@ export const CONTENT_PAGES = {
   settings: "사업자·상담 채널",
 } as const;
 export type ContentSlug = keyof typeof CONTENT_PAGES;
+/**
+ * 회사소개(slug "about")는 고정 문구 외에 아래 항목만 관리자가 수정한다.
+ * sections의 title이 항목명, body가 표시값이다. 빈 값은 사업자 설정(settings)값을 사용한다.
+ */
+export const ABOUT_FIELDS = [
+  "대표자",
+  "상호",
+  "주소",
+  "대표 전화",
+  "영업시간",
+  "배차 시간",
+] as const;
+export type AboutField = (typeof ABOUT_FIELDS)[number];
+export const ABOUT_FIELD_MAX = 200;
+/** 회사소개 항목을 비웠을 때 대신 쓰는 settings 항목명. */
+export const ABOUT_SETTING_KEYS: Partial<Record<AboutField, string>> = {
+  대표자: "대표자",
+  주소: "주소",
+  "대표 전화": "전화번호",
+  영업시간: "상담시간",
+};
+/** settings에 대응 항목이 없는 회사소개 항목의 기본 표시값(Figma 원본). */
+export const ABOUT_DEFAULTS: Partial<Record<AboutField, string>> = {
+  상호: "주식회사진렌트카",
+  "배차 시간": "평일, 주말 08:30~18:30 (배달 18:00 마감)",
+};
 export const RESERVATION_LABELS: Record<ReservationStatus, string> = {
   pending: "대기중",
   confirmed: "상담완료",

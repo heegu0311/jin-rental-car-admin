@@ -16,6 +16,8 @@ export interface ContentGuide {
     image: ContentFieldGuide;
     sections: ContentFieldGuide;
   };
+  /** true면 섹션을 ABOUT_FIELDS 고정 항목 입력으로 편집한다. */
+  fixedFields?: true;
 }
 
 const hiddenField = (description: string): ContentFieldGuide => ({
@@ -58,6 +60,26 @@ export const CONTENT_GUIDES = {
         "각 섹션이 특장점 카드 한 개가 되며 제목과 설명으로 표시됩니다.",
       ),
     },
+  },
+  about: {
+    route: "/about",
+    placement: "회사소개 페이지의 대표 인사말 서명과 찾아오시는 길",
+    summary:
+      "대표자 이름과 상호·주소·대표 전화·영업시간·배차 시간을 관리합니다. 인사말 문구와 배너는 고정입니다.",
+    preview: [
+      "대표 인사말 · 대표자",
+      "찾아오시는 길 · 상호",
+      "주소·전화·영업·배차 시간",
+    ],
+    fields: {
+      title: hiddenField("회사소개에서는 제목을 사용하지 않습니다."),
+      subtitle: hiddenField("회사소개 인사말 문구는 고정입니다."),
+      image: hiddenField("회사소개 배너 이미지는 고정입니다."),
+      sections: visibleField(
+        "비워 둔 항목은 사업자·상담 채널 설정의 값을 그대로 사용합니다.",
+      ),
+    },
+    fixedFields: true,
   },
   info: {
     route: "/info",
@@ -166,7 +188,7 @@ export const CONTENT_GROUPS = [
   {
     title: "서비스 안내 페이지",
     description: "상단 배너와 서비스 설명이 있는 개별 안내 페이지입니다.",
-    slugs: ["info", "accident", "new-car"],
+    slugs: ["about", "info", "accident", "new-car"],
   },
   {
     title: "고객지원·운영 정보",

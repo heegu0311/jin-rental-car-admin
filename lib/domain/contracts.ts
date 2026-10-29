@@ -116,6 +116,8 @@ export const ABOUT_FIELDS = [
 ] as const;
 export type AboutField = (typeof ABOUT_FIELDS)[number];
 export const ABOUT_FIELD_MAX = 200;
+/** 회사소개 배너 이미지를 등록하지 않았을 때 web이 표시하는 기본 이미지(web public 경로). */
+export const ABOUT_DEFAULT_IMAGE = "/images/wireframe/about-HeroSection.png";
 /** 회사소개 항목을 비웠을 때 대신 쓰는 settings 항목명. */
 export const ABOUT_SETTING_KEYS: Partial<Record<AboutField, string>> = {
   대표자: "대표자",

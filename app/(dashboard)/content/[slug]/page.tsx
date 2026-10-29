@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import {
+  ABOUT_DEFAULT_IMAGE,
   ABOUT_DEFAULTS,
   ABOUT_FIELDS,
   ABOUT_SETTING_KEYS,
@@ -9,6 +10,16 @@ import {
   type SiteContent,
 } from "@/lib/domain/contracts";
 import { ContentEditor } from "../ContentEditor";
+/** 고객 사이트 주소(재검증 URL의 origin)로 운영 중인 회사소개 기본 배너 주소를 만든다. 비밀값은 넘기지 않는다. */
+function liveDefaultAboutImage() {
+  try {
+    const url = new URL(process.env.WEB_REVALIDATE_URL ?? "");
+    if (url.protocol !== "https:" && url.protocol !== "http:") return "";
+    return new URL(ABOUT_DEFAULT_IMAGE, url.origin).toString();
+  } catch {
+    return "";
+  }
+}
 export default async function EditContent({
   params,
 }: {
@@ -57,5 +68,11 @@ export default async function EditContent({
       title: field,
       body: initial.sections.find((s) => s.title === field)?.body ?? "",
     }));
-  return <ContentEditor fallbacks={fallbacks} initial={initial} />;
+  return (
+    <ContentEditor
+      fallbacks={fallbacks}
+      defaultImage={slug === "about" ? liveDefaultAboutImage() : undefined}
+      initial={initial}
+    />
+  );
 }

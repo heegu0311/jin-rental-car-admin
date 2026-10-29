@@ -139,9 +139,12 @@ function FixedFields({
 export function ContentEditor({
   initial,
   fallbacks,
+  defaultImage,
 }: {
   initial: SiteContent;
   fallbacks?: Partial<Record<AboutField, string>>;
+  /** 이미지를 비웠을 때 고객 사이트가 실제로 표시하는 이미지 주소. */
+  defaultImage?: string;
 }) {
   const [draft, setDraft] = useState(initial),
     [busy, setBusy] = useState(false);
@@ -215,7 +218,10 @@ export function ContentEditor({
           <>
             {imageField}
             {slug === "about" ? (
-              <AboutBannerPreview image={draft.image_url} />
+              <AboutBannerPreview
+                image={draft.image_url}
+                defaultImage={defaultImage}
+              />
             ) : null}
             <FixedFields
               draft={draft}

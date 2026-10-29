@@ -96,7 +96,15 @@ function ScaledBanner({ frame, image }: { frame: Frame; image: string }) {
   );
 }
 
-export function AboutBannerPreview({ image }: { image: string }) {
+export function AboutBannerPreview({
+  image,
+  defaultImage,
+}: {
+  image: string;
+  /** 이미지를 비웠을 때 운영 사이트가 표시하는 기본 배너 주소. 없으면 남색 배경만 보인다. */
+  defaultImage?: string;
+}) {
+  const shown = image || defaultImage || "";
   return (
     <section className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div>
@@ -108,7 +116,9 @@ export function AboutBannerPreview({ image }: { image: string }) {
           잘립니다. 글자가 잘 보이도록 어두운 막이 덮입니다.
           {image
             ? null
-            : " 이미지를 비워 두면 웹사이트의 기본 배너 이미지가 표시됩니다."}
+            : defaultImage
+              ? " 지금은 운영 중인 기본 배너 이미지를 보여주고 있습니다. 새 이미지를 넣으면 바로 바뀝니다."
+              : " 이미지를 비워 두면 웹사이트의 기본 배너 이미지가 표시됩니다(고객 사이트 주소 설정이 없어 여기서는 불러오지 못했습니다)."}
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,1fr)] md:items-start">
@@ -118,7 +128,7 @@ export function AboutBannerPreview({ image }: { image: string }) {
               <frame.Icon size={14} aria-hidden="true" />
               {frame.label}
             </figcaption>
-            <ScaledBanner frame={frame} image={image} />
+            <ScaledBanner frame={frame} image={shown} />
           </figure>
         ))}
       </div>

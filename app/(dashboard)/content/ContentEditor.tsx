@@ -24,16 +24,7 @@ import {
 
 function FieldGuide({ guide }: { guide: ContentFieldGuide }) {
   return (
-    <span
-      className={`mt-1 block text-xs font-normal leading-5 ${
-        guide.isVisible ? "text-slate-500" : "text-amber-700"
-      }`}
-    >
-      {guide.isVisible ? null : (
-        <strong className="mr-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold">
-          현재 미사용
-        </strong>
-      )}
+    <span className="mt-1 block text-xs font-normal leading-5 text-slate-500">
       {guide.description}
     </span>
   );
@@ -155,7 +146,9 @@ export function ContentEditor({
   const input =
     "mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
   const update = (next: SiteContent) => setDraft(next);
-  const imageField = (
+  // 웹사이트에서 쓰지 않는 항목은 편집 화면에서 숨기고, 저장된 값은 그대로 보존한다.
+  const shows = guide.fields;
+  const imageField = shows.image.isVisible ? (
     <div className="text-sm font-semibold">
       <span className="flex items-center gap-2">
         <ImageIcon size={16} className="text-blue-600" aria-hidden="true" />{" "}
@@ -176,7 +169,7 @@ export function ContentEditor({
         </div>
       ) : null}
     </div>
-  );
+  ) : null;
   return (
     <form
       className="max-w-5xl space-y-8"
@@ -230,38 +223,48 @@ export function ContentEditor({
           </>
         ) : (
           <>
-            <label className="block text-sm font-semibold">
-              <span className="flex items-center gap-2">
-                <Type size={16} className="text-blue-600" aria-hidden="true" />{" "}
-                제목
-              </span>
-              <FieldGuide guide={guide.fields.title} />
-              <input
-                className={input}
-                required
-                maxLength={200}
-                value={draft.title}
-                onChange={(e) => update({ ...draft, title: e.target.value })}
-              />
-            </label>
-            <label className="block text-sm font-semibold">
-              <span className="flex items-center gap-2">
-                <LayoutTemplate
-                  size={16}
-                  className="text-blue-600"
-                  aria-hidden="true"
+            {shows.title.isVisible && (
+              <label className="block text-sm font-semibold">
+                <span className="flex items-center gap-2">
+                  <Type
+                    size={16}
+                    className="text-blue-600"
+                    aria-hidden="true"
+                  />{" "}
+                  제목
+                </span>
+                <FieldGuide guide={guide.fields.title} />
+                <input
+                  className={input}
+                  required
+                  maxLength={200}
+                  value={draft.title}
+                  onChange={(e) => update({ ...draft, title: e.target.value })}
                 />
-                소개 / 부제목
-              </span>
-              <FieldGuide guide={guide.fields.subtitle} />
-              <textarea
-                rows={3}
-                className={input}
-                maxLength={3000}
-                value={draft.subtitle}
-                onChange={(e) => update({ ...draft, subtitle: e.target.value })}
-              />
-            </label>
+              </label>
+            )}
+            {shows.subtitle.isVisible && (
+              <label className="block text-sm font-semibold">
+                <span className="flex items-center gap-2">
+                  <LayoutTemplate
+                    size={16}
+                    className="text-blue-600"
+                    aria-hidden="true"
+                  />
+                  소개 / 부제목
+                </span>
+                <FieldGuide guide={guide.fields.subtitle} />
+                <textarea
+                  rows={3}
+                  className={input}
+                  maxLength={3000}
+                  value={draft.subtitle}
+                  onChange={(e) =>
+                    update({ ...draft, subtitle: e.target.value })
+                  }
+                />
+              </label>
+            )}
             {imageField}
           </>
         )}
@@ -287,7 +290,7 @@ export function ContentEditor({
           화면을 유지합니다. 연락처와 상담 채널은 실제 운영 정보를 입력해주세요.
         </p>
       </fieldset>
-      {guide.fixedFields ? null : (
+      {guide.fixedFields || !shows.sections.isVisible ? null : (
         <fieldset disabled={busy} className="space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -296,14 +299,8 @@ export function ContentEditor({
             </div>
             <button
               type="button"
-              disabled={
-                draft.sections.length >= 40 || !guide.fields.sections.isVisible
-              }
-              title={
-                guide.fields.sections.isVisible
-                  ? "내용 섹션 추가"
-                  : "이 화면에서는 내용 섹션을 사용하지 않습니다."
-              }
+              disabled={draft.sections.length >= 40}
+              title="내용 섹션 추가"
               onClick={() =>
                 update({
                   ...draft,

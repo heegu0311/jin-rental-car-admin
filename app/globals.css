@@ -42,6 +42,21 @@
     color: #020617 !important;
     font-family: var(--font-sans);
   }
+
+  /* Tailwind v4 preflight resets buttons to cursor: default. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  input:is([type="button"], [type="submit"], [type="reset"], [type="checkbox"], [type="radio"], [type="file"]):not(:disabled),
+  input::file-selector-button,
+  select:not(:disabled),
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+  :is(button, input, select, textarea):disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 }
 
 /* Glass effect aligned with web project's subtle styling */

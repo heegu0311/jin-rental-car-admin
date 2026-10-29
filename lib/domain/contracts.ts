@@ -92,7 +92,6 @@ export interface SiteContent {
 export const CONTENT_PAGES = {
   home: "메인 배너",
   benefits: "홈 특장점",
-  about: "회사소개",
   info: "이용안내",
   accident: "사고대차",
   privacy: "개인정보처리방침",

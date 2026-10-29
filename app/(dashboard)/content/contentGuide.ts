@@ -59,21 +59,6 @@ export const CONTENT_GUIDES = {
       ),
     },
   },
-  about: {
-    route: "/about",
-    placement: "회사소개 페이지의 상단 배너와 대표 인사말",
-    summary:
-      "회사 소개 이미지, 인사말 제목·본문과 추가 소개 내용을 관리합니다.",
-    preview: ["상단 배너 이미지", "대표 인사말", "추가 소개 섹션"],
-    fields: {
-      title: visibleField("회사소개 본문의 대표 인사말 제목으로 표시됩니다."),
-      subtitle: visibleField("대표 인사말 제목 아래의 회사 소개 본문입니다."),
-      image: visibleField("회사소개 페이지 상단 배너 배경으로 사용됩니다."),
-      sections: visibleField(
-        "찾아오시는 길 아래에 추가 소개 내용으로 표시됩니다.",
-      ),
-    },
-  },
   info: {
     route: "/info",
     placement: "이용안내 페이지의 상단 배너와 하단 추가 안내",
@@ -181,7 +166,7 @@ export const CONTENT_GROUPS = [
   {
     title: "서비스 안내 페이지",
     description: "상단 배너와 서비스 설명이 있는 개별 안내 페이지입니다.",
-    slugs: ["about", "info", "accident", "new-car"],
+    slugs: ["info", "accident", "new-car"],
   },
   {
     title: "고객지원·운영 정보",

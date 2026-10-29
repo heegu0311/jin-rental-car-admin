@@ -150,11 +150,13 @@ export const CATEGORY_ORDER = [
   "승합",
   "SUV",
   "전기",
+  "수입",
 ] as const;
 function categoryRank(name: string) {
   const key = name.trim().toUpperCase();
   const i = CATEGORY_ORDER.findIndex((c) => key.startsWith(c));
-  return i < 0 ? CATEGORY_ORDER.length : i;
+  // 목록에 없는 차종은 전기 뒤에 두고, 수입은 항상 가장 마지막에 둔다.
+  return i < 0 ? CATEGORY_ORDER.indexOf("수입") - 0.5 : i;
 }
 export function compareCategory(a: string, b: string) {
   return categoryRank(a) - categoryRank(b) || a.localeCompare(b, "ko");

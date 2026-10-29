@@ -15,6 +15,7 @@ import { PageHeading } from "@/components/shared/feedback";
 import { saveContent } from "./actions";
 import { notifySaved } from "@/lib/public-site";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
+import { AboutBannerPreview } from "./AboutBannerPreview";
 import {
   CONTENT_GUIDES,
   type ContentFieldGuide,
@@ -164,7 +165,7 @@ export function ContentEditor({
           onChange={(image_url) => update({ ...draft, image_url })}
           folder={`content-${slug}`}
           preset="banner"
-          preview
+          preview={slug !== "about"}
         />
       </div>
     </div>
@@ -213,6 +214,9 @@ export function ContentEditor({
         {guide.fixedFields ? (
           <>
             {imageField}
+            {slug === "about" ? (
+              <AboutBannerPreview image={draft.image_url} />
+            ) : null}
             <FixedFields
               draft={draft}
               fallbacks={fallbacks}

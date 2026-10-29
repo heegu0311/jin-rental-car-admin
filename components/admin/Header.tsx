@@ -14,7 +14,6 @@ const titles: Record<string, string> = {
   "/consultations": "예약/문의 통합 관리",
   "/content": "웹사이트 콘텐츠 관리",
   "/insurance": "자차보험 설정",
-  "/settings": "사이트 설정",
   "/accident": "사고대차 안내 관리",
 };
 export function Header({ onMenuClick }: { onMenuClick: () => void }) {

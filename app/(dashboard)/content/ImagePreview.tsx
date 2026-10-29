@@ -20,7 +20,6 @@ interface Frame {
 }
 
 interface BannerSpec {
-  kind: "banner";
   align: "center" | "left";
   overlay: string;
   badge?: { text: string; color: string; radius: number };
@@ -33,21 +32,12 @@ interface BannerSpec {
   mobile: Frame;
 }
 
-interface InlineSpec {
-  kind: "inline";
-  desktop: { width: number; height: number };
-  mobile: { width: number; height: number };
-}
-
 const SLATE = "#94a3b8";
 const PAGE_DESKTOP = { width: 1440, minHeight: 420, padding: "32px 24px" };
 const PAGE_MOBILE = { width: 390, minHeight: 156, padding: "16px 20px" };
 
-export const IMAGE_PREVIEWS: Partial<
-  Record<ContentSlug, BannerSpec | InlineSpec>
-> = {
+export const IMAGE_PREVIEWS: Partial<Record<ContentSlug, BannerSpec>> = {
   home: {
-    kind: "banner",
     align: "left",
     overlay: "rgba(15,23,42,0.82)",
     badge: { text: "SINCE 1995", color: "#0ea5e9", radius: 4 },
@@ -80,7 +70,6 @@ export const IMAGE_PREVIEWS: Partial<
     },
   },
   about: {
-    kind: "banner",
     align: "center",
     overlay: "rgba(15,23,42,0.75)",
     badge: { text: "SINCE 1995", color: "#14b8a6", radius: 50 },
@@ -103,7 +92,6 @@ export const IMAGE_PREVIEWS: Partial<
     },
   },
   info: {
-    kind: "banner",
     align: "center",
     overlay:
       "linear-gradient(rgba(0,0,0,0), rgba(15,23,42,0.8) 55%, rgba(15,23,42,0.9))",
@@ -117,7 +105,6 @@ export const IMAGE_PREVIEWS: Partial<
     mobile: { ...PAGE_MOBILE, title: [32, 40], subtitle: [14, 22, 12] },
   },
   accident: {
-    kind: "banner",
     align: "left",
     overlay: "rgba(11,18,32,0.7)",
     badge: {
@@ -151,7 +138,6 @@ export const IMAGE_PREVIEWS: Partial<
     },
   },
   contact: {
-    kind: "banner",
     align: "center",
     overlay: "rgba(15,23,42,0.75)",
     subtitleColor: SLATE,
@@ -163,17 +149,6 @@ export const IMAGE_PREVIEWS: Partial<
     }),
     desktop: { ...PAGE_DESKTOP, title: [40, 48], subtitle: [16, 24, 12] },
     mobile: { ...PAGE_MOBILE, title: [32, 40], subtitle: [14, 22, 12] },
-  },
-  // 정책 문서는 본문 폭(1440px: 1232px, 390px: 342px)에 최대 384px 높이로 표시된다.
-  privacy: {
-    kind: "inline",
-    desktop: { width: 1232, height: 384 },
-    mobile: { width: 342, height: 171 },
-  },
-  terms: {
-    kind: "inline",
-    desktop: { width: 1232, height: 384 },
-    mobile: { width: 342, height: 171 },
   },
 };
 
@@ -338,62 +313,33 @@ export function ImagePreview({
   if (!spec) return null;
   const image = draft.image_url;
   const shown = image || defaultImage || "";
-  const note =
-    spec.kind === "inline"
-      ? image
-        ? " 문서 제목 아래 본문 폭에 맞춰 최대 높이까지 표시되며, 넘치는 부분은 잘립니다."
-        : " 이미지를 비워 두면 문서에 이미지가 표시되지 않습니다."
-      : image
-        ? null
-        : defaultImage
-          ? " 지금은 운영 중인 기본 이미지를 보여주고 있습니다. 새 이미지를 넣으면 바로 바뀝니다."
-          : " 이미지를 비워 두면 웹사이트의 기본 이미지가 표시됩니다(고객 사이트 주소 설정이 없어 여기서는 불러오지 못했습니다).";
+  const note = image
+    ? null
+    : defaultImage
+      ? " 지금은 운영 중인 기본 이미지를 보여주고 있습니다. 새 이미지를 넣으면 바로 바뀝니다."
+      : " 이미지를 비워 두면 웹사이트의 기본 이미지가 표시됩니다(고객 사이트 주소 설정이 없어 여기서는 불러오지 못했습니다).";
   return (
     <section className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div>
         <h3 className="text-sm font-bold text-slate-900">화면별 미리보기</h3>
         <p className="mt-1 text-xs font-normal leading-5 text-slate-500">
-          {spec.kind === "banner"
-            ? "이미지는 가운데를 기준으로 영역을 꽉 채우고, 넘치는 위아래·좌우는 잘립니다. 글자가 잘 보이도록 어두운 막이 덮이며, 문구는 위 입력값을 반영합니다."
-            : "정책 문서 본문에 들어가는 이미지입니다."}
+          이미지는 가운데를 기준으로 영역을 꽉 채우고, 넘치는 위아래·좌우는
+          잘립니다. 글자가 잘 보이도록 어두운 막이 덮이며, 문구는 위 입력값을
+          반영합니다.
           {note}
         </p>
       </div>
-      {spec.kind === "inline" && !image ? null : (
-        <div className="grid gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,1fr)] md:items-start">
-          {FRAMES.map(({ key, label, Icon }) => (
-            <figure key={key} className="space-y-2">
-              <figcaption className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
-                <Icon size={14} aria-hidden="true" />
-                {label}
-              </figcaption>
-              {spec.kind === "banner" ? (
-                <Banner
-                  spec={spec}
-                  frame={spec[key]}
-                  image={shown}
-                  draft={draft}
-                />
-              ) : (
-                <Scaled width={spec[key].width} minHeight={spec[key].height}>
-                  <div
-                    className="relative bg-white"
-                    style={{ height: spec[key].height }}
-                  >
-                    <Image
-                      src={image}
-                      alt=""
-                      fill
-                      unoptimized
-                      className="rounded-2xl object-cover"
-                    />
-                  </div>
-                </Scaled>
-              )}
-            </figure>
-          ))}
-        </div>
-      )}
+      <div className="grid gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,1fr)] md:items-start">
+        {FRAMES.map(({ key, label, Icon }) => (
+          <figure key={key} className="space-y-2">
+            <figcaption className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+              <Icon size={14} aria-hidden="true" />
+              {label}
+            </figcaption>
+            <Banner spec={spec} frame={spec[key]} image={shown} draft={draft} />
+          </figure>
+        ))}
+      </div>
     </section>
   );
 }

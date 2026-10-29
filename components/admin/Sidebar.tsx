@@ -1,7 +1,6 @@
 "use client";
 import {
   Table2,
-  Settings,
   CalendarCheck,
   CircleAlert,
   MessageCircle,
@@ -21,7 +20,6 @@ const menu = [
   { href: "/notices", label: "공지사항", icon: FileText },
   { href: "/content", label: "웹사이트 콘텐츠", icon: FileText },
   { href: "/insurance", label: "자차보험 설정", icon: ShieldCheck },
-  { href: "/settings", label: "사이트 설정", icon: Settings },
 ];
 const consultationMenu = [
   { href: "/reservations", label: "기간 렌트", icon: CalendarCheck },

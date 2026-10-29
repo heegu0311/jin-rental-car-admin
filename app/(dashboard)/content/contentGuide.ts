@@ -43,24 +43,6 @@ export const CONTENT_GUIDES = {
       sections: hiddenField("메인 배너에서는 내용 섹션을 사용하지 않습니다."),
     },
   },
-  benefits: {
-    route: "/",
-    placement: "메인 배너 바로 아래의 진렌트카 특장점 영역",
-    summary: "특장점 영역의 제목과 네 개의 장점 카드를 관리합니다.",
-    preview: ["영역 제목", "특장점 카드 1", "특장점 카드 2~4"],
-    fields: {
-      title: visibleField("JIN RENTAL CAR ADVANTAGE 아래의 제목입니다."),
-      subtitle: hiddenField(
-        "홈 특장점 영역에서는 소개 문구를 사용하지 않습니다.",
-      ),
-      image: hiddenField(
-        "홈 특장점 영역에서는 대표 이미지를 사용하지 않습니다.",
-      ),
-      sections: visibleField(
-        "각 섹션이 특장점 카드 한 개가 되며 제목과 설명으로 표시됩니다.",
-      ),
-    },
-  },
   about: {
     route: "/about",
     placement: "회사소개 페이지의 상단 배너, 대표 인사말 서명과 찾아오시는 길",
@@ -86,52 +68,26 @@ export const CONTENT_GUIDES = {
   },
   info: {
     route: "/info",
-    placement: "이용안내 페이지의 상단 배너와 하단 추가 안내",
-    summary: "이용안내의 첫 제목·이미지와 추가 안내 섹션을 관리합니다.",
-    preview: ["상단 배너", "기본 이용 절차", "추가 안내 섹션"],
+    placement: "이용안내 페이지의 상단 배너",
+    summary: "이용안내 상단 배너의 제목·소개 문구와 이미지를 관리합니다.",
+    preview: ["상단 배너", "기본 이용 절차", "주의사항"],
     fields: {
       title: visibleField("이용안내 페이지 상단 배너의 큰 제목입니다."),
       subtitle: visibleField("상단 배너 제목 아래의 소개 문구입니다."),
       image: visibleField("이용안내 페이지 상단 배너 배경으로 사용됩니다."),
-      sections: visibleField(
-        "기본 이용 절차와 주의사항 다음에 추가로 표시됩니다.",
-      ),
+      sections: hiddenField("이용안내에서는 내용 섹션을 사용하지 않습니다."),
     },
   },
   accident: {
     route: "/accident",
-    placement: "사고대차 페이지의 서비스 소개와 하단 추가 안내",
-    summary: "사고대차 소개 제목·설명, 배너 이미지와 추가 내용을 관리합니다.",
-    preview: ["상단 배너 이미지", "서비스 소개", "추가 안내 섹션"],
+    placement: "사고대차 페이지의 상단 배너와 서비스 소개",
+    summary: "사고대차 소개 제목·설명과 배너 이미지를 관리합니다.",
+    preview: ["상단 배너 이미지", "서비스 소개", "자주 묻는 질문"],
     fields: {
       title: visibleField("사고대차 서비스 소개 영역의 큰 제목입니다."),
       subtitle: visibleField("서비스 소개 제목 아래의 설명으로 표시됩니다."),
       image: visibleField("사고대차 페이지 상단 배너 배경으로 사용됩니다."),
-      sections: visibleField("FAQ 아래에 추가 안내 카드로 표시됩니다."),
-    },
-  },
-  privacy: {
-    route: "/privacy",
-    placement: "개인정보처리방침 페이지 전체",
-    summary: "공개 중인 개인정보처리방침의 제목과 조항을 관리합니다.",
-    preview: ["문서 제목", "문서 소개", "방침 조항"],
-    fields: {
-      title: visibleField("개인정보처리방침 페이지의 문서 제목입니다."),
-      subtitle: visibleField("문서 제목 아래의 방침 소개 문구입니다."),
-      image: visibleField("입력하면 문서 상단에 대표 이미지가 표시됩니다."),
-      sections: visibleField("각 섹션이 방침 조항 한 개로 표시됩니다."),
-    },
-  },
-  terms: {
-    route: "/terms",
-    placement: "서비스 이용약관 페이지 전체",
-    summary: "공개 중인 서비스 이용약관의 제목과 조항을 관리합니다.",
-    preview: ["문서 제목", "문서 소개", "약관 조항"],
-    fields: {
-      title: visibleField("이용약관 페이지의 문서 제목입니다."),
-      subtitle: visibleField("문서 제목 아래의 약관 소개 문구입니다."),
-      image: visibleField("입력하면 문서 상단에 대표 이미지가 표시됩니다."),
-      sections: visibleField("각 섹션이 약관 조항 한 개로 표시됩니다."),
+      sections: hiddenField("사고대차에서는 내용 섹션을 사용하지 않습니다."),
     },
   },
   contact: {
@@ -186,7 +142,7 @@ export const CONTENT_GROUPS = [
   {
     title: "메인 페이지",
     description: "방문자가 처음 보는 홈 화면의 주요 영역입니다.",
-    slugs: ["home", "benefits"],
+    slugs: ["home"],
   },
   {
     title: "서비스 안내 페이지",
@@ -195,8 +151,8 @@ export const CONTENT_GROUPS = [
   },
   {
     title: "고객지원·운영 정보",
-    description: "문의 화면, 정책 문서와 사이트 전역의 운영 정보입니다.",
-    slugs: ["contact", "privacy", "terms", "settings"],
+    description: "문의 화면과 사이트 전역의 운영 정보입니다.",
+    slugs: ["contact", "settings"],
   },
 ] as const satisfies ReadonlyArray<{
   title: string;

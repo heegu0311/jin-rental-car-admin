@@ -91,12 +91,9 @@ export interface SiteContent {
 }
 export const CONTENT_PAGES = {
   home: "메인 배너",
-  benefits: "홈 특장점",
   about: "회사소개",
   info: "이용안내",
   accident: "사고대차",
-  privacy: "개인정보처리방침",
-  terms: "이용약관",
   contact: "고객센터 안내",
   "new-car": "신차 장기렌트 안내",
   settings: "사업자·상담 채널",

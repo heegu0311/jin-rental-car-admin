@@ -37,7 +37,7 @@ export default async function ContentPage() {
         <ol className="mt-5 grid gap-3 text-sm md:grid-cols-3">
           {[
             ["1", "영역 선택", "아래 카드에서 노출 위치를 확인합니다."],
-            ["2", "내용 편집", "제목·이미지·내용 섹션을 수정합니다."],
+            ["2", "내용 편집", "제목·문구·이미지를 수정합니다."],
             ["3", "공개 후 확인", "저장한 다음 실제 웹페이지를 확인합니다."],
           ].map(([number, title, body]) => (
             <li

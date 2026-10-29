@@ -286,7 +286,7 @@ export function ContentEditor({
           </span>
         </label>
         <p className="text-xs leading-6 text-slate-500">
-          초안은 웹사이트에 노출되지 않습니다. 안내·약관 페이지의 초안은 기존
+          초안은 웹사이트에 노출되지 않습니다. 안내 페이지의 초안은 기존
           화면을 유지합니다. 연락처와 상담 채널은 실제 운영 정보를 입력해주세요.
         </p>
       </fieldset>

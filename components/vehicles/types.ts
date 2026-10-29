@@ -6,7 +6,10 @@ export interface Car {
   price: string;
   badge?: string;
   condition: string;
+  /** 대표 사진(images[0]). 목록·카드에 쓴다. */
   image: string;
+  /** 상세 캐러셀 사진. 첫 장이 대표 사진이다. */
+  images?: string[];
   fuel?: string;
   category_id?: string;
   pricePolicy: {

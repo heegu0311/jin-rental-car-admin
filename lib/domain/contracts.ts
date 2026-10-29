@@ -25,6 +25,8 @@ export interface Vehicle {
   year: number;
   fuel: string | null;
   image_url: string | null;
+  /** 상세 캐러셀 사진(첫 장이 대표 사진, image_url과 같음). 최대 VEHICLE_IMAGE_MAX장. */
+  image_urls?: string[] | null;
   badge: string | null;
   condition: string | null;
   category_id: string | null;
@@ -419,4 +421,20 @@ const variantImagePattern =
 export function mobileImageVariant(url: string | null | undefined) {
   const match = url?.match(variantImagePattern);
   return match ? `${match[1]}mobile${match[2]}` : null;
+}
+export const VEHICLE_IMAGE_MAX = 10;
+/** 사진 주소는 HTTPS 또는 사이트 내부 경로만 허용한다. */
+export function safeImageUrl(url: unknown): url is string {
+  return (
+    typeof url === "string" &&
+    url.length <= 2000 &&
+    (/^https:\/\/[^\s/?#]+\/\S*$/.test(url) || /^\/(?!\/)\S*$/.test(url))
+  );
+}
+/** 차량 사진 목록. image_urls가 비어 있으면 기존 대표 사진 1장을 쓴다. */
+export function vehicleImages(
+  car: Pick<Vehicle, "image_url" | "image_urls">,
+): string[] {
+  const list = car.image_urls?.length ? car.image_urls : [car.image_url];
+  return [...new Set(list.filter(safeImageUrl))].slice(0, VEHICLE_IMAGE_MAX);
 }

@@ -7,6 +7,8 @@ import {
   rentalType,
   validPhone,
   vehicleOptions,
+  vehicleImages,
+  VEHICLE_IMAGE_MAX,
 } from "../lib/domain/contracts.ts";
 test("금액은 저장된 단위를 유지하고 유효하지 않은 값을 문의로 표시", () => {
   assert.equal(formatWon(380000), "380,000원");
@@ -49,4 +51,24 @@ test("관리자 업로드 이미지의 모바일 사본 주소만 계산", () =>
   );
   assert.equal(mobileImageVariant("/empty.jpeg"), null);
   assert.equal(mobileImageVariant(null), null);
+});
+test("차량 사진 목록은 안전한 주소만 순서대로, 없으면 대표 사진으로", () => {
+  const a = "https://x.supabase.co/a.webp";
+  const b = "/cars/b.jpg";
+  assert.deepEqual(vehicleImages({ image_url: a, image_urls: [a, b, a] }), [a, b]);
+  assert.deepEqual(vehicleImages({ image_url: a, image_urls: [] }), [a]);
+  assert.deepEqual(vehicleImages({ image_url: a }), [a]);
+  assert.deepEqual(vehicleImages({ image_url: null, image_urls: null }), []);
+  assert.deepEqual(
+    vehicleImages({
+      image_url: null,
+      image_urls: ["javascript:alert(1)", "http://x.co/a.jpg", "//evil.co/a.jpg", b],
+    }),
+    [b],
+  );
+  const many = Array.from({ length: 15 }, (_, i) => `/c/${i}.jpg`);
+  assert.equal(
+    vehicleImages({ image_url: null, image_urls: many }).length,
+    VEHICLE_IMAGE_MAX,
+  );
 });

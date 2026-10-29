@@ -22,6 +22,7 @@ import {
 import {
   INCLUDED_KM_MAX,
   INSURANCE_LIMITS,
+  VEHICLE_IMAGE_MAX,
   VEHICLE_OPTIONS,
   vehicleOptions,
 } from "@/lib/domain/contracts";
@@ -34,6 +35,8 @@ import {
   Tag,
   Hash,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { refreshPublicSiteOrNotify } from "@/lib/public-site";
@@ -68,6 +71,7 @@ export function VehicleModal({
       badge: "",
       condition: "비흡연/완벽점검",
       image: "",
+      images: [],
       category_id: "",
       pricePolicy: { daily: 0, weekly: 0, monthly: 0 },
       price: "",
@@ -77,7 +81,7 @@ export function VehicleModal({
   const [units, setUnits] = useState<VehicleUnit[]>([]);
   const [newPlate, setNewPlate] = useState("");
   const [isAddingUnit, setIsAddingUnit] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
   const [saving, setSaving] = useState(false);
 
   const [supabase] = useState(createClient);
@@ -147,23 +151,62 @@ export function VehicleModal({
     }
   };
 
+  const images = formData.images || [];
+  const setImages = (update: (current: string[]) => string[]) =>
+    setFormData((current) => {
+      const next = update(current.images || []);
+      return { ...current, images: next, image: next[0] || "" };
+    });
+  const moveImage = (index: number, offset: -1 | 1) =>
+    setImages((current) => {
+      const next = [...current];
+      [next[index], next[index + offset]] = [next[index + offset], next[index]];
+      return next;
+    });
+  const removeImage = (index: number) =>
+    setImages((current) => current.filter((_, i) => i !== index));
+
+  /** 선택한 사진을 순서대로 올린다. 실패한 사진만 건너뛰고 나머지는 유지한다. */
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
-    const file = input.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    try {
-      const publicUrl = await uploadAdminImage(supabase, file, "vehicles", "thumbnail");
-      setFormData((current) => ({ ...current, image: publicUrl }));
-    } catch (error) {
+    const selected = Array.from(input.files || []);
+    input.value = "";
+    if (!selected.length) return;
+    const files = selected.slice(0, VEHICLE_IMAGE_MAX - images.length);
+    if (files.length < selected.length)
       toast.error(
-        error instanceof Error ? error.message : "이미지 업로드 중 오류가 발생했습니다.",
+        `사진은 최대 ${VEHICLE_IMAGE_MAX}장까지 등록할 수 있어 ${selected.length - files.length}장은 제외했습니다.`,
       );
-    } finally {
-      setIsUploading(false);
-      input.value = "";
+
+    let failed = 0;
+    for (const [index, file] of files.entries()) {
+      setUploadProgress(`${index + 1}/${files.length}`);
+      try {
+        const publicUrl = await uploadAdminImage(
+          supabase,
+          file,
+          "vehicles",
+          "thumbnail",
+        );
+        setImages((current) =>
+          current.length < VEHICLE_IMAGE_MAX
+            ? [...current, publicUrl]
+            : current,
+        );
+      } catch (error) {
+        failed += 1;
+        toast.error(
+          error instanceof Error
+            ? `${file.name}: ${error.message}`
+            : `${file.name}: 이미지 업로드 중 오류가 발생했습니다.`,
+        );
+      }
     }
+    setUploadProgress("");
+    if (failed && failed < files.length)
+      toast.error(
+        `${files.length - failed}장은 추가했고 ${failed}장은 올리지 못했습니다.`,
+      );
   };
 
   const handleEditorImageUpload = (file: File): Promise<string> =>
@@ -171,7 +214,7 @@ export function VehicleModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (saving) return;
+    if (saving || uploadProgress) return;
     setSaving(true);
     try {
       await onSave({
@@ -321,85 +364,101 @@ export function VehicleModal({
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-400 ml-1 uppercase">
-                  차량 이미지
-                </label>
-                <div className="relative group">
-                  {formData.image ? (
-                    <div className="relative aspect-[3/2] w-full rounded-2xl overflow-hidden border border-slate-200">
+                <div className="ml-1 flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase">
+                    차량 사진
+                  </label>
+                  <span className="text-[11px] font-bold text-slate-400">
+                    {images.length} / {VEHICLE_IMAGE_MAX}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {images.map((src, index) => (
+                    <div
+                      key={src}
+                      className="group relative aspect-[3/2] overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+                    >
                       <Image
-                        src={formData.image}
-                        alt="Preview"
+                        src={src}
+                        alt={`차량 사진 ${index + 1}`}
                         fill
+                        sizes="160px"
                         className="object-cover"
                       />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <label className="cursor-pointer p-2.5 bg-white text-slate-900 rounded-xl hover:bg-slate-50 transition-all font-bold text-xs flex items-center gap-2">
-                          <Camera size={16} />
-                          이미지 변경
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept={ADMIN_IMAGE_ACCEPT}
-                            onChange={handleImageUpload}
-                            disabled={isUploading}
-                          />
-                        </label>
+                      {index === 0 && (
+                        <span className="absolute left-1.5 top-1.5 rounded-md bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                          대표
+                        </span>
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 flex justify-between gap-1 bg-black/45 p-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                         <button
                           type="button"
-                          onClick={() =>
-                            setFormData({ ...formData, image: "" })
-                          }
-                          className="p-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
+                          aria-label={`사진 ${index + 1} 앞으로 이동`}
+                          disabled={index === 0}
+                          onClick={() => moveImage(index, -1)}
+                          className="rounded-md bg-white/90 p-1 text-slate-700 disabled:opacity-40"
                         >
-                          <Trash2 size={16} />
+                          <ChevronLeft size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`사진 ${index + 1} 삭제`}
+                          onClick={() => removeImage(index)}
+                          className="rounded-md bg-red-500 p-1 text-white"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`사진 ${index + 1} 뒤로 이동`}
+                          disabled={index === images.length - 1}
+                          onClick={() => moveImage(index, 1)}
+                          className="rounded-md bg-white/90 p-1 text-slate-700 disabled:opacity-40"
+                        >
+                          <ChevronRight size={14} />
                         </button>
                       </div>
                     </div>
-                  ) : (
+                  ))}
+                  {images.length < VEHICLE_IMAGE_MAX && (
                     <label
                       className={cn(
-                        "flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed rounded-2xl cursor-pointer transition-all",
-                        isUploading
-                          ? "bg-slate-50 border-slate-200"
-                          : "bg-slate-50 border-slate-200 hover:border-blue-400 hover:bg-blue-50/30",
+                        "flex aspect-[3/2] cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-slate-500 transition-all focus-within:border-blue-400",
+                        !uploadProgress &&
+                          "hover:border-blue-400 hover:bg-blue-50/30",
                       )}
                     >
-                      {isUploading ? (
-                        <div className="flex flex-col items-center gap-2">
-                          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                          <p className="text-xs font-bold text-slate-500">
-                            업로드 중...
-                          </p>
-                        </div>
+                      {uploadProgress ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                          <span className="text-[11px] font-bold">
+                            업로드 중 {uploadProgress}
+                          </span>
+                        </>
                       ) : (
-                        <div className="flex flex-col items-center gap-2">
-                          <div className="p-3 bg-white rounded-2xl shadow-sm text-slate-400 group-hover:text-blue-500 transition-colors">
-                            <Camera size={24} />
-                          </div>
-                          <div className="text-center">
-                            <p className="text-xs font-bold text-slate-600">
-                              클릭하여 이미지 업로드
-                            </p>
-                            <p className="text-[10px] text-slate-400 mt-1">
-                              권장 비율 {IMAGE_PRESETS.thumbnail.ratio} (예:{" "}
-                              {IMAGE_PRESETS.thumbnail.example})
-                            </p>
-                          </div>
-                        </div>
+                        <>
+                          <Camera size={20} />
+                          <span className="text-[11px] font-bold">
+                            사진 추가
+                          </span>
+                        </>
                       )}
                       <input
                         type="file"
-                        className="hidden"
+                        multiple
+                        className="sr-only"
                         accept={ADMIN_IMAGE_ACCEPT}
                         onChange={handleImageUpload}
-                        disabled={isUploading}
+                        disabled={Boolean(uploadProgress)}
                       />
                     </label>
                   )}
                 </div>
                 <p className="ml-1 text-[11px] leading-relaxed text-slate-400">
-                  {imageGuide("thumbnail")}
+                  여러 장을 한 번에 선택할 수 있습니다. 첫 번째 사진이
+                  목록·카드의 대표 사진이며 상세 페이지에서 순서대로 넘겨 볼 수
+                  있습니다. 권장 비율 {IMAGE_PRESETS.thumbnail.ratio} (예:{" "}
+                  {IMAGE_PRESETS.thumbnail.example}). {imageGuide("thumbnail")}
                 </p>
               </div>
 
@@ -784,9 +843,15 @@ export function VehicleModal({
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="available">대여 가능</SelectItem>
-                                  <SelectItem value="rented">대여 중</SelectItem>
-                                  <SelectItem value="maintenance">정비 중</SelectItem>
+                                  <SelectItem value="available">
+                                    대여 가능
+                                  </SelectItem>
+                                  <SelectItem value="rented">
+                                    대여 중
+                                  </SelectItem>
+                                  <SelectItem value="maintenance">
+                                    정비 중
+                                  </SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -834,7 +899,7 @@ export function VehicleModal({
             취소
           </button>
           <button
-            disabled={saving || isUploading}
+            disabled={saving || Boolean(uploadProgress)}
             form="vehicle-form"
             type="submit"
             className="flex-[2] py-3 px-8 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"

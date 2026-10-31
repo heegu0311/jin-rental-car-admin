@@ -1,22 +1,17 @@
 "use client";
-import {
-  VEHICLE_LABELS,
-  type Vehicle,
-  type VehicleStatus,
-} from "@/lib/domain/contracts";
+import { VEHICLE_LABELS, type VehicleStatus } from "@/lib/domain/contracts";
 import { Feedback } from "@/components/shared/feedback";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { compareCategory } from "@/lib/domain/contracts";
 import {
-  compareCategory,
-  INCLUDED_KM_MAX,
-  INSURANCE_LIMITS,
-  safeImageUrl,
-  VEHICLE_IMAGE_MAX,
-  vehicleImages,
-} from "@/lib/domain/contracts";
-import type { Car, Category } from "@/components/vehicles/types";
+  carFromVehicle,
+  vehiclePayload,
+  vehiclePayloadError,
+  type Car,
+  type Category,
+} from "@/lib/domain/vehicle-form";
 import { VehicleList } from "@/components/vehicles/VehicleList";
 import {
   VehicleSheet,
@@ -87,46 +82,7 @@ export default function VehiclesPage() {
   const applyData = useCallback(
     ([vehiclesRes, categoriesRes]: Awaited<ReturnType<typeof loadData>>) => {
       if (!vehiclesRes.error && vehiclesRes.data) {
-        const mapped = vehiclesRes.data.map((v: Vehicle) => {
-          const images = vehicleImages(v);
-          return {
-            id: v.id,
-            name: v.name,
-            type: v.type,
-            year: String(v.year),
-            price: String(v.price_monthly ?? 0),
-            badge: v.badge || "",
-            condition: v.condition || "",
-            image: images[0] || "",
-            images,
-            fuel: v.fuel || "",
-            category_id: v.category_id || "",
-            pricePolicy: {
-              daily: v.price_daily,
-              weekly: v.price_weekly,
-              monthly: v.price_monthly,
-            },
-            unitCount: v.vehicle_units?.length || 0,
-            availableCount:
-              v.vehicle_units?.filter((u) => u.status === "available").length ||
-              0,
-            content: v.content || "",
-            options: v.options || [],
-            manufacturer: v.manufacturer || "",
-            seats: v.seats || 5,
-            displacement_cc: v.displacement_cc ?? null,
-            is_van: Boolean(v.is_van),
-            extra_km_fee: v.extra_km_fee ?? null,
-            km_daily: v.km_daily ?? null,
-            km_weekly: v.km_weekly ?? null,
-            km_monthly: v.km_monthly ?? null,
-            rentedCount:
-              v.vehicle_units?.filter((u) => u.status === "rented").length || 0,
-            maintenanceCount:
-              v.vehicle_units?.filter((u) => u.status === "maintenance")
-                .length || 0,
-          };
-        });
+        const mapped = vehiclesRes.data.map(carFromVehicle);
         setCars(mapped);
       }
 
@@ -222,70 +178,9 @@ export default function VehiclesPage() {
   ];
 
   const handleSaveCar = async (carData: Car) => {
-    const images = carData.images || [];
-    const payload = {
-      name: carData.name,
-      year: Number(carData.year),
-      fuel: carData.fuel,
-      badge: carData.badge,
-      condition: carData.condition,
-      image_url: images[0] || "",
-      image_urls: images,
-      category_id: carData.category_id || null,
-      price_daily: carData.pricePolicy.daily,
-      price_weekly: carData.pricePolicy.weekly,
-      price_monthly: carData.pricePolicy.monthly,
-      type:
-        categories.find((c) => c.id === carData.category_id)?.name ||
-        carData.type ||
-        "일반",
-      content: carData.content || "",
-      options: (carData.options || []).map((s) => s.trim()).filter(Boolean),
-      manufacturer: carData.manufacturer || "",
-      seats: carData.seats || 5,
-      displacement_cc: carData.displacement_cc ?? null,
-      is_van: Boolean(carData.is_van),
-      extra_km_fee: carData.extra_km_fee ?? null,
-      km_daily: carData.km_daily ?? null,
-      km_weekly: carData.km_weekly ?? null,
-      km_monthly: carData.km_monthly ?? null,
-    };
-
-    if (
-      images.length > VEHICLE_IMAGE_MAX ||
-      new Set(images).size !== images.length ||
-      !images.every(safeImageUrl)
-    ) {
-      throw new Error(
-        `차량 사진은 HTTPS 주소로 중복 없이 최대 ${VEHICLE_IMAGE_MAX}장까지 등록할 수 있습니다.`,
-      );
-    }
-    if (
-      !payload.name.trim() ||
-      !Number.isInteger(payload.year) ||
-      payload.year < 1990 ||
-      payload.year > 2100 ||
-      [payload.price_daily, payload.price_weekly, payload.price_monthly].some(
-        (p) => !Number.isInteger(p) || p < 0,
-      ) ||
-      (payload.displacement_cc !== null &&
-        (!Number.isInteger(payload.displacement_cc) ||
-          payload.displacement_cc < 0 ||
-          payload.displacement_cc > INSURANCE_LIMITS.cc)) ||
-      (payload.extra_km_fee !== null &&
-        (!Number.isInteger(payload.extra_km_fee) ||
-          payload.extra_km_fee < 0 ||
-          payload.extra_km_fee > INSURANCE_LIMITS.price)) ||
-      [payload.km_daily, payload.km_weekly, payload.km_monthly].some(
-        (km) =>
-          km !== null &&
-          (!Number.isInteger(km) || km < 0 || km > INCLUDED_KM_MAX),
-      )
-    ) {
-      throw new Error(
-        "차량명, 연식, 0 이상의 정수 요금·약정 주행거리·초과 주행 요금과 배기량(0~20,000cc)을 입력해주세요.",
-      );
-    }
+    const payload = vehiclePayload(carData, categories);
+    const invalid = vehiclePayloadError(payload);
+    if (invalid) throw new Error(invalid);
     const result = editingCar
       ? await supabase
           .from("vehicles")

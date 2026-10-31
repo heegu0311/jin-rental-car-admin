@@ -1,0 +1,166 @@
+/**
+ * 관리자 차량 편집 화면의 상태(Car)와 vehicles 테이블 행 사이의 변환·저장 검증.
+ * React·Supabase에 의존하지 않는다.
+ */
+import {
+  INCLUDED_KM_MAX,
+  INSURANCE_LIMITS,
+  VEHICLE_IMAGE_MAX,
+  safeImageUrl,
+  vehicleImages,
+  type Vehicle,
+} from "./contracts.ts";
+
+export interface Car {
+  id: string;
+  name: string;
+  type?: string;
+  year: string;
+  price: string;
+  badge?: string;
+  condition: string;
+  /** 대표 사진(images[0]). 목록·카드에 쓴다. */
+  image: string;
+  /** 상세 캐러셀 사진. 첫 장이 대표 사진이다. */
+  images?: string[];
+  fuel?: string;
+  category_id?: string;
+  pricePolicy: {
+    daily: number;
+    weekly: number;
+    monthly: number;
+  };
+  unitCount?: number;
+  availableCount?: number;
+  content?: string;
+  options?: string[];
+  manufacturer?: string;
+  seats?: number;
+  /** 배기량(cc). 빈 값이면 null. */
+  displacement_cc?: number | null;
+  is_van?: boolean;
+  /** 100km당 초과 주행 요금(원). 빈 값이면 null. */
+  extra_km_fee?: number | null;
+  /** 일/주/월 기본 약정 주행거리(km). 빈 값이면 null. */
+  km_daily?: number | null;
+  km_weekly?: number | null;
+  km_monthly?: number | null;
+  rentedCount?: number;
+  maintenanceCount?: number;
+}
+
+export interface VehicleUnit {
+  id: string;
+  plate_number: string;
+  status: "available" | "rented" | "maintenance";
+}
+
+export interface Category {
+  id: string;
+  name: string;
+}
+
+/** vehicles 행(+ vehicle_units 상태 목록)을 편집 화면 상태로 바꾼다. */
+export function carFromVehicle(v: Vehicle): Car {
+  const images = vehicleImages(v);
+  const units = v.vehicle_units || [];
+  const count = (status: string) =>
+    units.filter((u) => u.status === status).length;
+  return {
+    id: v.id,
+    name: v.name,
+    type: v.type,
+    year: String(v.year),
+    price: String(v.price_monthly ?? 0),
+    badge: v.badge || "",
+    condition: v.condition || "",
+    image: images[0] || "",
+    images,
+    fuel: v.fuel || "",
+    category_id: v.category_id || "",
+    pricePolicy: {
+      daily: v.price_daily,
+      weekly: v.price_weekly,
+      monthly: v.price_monthly,
+    },
+    unitCount: units.length,
+    availableCount: count("available"),
+    rentedCount: count("rented"),
+    maintenanceCount: count("maintenance"),
+    content: v.content || "",
+    options: v.options || [],
+    manufacturer: v.manufacturer || "",
+    seats: v.seats || 5,
+    displacement_cc: v.displacement_cc ?? null,
+    is_van: Boolean(v.is_van),
+    extra_km_fee: v.extra_km_fee ?? null,
+    km_daily: v.km_daily ?? null,
+    km_weekly: v.km_weekly ?? null,
+    km_monthly: v.km_monthly ?? null,
+  };
+}
+
+/** 편집 화면 상태를 vehicles insert/update 값으로 바꾼다. type은 카테고리 이름을 따른다. */
+export function vehiclePayload(car: Car, categories: Category[]) {
+  const images = car.images || [];
+  return {
+    name: car.name,
+    year: Number(car.year),
+    fuel: car.fuel,
+    badge: car.badge,
+    condition: car.condition,
+    image_url: images[0] || "",
+    image_urls: images,
+    category_id: car.category_id || null,
+    price_daily: car.pricePolicy.daily,
+    price_weekly: car.pricePolicy.weekly,
+    price_monthly: car.pricePolicy.monthly,
+    type:
+      categories.find((c) => c.id === car.category_id)?.name ||
+      car.type ||
+      "일반",
+    content: car.content || "",
+    options: (car.options || []).map((s) => s.trim()).filter(Boolean),
+    manufacturer: car.manufacturer || "",
+    seats: car.seats || 5,
+    displacement_cc: car.displacement_cc ?? null,
+    is_van: Boolean(car.is_van),
+    extra_km_fee: car.extra_km_fee ?? null,
+    km_daily: car.km_daily ?? null,
+    km_weekly: car.km_weekly ?? null,
+    km_monthly: car.km_monthly ?? null,
+  };
+}
+export type VehiclePayload = ReturnType<typeof vehiclePayload>;
+
+const nonNegativeInt = (value: unknown, max = Infinity) =>
+  Number.isInteger(value) && (value as number) >= 0 && (value as number) <= max;
+const optional = (value: number | null, max: number) =>
+  value === null || nonNegativeInt(value, max);
+
+/** 저장 전 검증. 문제가 있으면 관리자에게 보여줄 문구, 없으면 null. */
+export function vehiclePayloadError(payload: VehiclePayload): string | null {
+  const images = payload.image_urls;
+  if (
+    images.length > VEHICLE_IMAGE_MAX ||
+    new Set(images).size !== images.length ||
+    !images.every(safeImageUrl)
+  )
+    return `차량 사진은 HTTPS 주소로 중복 없이 최대 ${VEHICLE_IMAGE_MAX}장까지 등록할 수 있습니다.`;
+  if (
+    !payload.name.trim() ||
+    !Number.isInteger(payload.year) ||
+    payload.year < 1990 ||
+    payload.year > 2100 ||
+    ![payload.price_daily, payload.price_weekly, payload.price_monthly].every(
+      (p) => nonNegativeInt(p),
+    ) ||
+    !optional(payload.displacement_cc, INSURANCE_LIMITS.cc) ||
+    !optional(payload.extra_km_fee, INSURANCE_LIMITS.price) ||
+    ![payload.km_daily, payload.km_weekly, payload.km_monthly].every((km) =>
+      optional(km, INCLUDED_KM_MAX),
+    )
+  )
+    return "차량명, 연식, 0 이상의 정수 요금·약정 주행거리·초과 주행 요금과 배기량(0~20,000cc)을 입력해주세요.";
+  return null;
+}

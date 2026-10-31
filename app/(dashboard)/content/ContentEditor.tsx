@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Eye, ImageIcon, LayoutTemplate, MapPin, Type } from "lucide-react";
 import {
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { PageHeading } from "@/components/shared/feedback";
 import { saveContent } from "./actions";
 import { notifySaved } from "@/lib/public-site";
+import { useSubmitLock } from "@/lib/hooks/use-submit-lock";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import { IMAGE_PREVIEWS, ImagePreview } from "./ImagePreview";
 import {
@@ -137,9 +138,8 @@ export function ContentEditor({
   /** 이미지를 비웠을 때 고객 사이트가 실제로 표시하는 이미지 주소. */
   defaultImage?: string;
 }) {
-  const [draft, setDraft] = useState(initial),
-    [busy, setBusy] = useState(false);
-  const lock = useRef(false);
+  const [draft, setDraft] = useState(initial);
+  const { busy, run } = useSubmitLock();
   const slug = draft.slug as ContentSlug;
   const guide: ContentGuide = CONTENT_GUIDES[slug];
   const label = CONTENT_PAGES[slug];
@@ -175,23 +175,19 @@ export function ContentEditor({
       className="max-w-5xl space-y-8"
       onSubmit={async (e) => {
         e.preventDefault();
-        if (lock.current) return;
-        lock.current = true;
-        setBusy(true);
-        try {
-          const r = await saveContent(draft);
-          if (r.error || !r.site) toast.error(r.error);
-          else
-            notifySaved(
-              "저장되었습니다. 공개 상태와 웹사이트 내용을 확인해주세요.",
-              r.site,
-            );
-        } catch {
-          toast.error("저장 요청에 실패했습니다. 다시 시도해주세요.");
-        } finally {
-          lock.current = false;
-          setBusy(false);
-        }
+        await run(async () => {
+          try {
+            const r = await saveContent(draft);
+            if (r.error || !r.site) toast.error(r.error);
+            else
+              notifySaved(
+                "저장되었습니다. 공개 상태와 웹사이트 내용을 확인해주세요.",
+                r.site,
+              );
+          } catch {
+            toast.error("저장 요청에 실패했습니다. 다시 시도해주세요.");
+          }
+        });
       }}
     >
       <PageHeading

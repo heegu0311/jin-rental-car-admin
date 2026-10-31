@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/auth";
-import { ConsultationList } from "@/components/shared/ConsultationList";
+import { ConsultationList } from "@/components/consultations/ConsultationList";
 import type { Inquiry, Reservation } from "@/lib/domain/contracts";
 
 export default async function ConsultationsPage() {

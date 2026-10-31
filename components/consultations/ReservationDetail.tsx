@@ -3,7 +3,8 @@ import {
   RESERVATION_LABELS,
   VEHICLE_OPTIONS,
 } from "@/lib/domain/contracts";
-import { StatusBadge } from "./feedback";
+import { StatusBadge } from "@/components/shared/feedback";
+import { formatKstDateTime } from "@/lib/format";
 
 // web의 submitConsultation이 message 앞뒤에 붙이는 라벨만 구조화한다.
 const LABELED_LINES = [
@@ -126,9 +127,7 @@ export function ReservationDetail({
       </section>
       <p className="text-xs text-slate-500">
         접수일{" "}
-        {new Date(reservation.created_at).toLocaleString("ko-KR", {
-          timeZone: "Asia/Seoul",
-        })}
+        {formatKstDateTime(reservation.created_at)}
       </p>
     </div>
   );

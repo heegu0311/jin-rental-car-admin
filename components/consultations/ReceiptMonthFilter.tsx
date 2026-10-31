@@ -1,5 +1,5 @@
 "use client";
-import { AdminCalendarField } from "./AdminCalendarField";
+import { AdminCalendarField } from "@/components/shared/AdminCalendarField";
 export function ReceiptMonthFilter({
   value,
   onChange,

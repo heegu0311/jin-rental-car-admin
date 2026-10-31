@@ -4,9 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import type { Inquiry, Reservation } from "@/lib/domain/contracts";
 import { INQUIRY_LABELS, RESERVATION_LABELS } from "@/lib/domain/contracts";
-import { DataTable } from "./DataTable";
-import { PageHeading, StatusBadge } from "./feedback";
-import { StatusChips } from "./StatusChips";
+import { DataTable } from "@/components/shared/DataTable";
+import { PageHeading, StatusBadge } from "@/components/shared/feedback";
+import { Pagination } from "@/components/shared/Pagination";
+import { StatusChips } from "@/components/shared/StatusChips";
+import {
+  matchesRecordFilter,
+  recordSubject,
+  reservationCategory,
+} from "@/lib/consultation";
+import { formatKstDateTime, kstMonth } from "@/lib/format";
 import { ReceiptMonthFilter } from "./ReceiptMonthFilter";
 
 type Row =
@@ -18,6 +25,7 @@ type Row =
     }
   | { kind: "inquiry"; record: Inquiry; id: string; created_at: string };
 
+const PAGE_SIZE = 20;
 const typeLabel = {
   rental: "기간 렌트",
   "new-car": "신차 장기",
@@ -34,11 +42,11 @@ export function ConsultationList({
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState("all");
   const [status, setStatus] = useState("all");
-  const [receiptMonth, setReceiptMonth] = useState(() => new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }).slice(0, 7));
+  const [receiptMonth, setReceiptMonth] = useState(() => kstMonth());
   const [page, setPage] = useState(0);
   const rows: Row[] = [
     ...reservations.map((record): Row => ({
-      kind: record.car_name.startsWith("[신차]") ? "new-car" : "rental",
+      kind: reservationCategory(record),
       record,
       id: `reservation-${record.id}`,
       created_at: record.created_at,
@@ -50,23 +58,11 @@ export function ConsultationList({
       created_at: record.created_at,
     })),
   ].sort((a, b) => b.created_at.localeCompare(a.created_at));
-  const filtered = rows.filter((row) => {
-    const month = new Date(row.created_at)
-      .toLocaleDateString("sv-SE", {
-        timeZone: "Asia/Seoul",
-      })
-      .slice(0, 7);
-    const subject =
-      row.kind === "inquiry" ? row.record.title : row.record.car_name;
-    const search =
-      `${row.record.user_name} ${row.record.user_phone} ${subject}`.toLowerCase();
-    return (
+  const filtered = rows.filter(
+    (row) =>
       (kind === "all" || row.kind === kind) &&
-      (status === "all" || row.record.status === status) &&
-      (!receiptMonth || month === receiptMonth) &&
-      search.includes(query.toLowerCase())
-    );
-  });
+      matchesRecordFilter(row.record, { query, status, month: receiptMonth }),
+  );
   const changeFilter = (setter: (value: string) => void, value: string) => {
     setter(value);
     setPage(0);
@@ -118,7 +114,7 @@ export function ConsultationList({
       <p className="text-sm text-slate-500">총 {filtered.length}건</p>
       <DataTable<Row>
         caption="예약 및 문의 목록"
-        rows={filtered.slice(page * 20, (page + 1) * 20)}
+        rows={filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
         columns={[
           {
             key: "kind",
@@ -151,16 +147,12 @@ export function ConsultationList({
           {
             key: "subject",
             label: "제목/차량명",
-            render: (row) =>
-              row.kind === "inquiry" ? row.record.title : row.record.car_name,
+            render: (row) => recordSubject(row.record),
           },
           {
             key: "created",
             label: "접수일",
-            render: (row) =>
-              new Date(row.created_at).toLocaleString("ko-KR", {
-                timeZone: "Asia/Seoul",
-              }),
+            render: (row) => formatKstDateTime(row.created_at),
           },
           {
             key: "action",
@@ -176,25 +168,12 @@ export function ConsultationList({
           },
         ]}
       />
-      <div className="flex items-center justify-end gap-4 text-sm">
-        <button
-          disabled={page === 0}
-          onClick={() => setPage((current) => current - 1)}
-          className="rounded border bg-white px-4 py-2 disabled:opacity-30"
-        >
-          이전
-        </button>
-        <span>
-          {page + 1} / {Math.max(1, Math.ceil(filtered.length / 20))}
-        </span>
-        <button
-          disabled={(page + 1) * 20 >= filtered.length}
-          onClick={() => setPage((current) => current + 1)}
-          className="rounded border bg-white px-4 py-2 disabled:opacity-30"
-        >
-          다음
-        </button>
-      </div>
+      <Pagination
+        page={page}
+        total={filtered.length}
+        pageSize={PAGE_SIZE}
+        onChange={setPage}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import {
@@ -17,6 +17,7 @@ import {
 import { PageHeading } from "@/components/shared/feedback";
 import { Panel } from "@/components/shared/Panel";
 import { notifySaved } from "@/lib/public-site";
+import { useSubmitLock } from "@/lib/hooks/use-submit-lock";
 import { saveInsurance } from "./actions";
 
 const UNITS = ["daily", "weekly", "monthly"] as const;
@@ -55,8 +56,7 @@ export function InsuranceEditor({
   const [draft, setDraft] = useState(initial);
   const [published, setPublished] = useState(initialPublished);
   const [unit, setUnit] = useState<RentalType>("daily");
-  const [busy, setBusy] = useState(false);
-  const lock = useRef(false);
+  const { busy, run } = useSubmitLock();
   const current = draft.units[unit];
   const classes = insuranceClasses(draft.ccLimits);
   const setCurrent = (next: typeof current) =>
@@ -131,25 +131,21 @@ export function InsuranceEditor({
       className="max-w-5xl space-y-6"
       onSubmit={async (e) => {
         e.preventDefault();
-        if (lock.current) return;
-        lock.current = true;
-        setBusy(true);
-        try {
-          const r = await saveInsurance(draft, published);
-          if ("error" in r) toast.error(r.error);
-          else
-            notifySaved(
-              published
-                ? "저장되었습니다. 상담 신청 화면에 반영됩니다."
-                : "초안으로 저장되었습니다. 웹사이트에는 표시되지 않습니다.",
-              r.site,
-            );
-        } catch {
-          toast.error("저장 요청에 실패했습니다. 다시 시도해주세요.");
-        } finally {
-          lock.current = false;
-          setBusy(false);
-        }
+        await run(async () => {
+          try {
+            const r = await saveInsurance(draft, published);
+            if ("error" in r) toast.error(r.error);
+            else
+              notifySaved(
+                published
+                  ? "저장되었습니다. 상담 신청 화면에 반영됩니다."
+                  : "초안으로 저장되었습니다. 웹사이트에는 표시되지 않습니다.",
+                r.site,
+              );
+          } catch {
+            toast.error("저장 요청에 실패했습니다. 다시 시도해주세요.");
+          }
+        });
       }}
     >
       <PageHeading

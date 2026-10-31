@@ -99,3 +99,9 @@
   - 차량 상세의 선택 대여 조건은 `lib/hooks/use-selected-rental.ts` 하나에서 읽고 바꾼다. 화면은 `SelectedRentalConditions`(조건 카드), `RentalPriceSummary`(모바일 하단 바·저렴한 단위 안내), `VehicleQueryConsultation`(상담).
   - 렌트 단위 라벨은 `RENTAL_TYPE_LABELS`, 기간 표시는 `rentalPeriodLabel`(`lib/rental-schedule.ts`).
   - React Compiler lint 규칙에 따라 props → state 동기화는 effect가 아니라 렌더 중 비교로 한다(ConsultationForm 참고).
+
+## 39 — 배지·아이콘·단계 번호 외곽선 스타일 통일 (2026-10-31 사용자 결정)
+
+- Wireframe의 색 배지(SINCE 1995 하늘/청록, 사고대차 파랑, PREMIUM NEW CAR LEASE 파랑 외곽선), 이용안내 주의사항의 네이비 원형 아이콘(파랑·청록·노랑·빨강), 이용 절차 네이비 번호 상자를 **흰 배경 + 네이비(#0f172a) 글자·1.5px 테두리 + 모서리 12px**로 통일했다. 원본에서 의도적으로 바꾼 것이다.
+- 값은 `web/app/wireframe.css` `:root`의 `--wf-navy`, `--wf-outline-bg`, `--wf-outline-border`, `--wf-outline-radius` 한 곳에서 관리한다. 크기·위치·문구는 원본 그대로이며, 모바일 번호 상자의 개별 반경 덮어쓰기는 제거했다.
+- 홈 특장점 아이콘(`.wf-benefit-icon`, 연파랑 배경)은 이번 범위에 포함하지 않았다.

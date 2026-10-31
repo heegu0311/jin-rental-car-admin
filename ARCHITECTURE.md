@@ -84,3 +84,18 @@
 - 렌트 검색의 수령 방식·대여/반납일시·장소는 URL에 보관하고 상세 상담 폼의 시작일·기간·추가 요청으로 전달한다.
 - 신차 상담의 선택 생년월일은 6자리 입력만 받으며 기존 예약 options에 저장한다. 공개 개인정보 안내에 선택 항목을 명시한다.
 - 관리자 그래프는 한국 시간 기준 오늘 포함 최근 7일의 실제 접수 건수를 서버에서 집계한다. 샘플 막대나 증가율을 표시하지 않는다.
+
+## 38 — 유지보수용 구조 정리 (2026-10-31)
+
+- 동작·디자인 변경 없는 리팩토링. 계약(`contracts.ts`)·DB·권한 변경 없음. 각 저장소 `README.md`에 실행법·폴더 구조·"자주 하는 수정" 표를 둔다.
+- 테스트는 양쪽 모두 `pnpm test`(= `node --test tests/*.test.mjs`). React·Supabase에 의존하지 않는 lib 순수 함수만 테스트한다.
+- 공통: 폼·저장 버튼의 중복 제출 방지는 `lib/hooks/use-submit-lock.ts`(`busy`, `run`)로 통일했다.
+- admin
+  - `components/consultations/`: 예약·신차·문의 목록(RecordManager, ConsultationList)과 상세(RecordDetailDialog, PhoneLink). 분류·필터 규칙은 `lib/consultation.ts`, 한국 시간 날짜·전화번호 표시는 `lib/format.ts`.
+  - 이벤트·공지 목록의 조회·전환·삭제는 `lib/hooks/use-admin-table.ts`, 검색·필터 버튼은 `components/shared/ListFilters.tsx`.
+  - 차량 편집은 `VehicleModal`(폼) + `VehicleImagesField` + `VehicleUnitsSection`. DB 행 ↔ 편집 상태 변환과 저장 전 검증은 `lib/domain/vehicle-form.ts`.
+  - lib 순수 모듈끼리는 `.ts` 확장자를 붙여 import한다(`allowImportingTsExtensions`, node 테스트 실행용).
+- web
+  - 차량 상세의 선택 대여 조건은 `lib/hooks/use-selected-rental.ts` 하나에서 읽고 바꾼다. 화면은 `SelectedRentalConditions`(조건 카드), `RentalPriceSummary`(모바일 하단 바·저렴한 단위 안내), `VehicleQueryConsultation`(상담).
+  - 렌트 단위 라벨은 `RENTAL_TYPE_LABELS`, 기간 표시는 `rentalPeriodLabel`(`lib/rental-schedule.ts`).
+  - React Compiler lint 규칙에 따라 props → state 동기화는 effect가 아니라 렌더 중 비교로 한다(ConsultationForm 참고).

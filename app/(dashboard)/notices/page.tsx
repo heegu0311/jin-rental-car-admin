@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   Plus,
-  Search,
   Bell,
   Edit2,
   Trash2,
@@ -14,12 +13,11 @@ import {
   ChevronLeft,
   Filter,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
-import { toast } from "sonner";
-import { refreshPublicSiteOrNotify } from "@/lib/public-site";
+import { FilterPill, SearchInput } from "@/components/shared/ListFilters";
+import { useAdminTable } from "@/lib/hooks/use-admin-table";
 
 interface Notice {
   id: string;
@@ -30,91 +28,51 @@ interface Notice {
   updated_at: string;
 }
 
+const ORDER = [
+  { column: "is_pinned", ascending: false },
+  { column: "created_at", ascending: false },
+] as const;
+const PAGE_SIZE = 10;
+
 export default function NoticesPage() {
+  const {
+    rows: notices,
+    loading,
+    loadError,
+    toggle,
+    remove,
+  } = useAdminTable<Notice>("notices", ORDER);
   const [page, setPage] = useState(1);
-  const [notices, setNotices] = useState<Notice[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<"all" | "pinned" | "normal">("all");
-  const supabase = createClient();
 
-  useEffect(() => {
-    let active = true;
-    const client = createClient();
-    client
-      .from("notices")
-      .select("*")
-      .order("is_pinned", { ascending: false })
-      .order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (!active) return;
-        if (error)
-          setLoadError("목록을 불러오지 못했습니다. 다시 시도해주세요.");
-        else setNotices(data || []);
-        setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const togglePin = async (id: string, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from("notices")
-      .update({ is_pinned: !currentStatus })
-      .eq("id", id)
-      .select("id")
-      .single();
-
-    if (error) {
-      toast.error("변경을 저장하지 못했습니다.");
-    } else {
-      refreshPublicSiteOrNotify("상단 고정 설정을 변경했습니다.");
-      setNotices(
-        notices.map((n) =>
-          n.id === id ? { ...n, is_pinned: !currentStatus } : n,
-        ),
-      );
-    }
+  const togglePin = (notice: Notice) =>
+    toggle(notice, "is_pinned", "상단 고정 설정을 변경했습니다.");
+  const deleteNotice = (id: string) =>
+    remove(id, {
+      confirm: "정말로 이 공지사항을 삭제하시겠습니까?",
+      done: "공지사항을 삭제했습니다.",
+    });
+  /** 조건을 바꾸면 첫 페이지로 돌아간다. */
+  const changeSearch = (value: string) => {
+    setSearchTerm(value);
+    setPage(1);
+  };
+  const changeFilter = (value: typeof filter) => {
+    setFilter(value);
+    setPage(1);
   };
 
-  const deleteNotice = async (id: string) => {
-    if (!window.confirm("정말로 이 공지사항을 삭제하시겠습니까?")) return;
-
-    const { error } = await supabase
-      .from("notices")
-      .delete()
-      .eq("id", id)
-      .select("id")
-      .single();
-
-    if (error) {
-      toast.error("삭제하지 못했습니다.");
-    } else {
-      refreshPublicSiteOrNotify("공지사항을 삭제했습니다.");
-      setNotices(notices.filter((n) => n.id !== id));
-    }
-  };
-
-  const filteredNotices = notices.filter((notice) => {
-    const matchesSearch = notice.title
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesFilter =
-      filter === "all"
-        ? true
-        : filter === "pinned"
-          ? notice.is_pinned
-          : !notice.is_pinned;
-    return matchesSearch && matchesFilter;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredNotices.length / 10));
+  const filteredNotices = notices.filter(
+    (notice) =>
+      notice.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (filter === "all" || notice.is_pinned === (filter === "pinned")),
+  );
+  const totalPages = Math.max(1, Math.ceil(filteredNotices.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const visibleNotices = filteredNotices.slice(
-    (currentPage - 1) * 10,
-    currentPage * 10,
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
   );
 
   return (
@@ -144,58 +102,34 @@ export default function NoticesPage() {
       )}
       {/* Filters & Search */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:w-96">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            size={18}
-          />
-          <input
-            type="text"
-            placeholder="공지사항 제목으로 검색..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setPage(1);
-            }}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-          />
-        </div>
+        <SearchInput
+          value={searchTerm}
+          onChange={changeSearch}
+          placeholder="공지사항 제목으로 검색..."
+        />
 
         <div className="flex items-center gap-2">
           <Filter size={16} className="text-slate-400 mr-1" />
-          <button
-            onClick={() => setFilter("all")}
-            className={cn(
-              "px-4 py-1.5 rounded-full text-xs font-semibold border transition-all",
-              filter === "all"
-                ? "bg-blue-600 border-blue-600 text-white"
-                : "bg-white border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600",
-            )}
+          <FilterPill
+            active={filter === "all"}
+            onClick={() => changeFilter("all")}
           >
             전체
-          </button>
-          <button
-            onClick={() => setFilter("pinned")}
-            className={cn(
-              "px-4 py-1.5 rounded-full text-xs font-semibold border transition-all",
-              filter === "pinned"
-                ? "bg-orange-500 border-orange-500 text-white"
-                : "bg-white border-slate-200 text-slate-600 hover:border-orange-400 hover:text-orange-500",
-            )}
+          </FilterPill>
+          <FilterPill
+            active={filter === "pinned"}
+            tone="orange"
+            onClick={() => changeFilter("pinned")}
           >
             고정됨
-          </button>
-          <button
-            onClick={() => setFilter("normal")}
-            className={cn(
-              "px-4 py-1.5 rounded-full text-xs font-semibold border transition-all",
-              filter === "normal"
-                ? "bg-slate-600 border-slate-600 text-white"
-                : "bg-white border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-600",
-            )}
+          </FilterPill>
+          <FilterPill
+            active={filter === "normal"}
+            tone="slate"
+            onClick={() => changeFilter("normal")}
           >
             일반
-          </button>
+          </FilterPill>
         </div>
       </div>
 
@@ -248,7 +182,7 @@ export default function NoticesPage() {
                   >
                     <td className="px-4 md:px-6 py-4 text-center">
                       <button
-                        onClick={() => togglePin(notice.id, notice.is_pinned)}
+                        onClick={() => togglePin(notice)}
                         className={cn(
                           "p-1.5 md:p-2 rounded-lg transition-all",
                           notice.is_pinned
@@ -351,7 +285,7 @@ export default function NoticesPage() {
                 aria-label="이전 페이지"
                 disabled={currentPage === 1}
                 onClick={() => setPage(currentPage - 1)}
-                className="p-1.5 rounded-md border border-slate-200 text-slate-300 cursor-not-allowed"
+                className="p-1.5 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:bg-transparent disabled:text-slate-300 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={18} />
               </button>
@@ -359,7 +293,7 @@ export default function NoticesPage() {
                 aria-label="다음 페이지"
                 disabled={currentPage === totalPages}
                 onClick={() => setPage(currentPage + 1)}
-                className="p-1.5 rounded-md border border-slate-200 text-slate-300 cursor-not-allowed"
+                className="p-1.5 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:bg-transparent disabled:text-slate-300 disabled:cursor-not-allowed"
               >
                 <ChevronRight size={18} />
               </button>

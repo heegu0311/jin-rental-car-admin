@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
   Plus,
-  Search,
   Calendar as CalendarIcon,
   Edit2,
   Trash2,
@@ -13,8 +12,8 @@ import {
   XCircle,
   Clock,
   ExternalLink,
+  Image as ImageIcon,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -25,8 +24,9 @@ import {
 } from "@/components/ui/select";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
-import { toast } from "sonner";
-import { refreshPublicSiteOrNotify } from "@/lib/public-site";
+import { FilterPill, SearchInput } from "@/components/shared/ListFilters";
+import { useAdminTable } from "@/lib/hooks/use-admin-table";
+import { kstDate } from "@/lib/format";
 
 interface Event {
   id: string;
@@ -39,94 +39,50 @@ interface Event {
   created_at: string;
 }
 
+const ORDER = [{ column: "created_at", ascending: false }] as const;
+type Schedule = "all" | "upcoming" | "current" | "ended";
+
+/** 시작일·종료일("YYYY-MM-DD")과 오늘(한국 시간)을 비교한 진행 단계. */
+function matchesSchedule(event: Event, schedule: Schedule, today: string) {
+  switch (schedule) {
+    case "upcoming":
+      return event.start_date > today;
+    case "current":
+      return event.start_date <= today && event.end_date >= today;
+    case "ended":
+      return event.end_date < today;
+    default:
+      return true;
+  }
+}
+
 export default function EventsPage() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
+  const {
+    rows: events,
+    loading,
+    loadError,
+    toggle,
+    remove,
+  } = useAdminTable<Event>("events", ORDER);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
-  const [schedule, setSchedule] = useState("all");
-  const supabase = createClient();
+  const [schedule, setSchedule] = useState<Schedule>("all");
 
-  useEffect(() => {
-    let active = true;
-    const client = createClient();
-    client
-      .from("events")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (!active) return;
-        if (error)
-          setLoadError("목록을 불러오지 못했습니다. 다시 시도해주세요.");
-        else setEvents(data || []);
-        setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const toggleActive = async (id: string, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from("events")
-      .update({ is_active: !currentStatus })
-      .eq("id", id)
-      .select("id")
-      .single();
-
-    if (error) {
-      toast.error("변경을 저장하지 못했습니다.");
-    } else {
-      refreshPublicSiteOrNotify("노출 상태를 변경했습니다.");
-      setEvents(
-        events.map((e) =>
-          e.id === id ? { ...e, is_active: !currentStatus } : e,
-        ),
-      );
-    }
-  };
-
-  const deleteEvent = async (id: string) => {
-    if (!window.confirm("정말로 이 이벤트를 삭제하시겠습니까?")) return;
-
-    const { error } = await supabase
-      .from("events")
-      .delete()
-      .eq("id", id)
-      .select("id")
-      .single();
-
-    if (error) {
-      toast.error("삭제하지 못했습니다.");
-    } else {
-      refreshPublicSiteOrNotify("이벤트를 삭제했습니다.");
-      setEvents(events.filter((e) => e.id !== id));
-    }
-  };
-
-  const filteredEvents = events.filter((event) => {
-    const today = new Date().toLocaleDateString("sv-SE", {
-      timeZone: "Asia/Seoul",
+  const toggleActive = (event: Event) =>
+    toggle(event, "is_active", "노출 상태를 변경했습니다.");
+  const deleteEvent = (id: string) =>
+    remove(id, {
+      confirm: "정말로 이 이벤트를 삭제하시겠습니까?",
+      done: "이벤트를 삭제했습니다.",
     });
-    const matchesSearch = event.title
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesFilter =
-      filter === "all"
-        ? true
-        : filter === "active"
-          ? event.is_active
-          : !event.is_active;
-    const matchesSchedule =
-      schedule === "all" ||
-      (schedule === "upcoming" && event.start_date > today) ||
-      (schedule === "current" &&
-        event.start_date <= today &&
-        event.end_date >= today) ||
-      (schedule === "ended" && event.end_date < today);
-    return matchesSearch && matchesFilter && matchesSchedule;
-  });
+
+  const today = kstDate();
+  const filteredEvents = events.filter(
+    (event) =>
+      event.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (filter === "all" || event.is_active === (filter === "active")) &&
+      matchesSchedule(event, schedule, today),
+  );
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -155,22 +111,17 @@ export default function EventsPage() {
       )}
       {/* Filters */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:w-96">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            size={18}
-          />
-          <input
-            type="text"
-            placeholder="이벤트 제목으로 검색..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-          />
-        </div>
+        <SearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="이벤트 제목으로 검색..."
+        />
 
         <div className="flex flex-wrap items-center gap-2">
-          <Select value={schedule} onValueChange={setSchedule}>
+          <Select
+            value={schedule}
+            onValueChange={(value) => setSchedule(value as Schedule)}
+          >
             <SelectTrigger aria-label="이벤트 기간" className="min-w-32">
               <SelectValue />
             </SelectTrigger>
@@ -181,39 +132,26 @@ export default function EventsPage() {
               <SelectItem value="ended">기간 종료</SelectItem>
             </SelectContent>
           </Select>
-          <button
+          <FilterPill
+            active={filter === "all"}
             onClick={() => setFilter("all")}
-            className={cn(
-              "px-4 py-1.5 rounded-full text-xs font-semibold border transition-all",
-              filter === "all"
-                ? "bg-blue-600 border-blue-600 text-white"
-                : "bg-white border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600",
-            )}
           >
             전체
-          </button>
-          <button
+          </FilterPill>
+          <FilterPill
+            active={filter === "active"}
+            tone="emerald"
             onClick={() => setFilter("active")}
-            className={cn(
-              "px-4 py-1.5 rounded-full text-xs font-semibold border transition-all",
-              filter === "active"
-                ? "bg-emerald-600 border-emerald-600 text-white"
-                : "bg-white border-slate-200 text-slate-600 hover:border-emerald-400 hover:text-emerald-600",
-            )}
           >
             활성
-          </button>
-          <button
+          </FilterPill>
+          <FilterPill
+            active={filter === "inactive"}
+            tone="slate"
             onClick={() => setFilter("inactive")}
-            className={cn(
-              "px-4 py-1.5 rounded-full text-xs font-semibold border transition-all",
-              filter === "inactive"
-                ? "bg-slate-600 border-slate-600 text-white"
-                : "bg-white border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-600",
-            )}
           >
             비활성
-          </button>
+          </FilterPill>
         </div>
       </div>
 
@@ -264,12 +202,14 @@ export default function EventsPage() {
                   <div className="flex gap-1 bg-white/90 backdrop-blur-sm p-1 rounded-lg border border-slate-200">
                     <Link
                       href={`/events/${event.id}`}
+                      aria-label="수정"
                       className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-white rounded-md transition-all"
                     >
                       <Edit2 size={16} />
                     </Link>
                     <button
                       onClick={() => deleteEvent(event.id)}
+                      aria-label="삭제"
                       className="p-1.5 text-slate-600 hover:text-red-500 hover:bg-white rounded-md transition-all"
                     >
                       <Trash2 size={16} />
@@ -313,7 +253,7 @@ export default function EventsPage() {
 
                 <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
                   <button
-                    onClick={() => toggleActive(event.id, event.is_active)}
+                    onClick={() => toggleActive(event)}
                     className={cn(
                       "flex items-center gap-1.5 text-xs font-bold transition-colors",
                       event.is_active
@@ -366,23 +306,3 @@ export default function EventsPage() {
   );
 }
 
-function ImageIcon({ size, className }: { size: number; className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-      <circle cx="9" cy="9" r="2" />
-      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-    </svg>
-  );
-}

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { addMonths } from "date-fns";
+import { kstDate } from "@/lib/format";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -55,18 +56,10 @@ export function EventForm({ initialData }: EventFormProps) {
   );
   const [imageUrl, setImageUrl] = useState(initialData?.image_url || "");
   const [startDate, setStartDate] = useState(
-    initialData?.start_date
-      ? new Date(initialData.start_date).toLocaleDateString("en-CA", {
-          timeZone: "Asia/Seoul",
-        })
-      : new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Seoul" }),
+    kstDate(initialData?.start_date || new Date()),
   );
   const [endDate, setEndDate] = useState(
-    initialData?.end_date
-      ? new Date(initialData.end_date).toLocaleDateString("en-CA", {
-          timeZone: "Asia/Seoul",
-        })
-      : addMonths(new Date(), 1).toLocaleDateString("en-CA", { timeZone: "Asia/Seoul" }),
+    kstDate(initialData?.end_date || addMonths(new Date(), 1)),
   );
   const [isPopup, setIsPopup] = useState(initialData?.is_popup ?? false);
   const [isActive, setIsActive] = useState(initialData?.is_active ?? true);

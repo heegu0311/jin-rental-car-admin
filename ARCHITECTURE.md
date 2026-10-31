@@ -78,7 +78,7 @@
 ## 10 — Wireframe 디자인 정합성 수정
 
 - 디자인 정합성 수정은 과거 기능 브랜치에서 진행해 main에 통합했다. 이후 수정은 각 저장소의 main에서 진행한다.
-- 원본 치수와 에셋은 `DESIGN_PARITY.md`를 참조한다. web의 `app/wireframe.css`는 페이지 간 공통 시각 규칙이므로 동시에 수정하지 않는다.
+- 원본 치수와 에셋은 `DESIGN_PARITY.md`를 참조한다. (2026-11-01 이후 공통 시각 규칙은 `web/app/globals.css @theme`과 `web/lib/styles.ts`가 관리한다. ARCHITECTURE 40 참고)
 - Header/Footer, PageBanner, ChannelButtons, QuickConsultation, PremiumCTA를 공통 구성으로 사용한다. Inter + Noto Sans KR을 두 앱에 적용한다.
 - 사용자 결정: 차량명·가격·사진은 실제 관리자 데이터를 유지한다. 디자인의 샘플 차량/가격으로 덮어쓰지 않는다.
 - 렌트 검색의 수령 방식·대여/반납일시·장소는 URL에 보관하고 상세 상담 폼의 시작일·기간·추가 요청으로 전달한다.
@@ -103,5 +103,13 @@
 ## 39 — 배지·아이콘·단계 번호 외곽선 스타일 통일 (2026-10-31 사용자 결정)
 
 - Wireframe의 색 배지(SINCE 1995 하늘/청록, 사고대차 파랑, PREMIUM NEW CAR LEASE 파랑 외곽선), 이용안내 주의사항의 네이비 원형 아이콘(파랑·청록·노랑·빨강), 이용 절차 네이비 번호 상자를 같은 네이비(**#1e293b**, 처음 적용한 #0f172a는 검정처럼 보여 변경)와 **모서리 12px**로 통일했다. 배지는 흰 배경 + 네이비 글자·1.5px 테두리, 이용안내의 번호 상자·주의사항 아이콘은 네이비 배경 + 흰 글자다. 원본에서 의도적으로 바꾼 것이다.
-- 값은 `web/app/wireframe.css` `:root`의 `--wf-navy`, `--wf-outline-bg`, `--wf-outline-border`, `--wf-outline-radius` 한 곳에서 관리한다. 크기·위치·문구는 원본 그대로이며, 모바일 번호 상자의 개별 반경 덮어쓰기는 제거했다.
-- 홈 특장점 아이콘(`.wf-benefit-icon`)도 이용안내 아이콘과 같은 네이비 배경 + 흰 아이콘으로 맞췄다.
+- 값은 `web/app/globals.css @theme`의 `--color-navy`와 `web/lib/styles.ts`의 `outlineBadge`·`navyIconBox`에서 관리한다(ARCHITECTURE 40에서 이동). 크기·위치·문구는 원본 그대로이며, 모바일 번호 상자의 개별 반경 덮어쓰기는 제거했다.
+- 홈 특장점 아이콘도 이용안내 아이콘과 같은 네이비 배경 + 흰 아이콘으로 맞췄다.
+
+## 40 — CSS를 Tailwind로 전환 (2026-11-01 사용자 결정)
+
+- 사용자가 익숙한 Tailwind로 통일하기로 결정. `web/app/wireframe.css`(약 3,800줄)·`mobile.css`(약 1,400줄)·`components/shared/calendar-date-field.css`·`BrandLoading.module.css`를 모두 컴포넌트 `className`의 Tailwind 유틸리티로 옮기고 삭제했다. 남은 CSS 파일은 `web/app/globals.css` 하나다.
+- `globals.css @theme`: Wireframe hex 팔레트(slate·blue 등) 고정, 브랜드 `navy`(#1e293b), 반응형 기준 `xs 360 · phone 560 · mobile 700 · md 767 · tablet 900 · laptop 1100 · desktop 1200 · wide 1250`(이하, 데스크톱 우선 `max-*:`), 브랜드 곡선 애니메이션. 전역 규칙은 헤더 높이(`--header-height`)·배너 높이(`--banner-height`)·700px 이하 줄바꿈과 iOS 입력칸 16px만 남겼다.
+- 반복 클래스는 `web/lib/styles.ts`(container·button·buttonOutline·outlineBadge·navyIconBox·carGrid·bookingBar·dateField·timeSelect·contactCard). 위치에 따라 모양이 다른 컴포넌트는 prop으로 고른다: PageBanner `variant`, QuickConsultation `variant`(dark/sheet), VehicleCard `compact`, VehicleConsultation `placement`(widget/bar), BrandCurve `loading`.
+- 검증 방법: 전환 전 16개 페이지 × 7개 폭(1440·1150·1000·800·680·390·340px)의 모든 요소 계산 스타일·위치를 기록하고, 단계마다 비교해 차이가 없을 때 커밋했다. 남은 차이는 같은 결과의 다른 표기(rounded-full, grid의 start/flex-start, Tailwind 그림자 링 레이어, translate 속성)와 보이지 않는 요소뿐이다. 공지 목록 행은 데이터 0건이라 코드 대조로 확인했다.
+- 이 전환은 디자인을 바꾸지 않는다. ARCHITECTURE 39의 배지·아이콘 스타일은 `lib/styles.ts` `outlineBadge`·`navyIconBox`와 `@theme --color-navy`로 옮겨졌다.

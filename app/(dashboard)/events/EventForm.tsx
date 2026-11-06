@@ -138,7 +138,12 @@ export function EventForm({ initialData }: EventFormProps) {
           checked={isPopup}
           onChange={(e) => setIsPopup(e.target.checked)}
         />
-        공개 기간 동안 홈 팝업으로 표시
+        <span>
+          공개 기간 동안 홈 팝업으로 표시
+          <span className="mt-1 block text-xs text-slate-500">
+            여러 이벤트를 선택하면 하나의 팝업에서 최신 등록순으로 넘겨 볼 수 있습니다.
+          </span>
+        </span>
       </label>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">

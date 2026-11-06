@@ -11,6 +11,7 @@ const noto = Noto_Sans_KR({
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: false },
   title: "진렌트카 관리자",
   description: "진렌트카 통합 관리 시스템",
   appleWebApp: { capable: true, title: "진렌트카 관리", statusBarStyle: "default" },

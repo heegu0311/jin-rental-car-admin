@@ -26,6 +26,18 @@ pnpm build
 
 service-role 키는 이 앱에서 쓰지 않는다. 관리자 권한은 서버 세션 + `profiles.role` + RLS로 확인한다(`lib/auth.ts`의 `requireAdmin`).
 
+### 관리자 비밀번호 찾기
+
+로그인의 **비밀번호 찾기** → `/login/forgot-password`에서 이메일 이용 동의 후 메일 요청 → `/auth/recovery`에서 PKCE 인증 코드 교환 및 관리자 권한 확인 → `/login/reset-password`에서 새 비밀번호 저장 → 로그아웃 후 다시 로그인한다. 메일 링크는 요청한 브라우저에서 열어야 한다. 비밀번호는 영문·숫자를 포함한 12~128자이며 Supabase 프로젝트의 추가 비밀번호 정책도 적용된다.
+
+운영 전 Supabase Authentication 설정을 확인한다.
+
+- URL Configuration의 Redirect URLs에 `https://<관리자 도메인>/auth/recovery`를 등록한다. 로컬 검증은 사용 중인 포트의 `http://localhost:<포트>/auth/recovery`도 등록한다.
+- Reset Password 이메일 템플릿은 `{{ .ConfirmationURL }}` 링크를 유지한다. 커스텀 템플릿이 Site URL로 직접 이동하면 PKCE 콜백을 거치지 못한다.
+- 이메일 발송/SMTP 설정과 발송 제한을 확인한다. 실제 관리자 메일 수신·링크 인증·새 비밀번호 로그인은 운영 설정 후 별도 확인한다.
+
+DB 스키마·RLS·공유 계약·추가 환경변수 변경은 없다. 이메일 존재 여부는 응답에 드러내지 않으며, 저장 시 세션과 `profiles.role`을 다시 검증한다. 상세 구현 및 검증 기록은 [비밀번호 찾기 문서](docs/features/admin-password-recovery.md)를 참고한다.
+
 ## 폴더 구조
 
 ```

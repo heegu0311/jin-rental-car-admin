@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { LogIn, Mail, Lock, Chrome, Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -87,6 +88,12 @@ function LoginContent() {
           </motion.div>
         )}
 
+        {searchParams.get("success") === "password_reset" && (
+          <p role="status" className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-slate-700">
+            비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.
+          </p>
+        )}
+
         <form onSubmit={handleEmailLogin} className="space-y-5">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">이메일</label>
@@ -139,6 +146,12 @@ function LoginContent() {
             로그인
           </button>
         </form>
+
+        <div className="mt-4 text-right text-sm">
+          <Link href="/login/forgot-password" className="text-blue-700 underline underline-offset-4">
+            비밀번호 찾기
+          </Link>
+        </div>
 
         <div className="relative my-8">
           <div className="absolute inset-0 flex items-center">

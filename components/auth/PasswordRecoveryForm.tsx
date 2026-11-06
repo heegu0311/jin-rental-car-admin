@@ -45,7 +45,7 @@ export default function PasswordRecoveryForm({
             setError(result.error);
             return;
           }
-          setSignOutFailed("signOutFailed" in result && result.signOutFailed);
+          setSignOutFailed("signOutFailed" in result && result.signOutFailed === true);
         } else {
           const result = await requestPasswordRecovery(data);
           if (result.error) {

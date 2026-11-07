@@ -1,4 +1,16 @@
 // Admin PWA service worker: shows push notifications only (no offline cache).
+// Activate notification fixes even while an older admin window remains open.
+self.addEventListener("install", (event) => {
+  event.waitUntil(self.skipWaiting());
+});
+
+function notificationUrl(value) {
+  const fallback = new URL("/", self.location.origin);
+  if (typeof value !== "string" || !/^\/(?!\/)/.test(value)) return fallback;
+  const target = new URL(value, self.location.origin);
+  return target.origin === fallback.origin ? target : fallback;
+}
+
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -6,8 +18,8 @@ self.addEventListener("push", (event) => {
   } catch {
     data = {};
   }
-  const url =
-    typeof data.url === "string" && /^\/(?!\/)/.test(data.url) ? data.url : "/";
+  const target = notificationUrl(data.url);
+  const url = target.pathname + target.search + target.hash;
   event.waitUntil(
     self.registration.showNotification(data.title || "진렌트카 관리자", {
       body: data.body || "",
@@ -21,16 +33,10 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = new URL(event.notification.data?.url || "/", self.location.origin);
+  const target = notificationUrl(event.notification.data?.url);
+  // Let Chrome Android route into the installed standalone app. Selecting a
+  // same-origin WindowClient ourselves can bring an ordinary browser tab forward.
   event.waitUntil(
-    self.clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((windows) => {
-        for (const client of windows) {
-          if (new URL(client.url).origin === target.origin && "focus" in client)
-            return client.navigate(target.href).then((c) => (c || client).focus());
-        }
-        return self.clients.openWindow(target.href);
-      }),
+    self.clients.openWindow(target.href).then((client) => client?.focus()),
   );
 });

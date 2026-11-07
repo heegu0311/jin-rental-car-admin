@@ -39,3 +39,15 @@
 - Android Chromium에서 `beforeinstallprompt`가 오면 ‘지금 설치’ 버튼으로 기본 설치 창을 띄운다.
 - 모바일 헤더: 아이콘 추가로 제목이 줄바꿈되어 ‘관리자’ 글자를 sm 미만에서 숨기고 제목을 한 줄로 유지.
 - 검증: tsc·lint·테스트·build 통과, 375px에서 제목 한 줄·가로 넘침 없음·다이얼로그 내부 스크롤 확인.
+
+## Android 알림 클릭의 PWA 실행 수정 (2026-11-07)
+
+- 기존 `notificationclick`은 같은 출처의 첫 WindowClient를 탐색·포커스했으므로, 일반 Chrome 탭이 열려 있으면 설치된 PWA 대신 그 탭으로 이동할 수 있었다.
+- 이제 `clients.openWindow()`를 직접 호출해 Chrome Android가 설치된 standalone 앱으로 연결할 수 있게 한다. 반환된 창이 있으면 포커스하고, null이면 그대로 완료한다. 설치 여부·설치 브라우저·기기 설정에 따른 앱 실행 여부는 실제 Android에서 확인해야 한다.
+- 수신 시점과 클릭 시점 모두 내부 경로만 허용한다. 이전 알림에 외부 주소가 있어도 관리자 홈으로 이동한다.
+- 알림 전용 서비스 워커의 새 버전은 `skipWaiting()`으로 활성화한다. 기존 관리자 창이 열려 있어도 업데이트가 대기하지 않는다. 오프라인 캐시·DB·구독·manifest 식별자는 변경하지 않는다.
+- 회귀 테스트: 창을 직접 탐색하지 않는 실행 경로, 반환된 창 포커스/null 처리, 외부 주소 차단, 수신→클릭 주소 유지, 업데이트 활성화.
+- 참고: [MDN Clients.openWindow](https://developer.mozilla.org/en-US/docs/Web/API/Clients/openWindow), 현재 설치된 Next.js 16.2.3 PWA 가이드와 manifest 문서.
+- 실제 기기 확인: 배포 후 설치된 관리자 앱을 한 번 실행해 새 워커를 받는다. 일반 Chrome 관리자 탭과 PWA가 함께 열린 경우 및 PWA를 닫은 경우 각각 ‘테스트 알림’을 누르고, 앱으로 이동하는지 확인한다. 예약·신차·문의 알림은 각각 해당 목록으로 이동해야 한다. PWA 설치와 알림 구독은 같은 브라우저·관리자 주소에서 사용한다.
+- 검증: admin 테스트 34개(새 회귀 테스트 5개 포함)·web 테스트 34개, 양쪽 `pnpm exec tsc --noEmit`·`pnpm lint`·`pnpm build` 통과. 첫 빌드는 Google Fonts 연결 제한으로 실패했고, 다운로드 가능한 환경에서 재실행해 통과했다.
+- 작업 저장소: `admin/main`. web의 기존 `components/cars/RentalGuide.tsx` 변경은 보존했다. 외부 push·배포 및 실제 Android 기기 검증은 수행하지 않았다.

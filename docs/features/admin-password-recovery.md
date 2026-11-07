@@ -23,3 +23,16 @@
 Supabase Redirect URLs에 관리자 origin의 `/auth/recovery`를 등록하고, Reset Password 템플릿의 `{{ .ConfirmationURL }}` 및 SMTP 설정을 확인한다([공식 가이드](https://supabase.com/docs/guides/auth/passwords#resetting-a-password)). 메일 요청과 링크 열기는 같은 브라우저에서 진행한다.
 
 admin main에서 구현한다. web 소스·계약·DB 마이그레이션 변경 없음. 로컬 커밋만 수행하며 외부 push·배포·Supabase 설정 변경은 수행하지 않는다.
+
+## 2026-11-07 — 운영 메일·리다이렉트 설정 수정
+
+- 대상: Supabase `jin-rental-car` 프로젝트(`daerwmqweobyeecbquuh`), main PRODUCTION. Supabase Dashboard에서 설정을 직접 저장했다. 위의 "Supabase 설정 변경 없음"은 최초 구현 당시 기록이다.
+- 원인: Redirect URLs에 `https://admin.jinrentcar.co.kr/auth/callback`만 등록되어 있었다. 기존 수신 메일의 재설정 링크도 `/auth/recovery` 대신 기본 Site URL 루트로 이동하도록 생성된 것을 확인했다.
+- 기존 로그인 콜백은 유지하고 아래 세 주소를 정확한 경로로 추가했다. 와일드카드는 사용하지 않았다.
+  - `https://admin.jinrentcar.co.kr/auth/recovery`
+  - `https://jin-rental-car-admin.vercel.app/auth/recovery`
+  - `http://localhost:3102/auth/recovery`
+- Reset password 제목을 **진렌트카 비밀번호 변경하기**로 변경했다. 한국어 안내·네이비 버튼·요청하지 않은 경우의 안내를 적용했다. 저장한 본문은 `supabase/templates/recovery.html`에 보관한다. 인증 링크는 기존 `{{ .ConfirmationURL }}`를 유지한다.
+- 실제 서비스에서 재설정 메일 1건을 요청해 한국어 제목과 본문 수신, 링크의 `/auth/recovery` 목적지, 클릭 후 `/login/reset-password`의 **새 비밀번호 설정** 화면 도착을 확인했다. 비밀번호 입력·변경 제출은 하지 않았으며 사용자가 직접 마무리한다. 새 계정 생성·권한 변경·SMTP 변경은 없다.
+- 이전 메일의 링크는 수정되지 않으므로 새로 요청한 메일을 사용해야 한다. 요청과 링크 열기는 같은 브라우저에서 진행한다.
+- 이번 후속 수정은 호스팅된 인증 설정과 정적 메일 템플릿·기록만 변경했다. 런타임 소스·의존성·DB·공유 계약 변경이 없어 타입 검사·린트·빌드를 재실행하지 않았다. 검증은 실제 메일 발송·수신·인증 이동으로 수행했다. 코드 push·사이트 재배포는 하지 않았다.

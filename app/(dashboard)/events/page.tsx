@@ -27,6 +27,7 @@ import { ko } from "date-fns/locale";
 import { FilterPill, SearchInput } from "@/components/shared/ListFilters";
 import { useAdminTable } from "@/lib/hooks/use-admin-table";
 import { kstDate } from "@/lib/format";
+import { PopupOrderManager } from "@/components/events/PopupOrderManager";
 
 interface Event {
   id: string;
@@ -36,6 +37,8 @@ interface Event {
   start_date: string;
   end_date: string;
   is_active: boolean;
+  is_popup?: boolean;
+  popup_order?: number;
   created_at: string;
 }
 
@@ -108,6 +111,15 @@ export default function EventsPage() {
         <p role="alert" className="text-red-600">
           {loadError}
         </p>
+      )}
+      {!loading && !loadError && (
+        <PopupOrderManager
+          key={events
+            .filter((event) => event.is_popup)
+            .map((event) => `${event.id}:${event.popup_order ?? 0}`)
+            .join(",")}
+          events={events.filter((event) => event.is_popup)}
+        />
       )}
       {/* Filters */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -224,6 +236,11 @@ export default function EventsPage() {
                 </h3>
 
                 <div className="space-y-2 mb-6">
+                  {event.is_popup && (
+                    <p className="text-xs font-semibold text-blue-600">
+                      홈 팝업 · 표시 순서 {event.popup_order ?? 0}
+                    </p>
+                  )}
                   <div className="flex items-center gap-2 text-xs text-slate-500">
                     <CalendarIcon size={14} className="text-slate-400" />
                     <span>
@@ -305,4 +322,3 @@ export default function EventsPage() {
     </div>
   );
 }
-

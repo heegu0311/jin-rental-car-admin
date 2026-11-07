@@ -5,12 +5,7 @@ import { useState } from "react";
 import { addMonths } from "date-fns";
 import { kstDate } from "@/lib/format";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Save,
-  Image as ImageIcon,
-  X,
-} from "lucide-react";
+import { ArrowLeft, Save, Image as ImageIcon, X } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
@@ -29,7 +24,9 @@ import { AdminCalendarField } from "@/components/shared/AdminCalendarField";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import { uploadAdminImage } from "@/lib/storage/upload-image";
 import { toast } from "sonner";
-import { refreshPublicSiteOrNotify } from "@/lib/public-site";
+import { notifySaved } from "@/lib/public-site";
+import { useSubmitLock } from "@/lib/hooks/use-submit-lock";
+import { saveEvent } from "./actions";
 
 interface EventFormProps {
   initialData?: {
@@ -46,9 +43,8 @@ interface EventFormProps {
 
 export function EventForm({ initialData }: EventFormProps) {
   const router = useRouter();
-  const supabase = createClient();
 
-  const [loading, setLoading] = useState(false);
+  const { busy: loading, run } = useSubmitLock();
 
   const [title, setTitle] = useState(initialData?.title || "");
   const [description, setDescription] = useState(
@@ -69,62 +65,47 @@ export function EventForm({ initialData }: EventFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    if (!title) {
-      toast.error("제목을 입력해주세요.");
-      setLoading(false);
-      return;
-    }
-
-    if (startDate && endDate && startDate > endDate) {
-      toast.error("종료일은 시작일 이후여야 합니다.");
-      setLoading(false);
-      return;
-    }
-    const eventData = {
-      title,
-      description,
-      image_url: imageUrl,
-      start_date: startDate
-        ? new Date(`${startDate}T00:00:00+09:00`).toISOString()
-        : null,
-      end_date: endDate
-        ? new Date(`${endDate}T23:59:59+09:00`).toISOString()
-        : null,
-      is_active: isActive,
-      is_popup: isPopup,
-    };
-
-    try {
-      if (initialData?.id) {
-        // Update
-        const { error } = await supabase
-          .from("events")
-          .update(eventData)
-          .eq("id", initialData.id)
-          .select("id")
-          .single();
-
-        if (error) throw error;
-      } else {
-        // Create
-        const { error } = await supabase.from("events").insert([eventData]);
-
-        if (error) throw error;
+    await run(async () => {
+      if (!title) {
+        toast.error("제목을 입력해주세요.");
+        return;
       }
 
-      await refreshPublicSiteOrNotify("이벤트를 저장했습니다.");
-      router.push("/events");
-      router.refresh();
-    } catch (err: unknown) {
-      console.error("Error saving event:", err);
-      toast.error(
-        err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
-      );
-    } finally {
-      setLoading(false);
-    }
+      if (startDate && endDate && startDate > endDate) {
+        toast.error("종료일은 시작일 이후여야 합니다.");
+        return;
+      }
+      const eventData = {
+        id: initialData?.id,
+        title,
+        description,
+        image_url: imageUrl,
+        start_date: startDate
+          ? new Date(`${startDate}T00:00:00+09:00`).toISOString()
+          : null,
+        end_date: endDate
+          ? new Date(`${endDate}T23:59:59+09:00`).toISOString()
+          : null,
+        is_active: isActive,
+        is_popup: isPopup,
+      };
+
+      try {
+        const result = await saveEvent(eventData);
+        if (result.error) {
+          toast.error(result.error);
+          return;
+        }
+        if (!result.success) return;
+        notifySaved("이벤트를 저장했습니다.", result.site);
+        router.push("/events");
+        router.refresh();
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
+        );
+      }
+    });
   };
 
   return (
@@ -141,7 +122,8 @@ export function EventForm({ initialData }: EventFormProps) {
         <span>
           공개 기간 동안 홈 팝업으로 표시
           <span className="mt-1 block text-xs text-slate-500">
-            여러 이벤트를 선택하면 하나의 팝업에서 최신 등록순으로 넘겨 볼 수 있습니다.
+            여러 이벤트를 선택하면 이벤트 목록에서 지정한 순서대로 하나의
+            팝업에서 넘겨 볼 수 있습니다.
           </span>
         </span>
       </label>
@@ -247,11 +229,19 @@ export function EventForm({ initialData }: EventFormProps) {
                 공개 기간
               </div>
               <div className="grid grid-cols-1 gap-4">
-                <AdminCalendarField value={startDate} onChange={setStartDate} label="공개 시작일" />
+                <AdminCalendarField
+                  value={startDate}
+                  onChange={setStartDate}
+                  label="공개 시작일"
+                />
                 <div className="flex items-center justify-center text-slate-400 font-bold">
                   ~
                 </div>
-                <AdminCalendarField value={endDate} onChange={setEndDate} label="공개 종료일" />
+                <AdminCalendarField
+                  value={endDate}
+                  onChange={setEndDate}
+                  label="공개 종료일"
+                />
               </div>
             </div>
           </div>

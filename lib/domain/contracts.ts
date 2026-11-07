@@ -3,6 +3,8 @@ export type VehicleStatus = "available" | "rented" | "maintenance";
 export type ReservationStatus = "pending" | "confirmed" | "cancelled";
 export type InquiryStatus = "pending" | "answered";
 export type RentalType = "daily" | "weekly" | "monthly";
+/** 홈 팝업 순서는 작은 숫자부터. 동일 순서는 최신 등록일, ID 내림차순. */
+export const POPUP_ORDER_MAX = 9999;
 export const VEHICLE_OPTIONS = [
   "열선시트",
   "열선핸들",

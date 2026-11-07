@@ -30,6 +30,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
         start_date: event.start_date || "",
         end_date: event.end_date || "",
         is_active: event.is_active,
+        is_popup: event.is_popup,
       }}
     />
   );

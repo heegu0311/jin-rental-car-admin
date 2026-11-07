@@ -3,7 +3,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { unstable_rethrow } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useSubmitLock } from "@/lib/hooks/use-submit-lock";
 import {
   requestPasswordRecovery,
@@ -45,20 +47,25 @@ export default function PasswordRecoveryForm({
             setError(result.error);
             return;
           }
-          setSignOutFailed("signOutFailed" in result && result.signOutFailed === true);
+          setSignOutFailed(
+            "signOutFailed" in result && result.signOutFailed === true,
+          );
         } else {
           const result = await requestPasswordRecovery(data);
           if (result.error) {
             setError(result.error);
+            toast.error(result.error);
             return;
           }
         }
         form.reset();
         setDone(true);
-      } catch {
-        setError(
-          "요청을 완료하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.",
-        );
+      } catch (error) {
+        unstable_rethrow(error);
+        const message =
+          "요청을 완료하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.";
+        setError(message);
+        if (!reset) toast.error(message);
       }
     });
   }
@@ -106,9 +113,8 @@ export default function PasswordRecoveryForm({
               </>
             ) : (
               <>
-                재설정 요청을 처리했습니다. 등록된 계정이면 이메일로 링크가
-                전송됩니다. 스팸함도 확인해 주세요. 링크는 메일을 요청한
-                브라우저에서 열어 주세요.
+                재설정 메일을 요청했습니다. 받은편지함과 스팸함을 확인해 주세요.
+                링크는 메일을 요청한 브라우저에서 열어 주세요.
               </>
             )}
           </div>

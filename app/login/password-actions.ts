@@ -9,6 +9,7 @@ import {
   passwordRecoveryError,
 } from "@/lib/password-recovery";
 import { recoverAdminPassword } from "@/lib/recover-admin-password";
+import { requestAdminPasswordRecovery } from "@/lib/request-password-recovery";
 
 export async function requestPasswordRecovery(formData: FormData) {
   const email = recoveryEmail(formData.get("email"));
@@ -26,17 +27,7 @@ export async function requestPasswordRecovery(formData: FormData) {
 
   try {
     const db = await createClient();
-    const { error } = await db.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/auth/recovery`,
-    });
-    if (error)
-      return {
-        error:
-          error.status === 429
-            ? "요청이 많습니다. 잠시 후 다시 시도해 주세요."
-            : "재설정 메일을 요청하지 못했습니다. 잠시 후 다시 시도해 주세요.",
-      };
-    return { success: true };
+    return await requestAdminPasswordRecovery(db, email, origin);
   } catch {
     return { error: "연결에 실패했습니다. 잠시 후 다시 시도해 주세요." };
   }

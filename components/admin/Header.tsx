@@ -1,6 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { UserRound } from "lucide-react";
+import Link from "next/link";
+import type { AccountIdentity } from "@/lib/account";
 import { PushToggle } from "@/components/admin/PushToggle";
 import { InstallGuide } from "@/components/admin/InstallGuide";
 const titles: Record<string, string> = {
@@ -15,8 +16,15 @@ const titles: Record<string, string> = {
   "/content": "웹사이트 콘텐츠 관리",
   "/insurance": "자차보험 설정",
   "/accident": "사고대차 안내 관리",
+  "/mypage": "마이페이지",
 };
-export function Header({ onMenuClick }: { onMenuClick: () => void }) {
+export function Header({
+  onMenuClick,
+  identity,
+}: {
+  onMenuClick: () => void;
+  identity: AccountIdentity;
+}) {
   const path = usePathname();
   const key = path === "/" ? "/" : "/" + path.split("/")[1];
   return (
@@ -34,11 +42,22 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
       <div className="ml-auto flex shrink-0 items-center gap-2 text-xs sm:gap-3">
         <InstallGuide />
         <PushToggle />
-        <span className="grid size-8 place-items-center rounded-full bg-slate-100 text-slate-500">
-          <UserRound size={16} />
-        </span>
-        <strong className="hidden sm:inline">관리자</strong>
-        <span className="hidden text-slate-500 sm:inline">운영 관리</span>
+        <Link
+          href="/mypage"
+          aria-label="마이페이지"
+          title={`${identity.name} · ${identity.email}`}
+          className="flex items-center gap-2 rounded-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600"
+        >
+          <span
+            aria-hidden="true"
+            className="grid size-9 place-items-center rounded-full bg-blue-700 text-sm font-bold text-white"
+          >
+            {identity.initial}
+          </span>
+          <strong className="hidden max-w-28 truncate sm:inline">
+            {identity.name}
+          </strong>
+        </Link>
       </div>
     </header>
   );

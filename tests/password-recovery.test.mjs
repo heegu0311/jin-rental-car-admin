@@ -156,3 +156,24 @@ test("저장 후 로그아웃 실패는 저장 성공과 구분", async () => {
     });
   }
 });
+
+test("마이페이지의 비밀번호 변경은 현재 비밀번호를 인증 서버로 함께 전달", async () => {
+  const { db, calls } = mockDb();
+  await recoverAdminPassword(db, "NewPassword1234", "OldPassword1234");
+  assert.deepEqual(calls[0], [
+    "update",
+    { password: "NewPassword1234", current_password: "OldPassword1234" },
+  ]);
+});
+
+test("현재 비밀번호가 틀리면 성공 안내나 로그아웃을 수행하지 않음", async () => {
+  const { db, calls } = mockDb({
+    updateError: { code: "invalid_credentials" },
+  });
+  assert.match(
+    (await recoverAdminPassword(db, "NewPassword1234", "WrongPassword1234"))
+      .error,
+    /현재 비밀번호/,
+  );
+  assert.equal(calls.length, 1);
+});

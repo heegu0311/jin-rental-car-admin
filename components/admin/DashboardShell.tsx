@@ -3,8 +3,15 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { Header } from "@/components/admin/Header";
+import type { AccountIdentity } from "@/lib/account";
 
-export function DashboardShell({ children }: { children: React.ReactNode }) {
+export function DashboardShell({
+  children,
+  identity,
+}: {
+  children: React.ReactNode;
+  identity: AccountIdentity;
+}) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
@@ -12,7 +19,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       <div className="min-w-0 flex-1 flex flex-col h-full overflow-hidden">
-        <Header onMenuClick={() => setIsSidebarOpen(true)} />
+        <Header
+          identity={identity}
+          onMenuClick={() => setIsSidebarOpen(true)}
+        />
         <main className="flex-1 overflow-y-auto bg-slate-100 p-4 md:p-8">
           {children}
         </main>

@@ -40,6 +40,10 @@ service-role 키는 이 앱에서 쓰지 않는다. 관리자 권한은 서버 �
 
 메일 요청 전 `is_admin_recovery_email` RPC로 활성 관리자 등록 여부를 확인한다. 미등록·비관리자·차단/삭제 계정이면 메일을 요청하지 않고 Sonner로 **유효한 관리자 이메일이 아닙니다.**를 표시한다(2026-11-07 사용자 요청). 조회 실패는 미등록으로 취급하지 않고 재시도를 안내한다. 새 마이그레이션 `20261107062641_admin_recovery_email_check.sql`은 운영 DB에 적용했다. 기존 테이블 RLS·공유 계약·추가 환경변수 변경은 없다. 저장 시 세션과 `profiles.role`을 다시 검증한다. 상세 구현 및 검증 기록은 [비밀번호 찾기 문서](docs/features/admin-password-recovery.md)를 참고한다.
 
+### 마이페이지
+
+헤더 오른쪽의 이메일 첫 글자 프로필을 클릭하면 `/mypage`로 이동한다. 표시 이름은 본인 Auth user metadata의 `display_name`에 저장하며 이메일과 관리자 권한은 수정하지 않는다. 이메일/비밀번호 계정은 현재 비밀번호를 확인한 후 변경하고 로그아웃한다. Google 전용 계정은 이메일 재설정 흐름으로 연결한다. 구현·검증 기록은 [마이페이지 문서](docs/features/admin-account-settings.md)를 참고한다.
+
 ## 폴더 구조
 
 ```

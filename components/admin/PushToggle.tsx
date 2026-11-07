@@ -9,7 +9,7 @@ import {
   sendTestPush,
 } from "@/lib/push/actions";
 
-type Support = "checking" | "supported" | "install" | "unsupported";
+type Support = "checking" | "hidden" | "supported" | "unsupported";
 function keyBytes(base64: string) {
   const padded = (base64 + "=".repeat((4 - (base64.length % 4)) % 4))
     .replace(/-/g, "+")
@@ -21,15 +21,15 @@ function detectSupport(): Support {
   const standalone =
     window.matchMedia("(display-mode: standalone)").matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
-  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  // Only the installed app may offer push settings, even if the browser supports push.
+  if (!standalone) return "hidden";
   if (
     "serviceWorker" in navigator &&
     "PushManager" in window &&
     "Notification" in window
   )
     return "supported";
-  // iOS exposes Web Push only to apps added to the home screen.
-  return ios && !standalone ? "install" : "unsupported";
+  return "unsupported";
 }
 
 export function PushToggle() {
@@ -139,6 +139,8 @@ export function PushToggle() {
     setBusy(false);
   }
 
+  if (support === "checking" || support === "hidden") return null;
+
   const on = support === "supported" && !!subscription;
   const Icon = on ? BellRing : support === "supported" ? Bell : BellOff;
   return (
@@ -155,13 +157,6 @@ export function PushToggle() {
       {open && (
         <div className="fixed inset-x-4 top-[76px] z-50 sm:absolute sm:inset-x-auto sm:right-0 sm:top-10 sm:w-80 space-y-3 rounded-xl border border-slate-200 bg-white p-4 text-sm shadow-lg">
           <p className="font-bold text-slate-900">새 상담·문의 푸시 알림</p>
-          {support === "checking" && <p className="text-slate-500">확인 중…</p>}
-          {support === "install" && (
-            <p className="leading-6 text-slate-600">
-              iPhone에서는 Safari 공유 버튼 → <strong>홈 화면에 추가</strong>로
-              설치한 뒤, 설치된 앱에서 알림을 켜주세요.
-            </p>
-          )}
           {support === "unsupported" && (
             <p className="leading-6 text-slate-600">
               이 브라우저는 푸시 알림을 지원하지 않습니다.

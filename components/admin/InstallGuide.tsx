@@ -47,7 +47,7 @@ const STEPS: Record<Platform, { title: string; body: string }[]> = {
     },
     {
       title: "알림 켜기",
-      body: "상단 종 아이콘 → ‘알림 켜기’ → 알림 허용 후 ‘테스트 알림’으로 수신을 확인합니다.",
+      body: "설치된 앱의 상단 종 아이콘 → ‘알림 켜기’ → 알림 허용 후 ‘테스트 알림’으로 수신을 확인합니다.",
     },
   ],
 };

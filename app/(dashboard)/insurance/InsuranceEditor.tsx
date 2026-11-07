@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { numberInputValue, parseNumberInput } from "@/lib/number-input";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import {
@@ -75,7 +76,7 @@ export function InsuranceEditor({
     cls: InsuranceClass,
     value: string,
   ) => {
-    const price = Math.max(0, Math.trunc(Number(value) || 0));
+    const price = parseNumberInput(value);
     const { prices } = current.plans[age][index];
     editPlan(age, index, {
       prices:
@@ -201,16 +202,13 @@ export function InsuranceEditor({
                     max={INSURANCE_LIMITS.cc}
                     step={1}
                     required
-                    value={limit}
+                    value={numberInputValue(limit)}
                     onChange={(e) =>
                       setDraft({
                         ...draft,
                         ccLimits: draft.ccLimits.map((l, j) =>
                           j === i
-                            ? Math.max(
-                                0,
-                                Math.trunc(Number(e.target.value) || 0),
-                              )
+                            ? parseNumberInput(e.target.value)
                             : l,
                         ),
                       })
@@ -353,11 +351,11 @@ export function InsuranceEditor({
                             max={INSURANCE_LIMITS.price}
                             step={1}
                             required
-                            value={
+                            value={numberInputValue(
                               cls === "van"
                                 ? plan.prices.van
-                                : (plan.prices.cc[cls] ?? 0)
-                            }
+                                : (plan.prices.cc[cls] ?? 0),
+                            )}
                             onChange={(e) =>
                               setPrice(age, i, cls, e.target.value)
                             }

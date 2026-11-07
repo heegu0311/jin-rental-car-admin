@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { numberInputValue, parseNumberInput } from "@/lib/number-input";
 import dynamic from "next/dynamic";
 import { Car as CarIcon, Tag, X } from "lucide-react";
 import { toast } from "sonner";
@@ -79,7 +80,7 @@ export function VehicleModal({
       ...current,
       pricePolicy: {
         ...current.pricePolicy!,
-        [key]: parseInt(value) || 0,
+        [key]: parseNumberInput(value),
       },
     }));
   /** 첫 장을 대표 사진(image)으로 함께 저장한다. */
@@ -262,7 +263,7 @@ export function VehicleModal({
                   <input
                     type="number"
                     required
-                    value={formData.pricePolicy?.daily || ""}
+                    value={numberInputValue(formData.pricePolicy?.daily)}
                     onChange={(e) => updatePrice("daily", e.target.value)}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500"
                   />
@@ -281,7 +282,7 @@ export function VehicleModal({
                   <input
                     type="number"
                     required
-                    value={formData.pricePolicy?.weekly || ""}
+                    value={numberInputValue(formData.pricePolicy?.weekly)}
                     onChange={(e) => updatePrice("weekly", e.target.value)}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500"
                   />
@@ -302,7 +303,7 @@ export function VehicleModal({
                   <input
                     type="number"
                     required
-                    value={formData.pricePolicy?.monthly || ""}
+                    value={numberInputValue(formData.pricePolicy?.monthly)}
                     onChange={(e) => updatePrice("monthly", e.target.value)}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500"
                   />
@@ -427,8 +428,9 @@ export function VehicleModal({
                 type="number"
                 min={1}
                 max={45}
-                value={formData.seats || 5}
-                onChange={(e) => update("seats", Number(e.target.value))}
+                required
+                value={numberInputValue(formData.seats ?? 5)}
+                onChange={(e) => update("seats", parseNumberInput(e.target.value))}
               />
             </label>
             <fieldset className="space-y-3">

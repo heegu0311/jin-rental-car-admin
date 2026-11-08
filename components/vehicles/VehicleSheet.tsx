@@ -562,6 +562,9 @@ export function VehicleSheet({
                             {...handlers}
                             disabled={specialFieldsLocked}
                             type="text"
+                            placeholder={
+                              column.kind === "date" ? "YYYY-MM-DD" : undefined
+                            }
                             inputMode={
                               column.kind === "int" ? "numeric" : undefined
                             }

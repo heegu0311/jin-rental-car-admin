@@ -18,6 +18,7 @@ export interface Car {
   year: string;
   price: string;
   badge?: string;
+  is_monthly_special?: boolean;
   condition: string;
   /** 대표 사진(images[0]). 목록·카드에 쓴다. */
   image: string;
@@ -73,6 +74,7 @@ export function carFromVehicle(v: Vehicle): Car {
     year: String(v.year),
     price: String(v.price_monthly ?? 0),
     badge: v.badge || "",
+    is_monthly_special: v.is_monthly_special === true,
     condition: v.condition || "",
     image: images[0] || "",
     images,
@@ -108,6 +110,7 @@ export function vehiclePayload(car: Car, categories: Category[]) {
     year: Number(car.year),
     fuel: car.fuel,
     badge: car.badge,
+    is_monthly_special: car.is_monthly_special ?? false,
     condition: car.condition,
     image_url: images[0] || "",
     image_urls: images,
@@ -140,6 +143,8 @@ const optional = (value: number | null, max: number) =>
 
 /** 저장 전 검증. 문제가 있으면 관리자에게 보여줄 문구, 없으면 null. */
 export function vehiclePayloadError(payload: VehiclePayload): string | null {
+  if (typeof payload.is_monthly_special !== "boolean")
+    return "월렌트 특가 지정 여부를 확인해주세요.";
   const images = payload.image_urls;
   if (
     images.length > VEHICLE_IMAGE_MAX ||

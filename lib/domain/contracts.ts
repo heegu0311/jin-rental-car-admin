@@ -29,6 +29,8 @@ export interface Vehicle {
   image_url: string | null;
   /** 상세 캐러셀 사진(첫 장이 대표 사진, image_url과 같음). 최대 VEHICLE_IMAGE_MAX장. */
   image_urls?: string[] | null;
+  /** 관리자가 지정한 월렌트 특가 차량. 미지정은 false. */
+  is_monthly_special?: boolean;
   badge: string | null;
   condition: string | null;
   category_id: string | null;

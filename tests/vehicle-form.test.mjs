@@ -29,13 +29,20 @@ const row = {
     { id: "u3", status: "available" },
   ],
 };
-const categories = [{ id: "c1", name: "중형" }, { id: "c2", name: "SUV" }];
+const categories = [
+  { id: "c1", name: "중형" },
+  { id: "c2", name: "SUV" },
+];
 
 test("차량 행을 편집 상태로 바꾸고 실차 상태별 대수를 센다", () => {
   const car = carFromVehicle(row);
   assert.equal(car.year, "2025");
   assert.equal(car.image, row.image_url);
-  assert.deepEqual(car.pricePolicy, { daily: 50000, weekly: 300000, monthly: 900000 });
+  assert.deepEqual(car.pricePolicy, {
+    daily: 50000,
+    weekly: 300000,
+    monthly: 900000,
+  });
   assert.equal(car.unitCount, 3);
   assert.equal(car.availableCount, 2);
   assert.equal(car.rentedCount, 1);
@@ -44,7 +51,11 @@ test("차량 행을 편집 상태로 바꾸고 실차 상태별 대수를 센다
 });
 
 test("저장 값은 편집 상태를 그대로 되돌리고 type은 카테고리 이름을 따른다", () => {
-  const car = { ...carFromVehicle(row), category_id: "c2", options: [" 후방카메라 ", ""] };
+  const car = {
+    ...carFromVehicle(row),
+    category_id: "c2",
+    options: [" 후방카메라 ", ""],
+  };
   const payload = vehiclePayload(car, categories);
   assert.equal(payload.type, "SUV");
   assert.equal(payload.year, 2025);
@@ -66,4 +77,24 @@ test("저장 전 검증은 사진·연식·요금·배기량 범위를 거부한
   assert.notEqual(bad({ displacement_cc: 20001 }), null);
   assert.equal(bad({ displacement_cc: null, km_daily: null }), null);
   assert.notEqual(bad({ km_monthly: -10 }), null);
+});
+
+test("월렌트 특가 지정·해제·기존 차량 미지정이 저장 왕복에서 유지된다", () => {
+  assert.equal(carFromVehicle(row).is_monthly_special, false);
+  for (const value of [true, false]) {
+    const car = carFromVehicle({ ...row, is_monthly_special: value });
+    const payload = vehiclePayload(car, categories);
+    assert.equal(payload.is_monthly_special, value);
+    assert.equal(vehiclePayloadError(payload), null);
+    assert.equal(
+      carFromVehicle({ ...row, ...payload }).is_monthly_special,
+      value,
+    );
+    assert.equal(payload.price_monthly, row.price_monthly);
+  }
+  const valid = vehiclePayload(carFromVehicle(row), categories);
+  assert.match(
+    vehiclePayloadError({ ...valid, is_monthly_special: "true" }),
+    /특가/,
+  );
 });

@@ -109,6 +109,11 @@ export function VehicleList({
                 priority={cars.indexOf(car) < 6}
               />
               <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                {car.is_monthly_special && (
+                  <span className="rounded-full bg-slate-900 px-3 py-1.5 text-[10px] font-bold text-white">
+                    월렌트 특가
+                  </span>
+                )}
                 {car.badge && (
                   <span className="px-3 py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded-full shadow-lg shadow-blue-500/30 uppercase tracking-widest">
                     {car.badge}
@@ -236,10 +241,7 @@ export function VehicleList({
             disabled={bulkUpdating}
             onValueChange={(value) => setBulkStatus(value as VehicleStatus)}
           >
-            <SelectTrigger
-              id="bulk-vehicle-status"
-              className="font-semibold"
-            >
+            <SelectTrigger id="bulk-vehicle-status" className="font-semibold">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -376,6 +378,11 @@ export function VehicleList({
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
+                  {car.is_monthly_special && (
+                    <span className="mb-1 inline-block whitespace-nowrap rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-bold text-white">
+                      월렌트 특가
+                    </span>
+                  )}
                   {car.badge ? (
                     <span className="inline-block whitespace-nowrap px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
                       {car.badge}

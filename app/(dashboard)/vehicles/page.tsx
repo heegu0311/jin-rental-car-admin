@@ -7,8 +7,6 @@ import { createClient } from "@/lib/supabase/client";
 import { compareCategory } from "@/lib/domain/contracts";
 import {
   carFromVehicle,
-  vehiclePayload,
-  vehiclePayloadError,
   type Car,
   type Category,
 } from "@/lib/domain/vehicle-form";
@@ -18,6 +16,7 @@ import {
   applyVehiclePatch,
   type VehicleSheetPatch,
 } from "@/components/vehicles/VehicleSheet";
+import { saveVehicle } from "./actions";
 import { VehicleModal } from "@/components/vehicles/VehicleModal";
 import { CategoryManager } from "@/components/vehicles/CategoryManager";
 import {
@@ -178,22 +177,8 @@ export default function VehiclesPage() {
   ];
 
   const handleSaveCar = async (carData: Car) => {
-    const payload = vehiclePayload(carData, categories);
-    const invalid = vehiclePayloadError(payload);
-    if (invalid) throw new Error(invalid);
-    const result = editingCar
-      ? await supabase
-          .from("vehicles")
-          .update(payload)
-          .eq("id", editingCar.id)
-          .select("id")
-          .single()
-      : await supabase.from("vehicles").insert(payload).select("id").single();
-    if (result.error) {
-      throw new Error(
-        "차량 저장에 실패했습니다. 입력값과 권한을 확인해주세요.",
-      );
-    }
+    const result = await saveVehicle(editingCar?.id ?? null, carData);
+    if (result.error) throw new Error(result.error);
     refreshPublicSiteOrNotify(
       editingCar ? "차량 정보를 저장했습니다." : "차량을 등록했습니다.",
     );

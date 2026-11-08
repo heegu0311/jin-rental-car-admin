@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { numberInputValue, parseNumberInput } from "@/lib/number-input";
+import { useSubmitLock } from "@/lib/hooks/use-submit-lock";
 import dynamic from "next/dynamic";
 import { Car as CarIcon, Tag, X } from "lucide-react";
 import { toast } from "sonner";
@@ -66,7 +67,7 @@ export function VehicleModal({
     },
   );
   const [uploading, setUploading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const { busy: saving, run } = useSubmitLock();
 
   const [supabase] = useState(createClient);
   const selectedOptions = vehicleOptions(formData.options || []);
@@ -96,20 +97,21 @@ export function VehicleModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (saving || uploading) return;
-    setSaving(true);
-    try {
-      await onSave({
-        ...formData,
-        id: car?.id || "",
-        price: (formData.pricePolicy?.monthly || 0).toLocaleString(),
-      } as Car);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "차량을 저장하지 못했습니다.",
-      );
-    } finally {
-      setSaving(false);
-    }
+    await run(async () => {
+      try {
+        await onSave({
+          ...formData,
+          id: car?.id || "",
+          price: (formData.pricePolicy?.monthly || 0).toLocaleString(),
+        } as Car);
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "차량을 저장하지 못했습니다.",
+        );
+      }
+    });
   };
 
   if (!isOpen) return null;
@@ -231,6 +233,24 @@ export function VehicleModal({
                   placeholder="예: 비흡연/완벽점검/썬루프"
                 />
               </div>
+              <label className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                <input
+                  type="checkbox"
+                  checked={formData.is_monthly_special === true}
+                  onChange={(e) =>
+                    update("is_monthly_special", e.target.checked)
+                  }
+                  className="mt-1 h-4 w-4 accent-blue-600"
+                />
+                <span className="text-sm font-bold text-slate-900">
+                  월렌트 특가 차량
+                  <span className="mt-1 block text-xs font-normal leading-5 text-slate-600">
+                    메인 페이지의 월렌트 특가 목록에 등록된 월 요금으로
+                    표시합니다. 해제하면 특가 목록에서 제외됩니다.
+                  </span>
+                </span>
+              </label>
+
               <VehicleImagesField
                 supabase={supabase}
                 images={formData.images || []}

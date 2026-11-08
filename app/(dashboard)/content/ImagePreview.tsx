@@ -23,7 +23,7 @@ interface BannerSpec {
   align: "center" | "left";
   overlay: string;
   badge?: { text: string; color: string; radius: number };
-  /** 홈 히어로의 SINCE 배지 옆 문구 */
+  /** 홈 히어로의 제목 위 문구 */
   eyebrow?: string;
   subtitleColor: string;
   subtitleMaxWidth?: number;
@@ -40,8 +40,7 @@ export const IMAGE_PREVIEWS: Partial<Record<ContentSlug, BannerSpec>> = {
   home: {
     align: "left",
     overlay: "rgba(15,23,42,0.82)",
-    badge: { text: "SINCE 1995", color: "#0ea5e9", radius: 4 },
-    eyebrow: "주식회사 진렌트카 | Best Rentcar",
+    eyebrow: "Best Rentcar",
     subtitleColor: "rgba(255,255,255,0.82)",
     text: (d) => ({
       title:
@@ -56,7 +55,6 @@ export const IMAGE_PREVIEWS: Partial<Record<ContentSlug, BannerSpec>> = {
       padding: "60px 80px",
       title: [48, 66],
       subtitle: [16, 26, 16],
-      badge: [12, 15, "4px 12px", 12],
       eyebrow: [20, 24, 12],
     },
     mobile: {
@@ -65,30 +63,26 @@ export const IMAGE_PREVIEWS: Partial<Record<ContentSlug, BannerSpec>> = {
       padding: "28px 20px",
       title: [32, 42],
       subtitle: [14, 22, 12],
-      badge: [11, 13, "4px 10px", 10],
       eyebrow: [14, 18, 8],
     },
   },
   about: {
     align: "center",
     overlay: "rgba(15,23,42,0.75)",
-    badge: { text: "SINCE 1995", color: "#14b8a6", radius: 50 },
     subtitleColor: SLATE,
-    text: () => ({
-      title: "30년 이상의 경험과 신뢰",
-      subtitle: "고객님의 여정에 항상 안전과 편안함을 더합니다.",
+    text: (d) => ({
+      title: d.title && d.title !== "고객과 함께하는 진렌트카" && d.title !== "회사소개" ? d.title : "30년 이상의 경험과 신뢰",
+      subtitle: d.subtitle && !d.subtitle.startsWith("30년이 넘는 시간 동안") ? d.subtitle : "고객님의 여정에 항상 안전과 편안함을 더합니다.",
     }),
     desktop: {
       ...PAGE_DESKTOP,
       title: [40, 48],
       subtitle: [16, 24, 12],
-      badge: [12, 18, "4px 12px", 12],
     },
     mobile: {
       ...PAGE_MOBILE,
       title: [28, 36],
       subtitle: [14, 22, 12],
-      badge: [12, 18, "4px 12px", 12],
     },
   },
   info: {
@@ -264,6 +258,8 @@ function Banner({
                 </em>
               ) : null}
             </div>
+          ) : spec.eyebrow && frame.eyebrow ? (
+            <em className="mb-3 block font-medium not-italic text-sky-500" style={{ fontSize: frame.eyebrow[0], lineHeight: `${frame.eyebrow[1]}px` }}>{spec.eyebrow}</em>
           ) : null}
           <h1
             className="whitespace-pre-line font-extrabold"

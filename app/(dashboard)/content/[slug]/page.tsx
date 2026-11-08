@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import {
+  ABOUT_DEFAULTS,
   CONTENT_DEFAULT_IMAGES,
   CONTENT_PAGES,
   type ContentSlug,
@@ -72,10 +73,10 @@ export default async function EditContent({
       const body = legacySections
         .find((section) => section.title === field)
         ?.body.trim();
-      if (body)
+      if (body || field === "배차 시간")
         initial.sections = [
           ...initial.sections.filter((section) => section.title !== field),
-          { title: field, body },
+          { title: field, body: body || ABOUT_DEFAULTS["배차 시간"] || "" },
         ];
     }
   }

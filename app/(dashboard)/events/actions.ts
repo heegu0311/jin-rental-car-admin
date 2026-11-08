@@ -9,7 +9,7 @@ import { operationLog } from "@/lib/observability";
 export async function saveEvent(value: unknown) {
   const requestId = crypto.randomUUID();
   const startedAt = performance.now();
-  const { db } = await requireAdmin();
+  const { db, user } = await requireAdmin();
   const event = parseEventForm(value);
   if (!event)
     return {
@@ -21,6 +21,7 @@ export async function saveEvent(value: unknown) {
   const { data, error } = await mutation.select("id").single();
   if (error) {
     operationLog("event.save", requestId, "failure", "db_save", startedAt, {
+      actorUserId: user.id,
       table: "events",
       action: event.id ? "update" : "insert",
       recordId: event.id ?? null,
@@ -30,6 +31,7 @@ export async function saveEvent(value: unknown) {
     };
   }
   operationLog("event.save", requestId, "success", "saved", startedAt, {
+    actorUserId: user.id,
     table: "events",
     action: event.id ? "update" : "insert",
     recordId: data.id,
@@ -44,12 +46,13 @@ export async function saveEvent(value: unknown) {
 export async function savePopupOrder(value: unknown) {
   const requestId = crypto.randomUUID();
   const startedAt = performance.now();
-  const { db } = await requireAdmin();
+  const { db, user } = await requireAdmin();
   const ids = parsePopupOrderIds(value);
   if (!ids) return { error: "팝업 목록을 확인하고 다시 시도해주세요." };
   const { error } = await db.rpc("reorder_event_popups", { event_ids: ids });
   if (error) {
     operationLog("event.reorder", requestId, "failure", "db_rpc", startedAt, {
+      actorUserId: user.id,
       table: "events",
       itemCount: ids.length,
     });
@@ -59,6 +62,7 @@ export async function savePopupOrder(value: unknown) {
     };
   }
   operationLog("event.reorder", requestId, "success", "reordered", startedAt, {
+    actorUserId: user.id,
     table: "events",
     itemCount: ids.length,
   });

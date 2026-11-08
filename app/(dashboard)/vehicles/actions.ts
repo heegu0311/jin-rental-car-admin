@@ -13,7 +13,7 @@ import {
 export async function saveVehicle(id: string | null, car: Car) {
   const requestId = crypto.randomUUID();
   const startedAt = performance.now();
-  const { db } = await requireAdmin();
+  const { db, user } = await requireAdmin();
   if (id !== null && (typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id)))
     return { error: "차량 ID를 확인해주세요." };
   const { data: categories, error: categoryError } = await db
@@ -56,6 +56,7 @@ export async function saveVehicle(id: string | null, car: Car) {
       : await db.from("vehicles").insert(payload).select("id").single();
     if (result.error) {
       operationLog("vehicle.save", requestId, "failure", "db_save", startedAt, {
+        actorUserId: user.id,
         table: "vehicles",
         action: id ? "update" : "insert",
         recordId: id,
@@ -65,6 +66,7 @@ export async function saveVehicle(id: string | null, car: Car) {
       };
     }
     operationLog("vehicle.save", requestId, "success", "saved", startedAt, {
+      actorUserId: user.id,
       table: "vehicles",
       action: id ? "update" : "insert",
       recordId: result.data.id,

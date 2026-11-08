@@ -21,7 +21,7 @@ const idPattern = /^[0-9a-f-]{36}$/i;
 export async function patchVehicleSheet(id: string, patch: VehicleSheetPatch) {
   const requestId = crypto.randomUUID();
   const startedAt = performance.now();
-  const { db } = await requireAdmin();
+  const { db, user } = await requireAdmin();
   if (
     !idPattern.test(id) ||
     !patch ||
@@ -130,6 +130,7 @@ export async function patchVehicleSheet(id: string, patch: VehicleSheetPatch) {
     error ? "db_update" : "updated",
     startedAt,
     {
+      actorUserId: user.id,
       table: "vehicles",
       recordId: id,
       fields: Object.keys(values).sort().join(","),

@@ -12,7 +12,7 @@ import { operationLog } from "@/lib/observability";
 export async function saveContent(value: SiteContent) {
   const requestId = crypto.randomUUID();
   const startedAt = performance.now();
-  const { db } = await requireAdmin();
+  const { db, user } = await requireAdmin();
   if (
     !value ||
     !(value.slug in CONTENT_PAGES) ||
@@ -76,12 +76,14 @@ export async function saveContent(value: SiteContent) {
     .single();
   if (error) {
     operationLog("content.save", requestId, "failure", "db_upsert", startedAt, {
+      actorUserId: user.id,
       table: "site_content",
       recordId: value.slug,
     });
     return { error: "저장하지 못했습니다. 연결 상태와 권한을 확인해주세요." };
   }
   operationLog("content.save", requestId, "success", "saved", startedAt, {
+    actorUserId: user.id,
     table: "site_content",
     recordId: value.slug,
     isPublished: payload.is_published,

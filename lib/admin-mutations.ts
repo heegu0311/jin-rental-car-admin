@@ -20,7 +20,7 @@ export async function togglePublishedField(
     return { error: "올바르지 않은 요청입니다." };
   const requestId = crypto.randomUUID();
   const startedAt = performance.now();
-  const { db } = await requireAdmin();
+  const { db, user } = await requireAdmin();
   const { error } = await db
     .from(table)
     .update({ [field]: value })
@@ -33,7 +33,7 @@ export async function togglePublishedField(
     error ? "failure" : "success",
     error ? "db_update" : "updated",
     startedAt,
-    { table, recordId: id, field, value },
+    { actorUserId: user.id, table, recordId: id, field, value },
   );
   return error ? { error: "변경을 저장하지 못했습니다." } : { success: true };
 }
@@ -46,7 +46,7 @@ export async function deletePublishedRecord(
     return { error: "올바르지 않은 요청입니다." };
   const requestId = crypto.randomUUID();
   const startedAt = performance.now();
-  const { db } = await requireAdmin();
+  const { db, user } = await requireAdmin();
   const { error } = await db
     .from(table)
     .delete()
@@ -59,7 +59,7 @@ export async function deletePublishedRecord(
     error ? "failure" : "success",
     error ? "db_delete" : "deleted",
     startedAt,
-    { table, recordId: id },
+    { actorUserId: user.id, table, recordId: id },
   );
   return error ? { error: "삭제하지 못했습니다." } : { success: true };
 }
@@ -68,7 +68,7 @@ export async function deleteVehicle(id: string) {
   if (!uuid.test(id)) return { error: "올바르지 않은 요청입니다." };
   const requestId = crypto.randomUUID();
   const startedAt = performance.now();
-  const { db } = await requireAdmin();
+  const { db, user } = await requireAdmin();
   const { error } = await db
     .from("vehicles")
     .delete()
@@ -81,7 +81,7 @@ export async function deleteVehicle(id: string) {
     error ? "failure" : "success",
     error ? "db_delete" : "deleted",
     startedAt,
-    { table: "vehicles", recordId: id },
+    { actorUserId: user.id, table: "vehicles", recordId: id },
   );
   return error ? { error: "삭제하지 못했습니다." } : { success: true };
 }
@@ -91,7 +91,7 @@ export async function addCategory(name: string) {
     return { error: "카테고리 이름을 확인해주세요." };
   const requestId = crypto.randomUUID();
   const startedAt = performance.now();
-  const { db } = await requireAdmin();
+  const { db, user } = await requireAdmin();
   const { data, error } = await db
     .from("vehicle_categories")
     .insert({ name: name.trim() })
@@ -103,7 +103,11 @@ export async function addCategory(name: string) {
     error ? "failure" : "success",
     error ? "db_insert" : "created",
     startedAt,
-    { table: "vehicle_categories", recordId: data?.id ?? null },
+    {
+      actorUserId: user.id,
+      table: "vehicle_categories",
+      recordId: data?.id ?? null,
+    },
   );
   return error ? { error: "카테고리 추가에 실패했습니다." } : { success: true };
 }
@@ -112,7 +116,7 @@ export async function deleteCategory(id: string) {
   if (!uuid.test(id)) return { error: "올바르지 않은 요청입니다." };
   const requestId = crypto.randomUUID();
   const startedAt = performance.now();
-  const { db } = await requireAdmin();
+  const { db, user } = await requireAdmin();
   const { error } = await db
     .from("vehicle_categories")
     .delete()
@@ -125,7 +129,7 @@ export async function deleteCategory(id: string) {
     error ? "failure" : "success",
     error ? "db_delete" : "deleted",
     startedAt,
-    { table: "vehicle_categories", recordId: id },
+    { actorUserId: user.id, table: "vehicle_categories", recordId: id },
   );
   return error
     ? { error: "카테고리를 삭제하지 못했습니다." }
@@ -169,6 +173,7 @@ export async function saveNotice(value: {
     error ? "db_save" : "saved",
     startedAt,
     {
+      actorUserId: user.id,
       table: "notices",
       action: value.id ? "update" : "insert",
       recordId: data?.id ?? value.id ?? null,

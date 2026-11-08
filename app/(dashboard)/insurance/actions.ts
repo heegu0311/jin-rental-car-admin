@@ -11,7 +11,7 @@ import { operationLog } from "@/lib/observability";
 export async function saveInsurance(value: unknown, isPublished: unknown) {
   const requestId = crypto.randomUUID();
   const startedAt = performance.now();
-  const { db } = await requireAdmin();
+  const { db, user } = await requireAdmin();
   const config = parseInsuranceConfig(value);
   if (!config || typeof isPublished !== "boolean")
     return {
@@ -51,6 +51,7 @@ export async function saveInsurance(value: unknown, isPublished: unknown) {
       "db_upsert",
       startedAt,
       {
+        actorUserId: user.id,
         table: "site_content",
         recordId: INSURANCE_CONTENT_SLUG,
       },
@@ -58,6 +59,7 @@ export async function saveInsurance(value: unknown, isPublished: unknown) {
     return { error: "저장하지 못했습니다. 연결 상태와 권한을 확인해주세요." };
   }
   operationLog("insurance.save", requestId, "success", "saved", startedAt, {
+    actorUserId: user.id,
     table: "site_content",
     recordId: INSURANCE_CONTENT_SLUG,
     isPublished,

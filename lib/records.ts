@@ -72,6 +72,7 @@ export async function updateRecord(
       "db_update",
       startedAt,
       {
+        actorUserId: user.id,
         table: kind,
         recordId: id,
         status,
@@ -81,6 +82,7 @@ export async function updateRecord(
     return { error: "저장하지 못했습니다. 데이터 또는 권한을 확인해주세요." };
   }
   operationLog("record.update", requestId, "success", "updated", startedAt, {
+    actorUserId: user.id,
     table: kind,
     recordId: id,
     status,
@@ -93,7 +95,7 @@ export async function updateRecord(
 export async function deleteRecord(kind: RecordKind, id: string) {
   const requestId = crypto.randomUUID();
   const startedAt = performance.now();
-  const { db } = await requireAdmin();
+  const { db, user } = await requireAdmin();
   if (!validTarget(kind, id)) return { error: "올바르지 않은 요청입니다." };
   const { error } = await db
     .from(kind)
@@ -109,6 +111,7 @@ export async function deleteRecord(kind: RecordKind, id: string) {
       "db_delete",
       startedAt,
       {
+        actorUserId: user.id,
         table: kind,
         recordId: id,
       },
@@ -116,6 +119,7 @@ export async function deleteRecord(kind: RecordKind, id: string) {
     return { error: "삭제에 실패했습니다." };
   }
   operationLog("record.delete", requestId, "success", "deleted", startedAt, {
+    actorUserId: user.id,
     table: kind,
     recordId: id,
   });

@@ -47,9 +47,9 @@ export function SettingsFields({ sections, onChange, inputClass }: Props) {
             <div key={field} className="text-sm font-semibold text-slate-900">
               상담시간
               <div className="mt-2 flex items-center gap-3">
-                <label className="min-w-0 flex-1 text-xs text-slate-600">시작<input aria-label="상담 시작 시간" type="time" step="1800" className={inputClass} value={start} onChange={(event) => setHours(event.target.value, end || "20:00")} /></label>
+                <label className="min-w-0 flex-1 text-xs text-slate-600"><input aria-label="상담 시작 시간" type="time" step="1800" className={inputClass} value={start} onChange={(event) => setHours(event.target.value, end || "20:00")} /></label>
                 <span aria-hidden="true">~</span>
-                <label className="min-w-0 flex-1 text-xs text-slate-600">종료<input aria-label="상담 종료 시간" type="time" step="1800" className={inputClass} value={end} onChange={(event) => setHours(start || "08:30", event.target.value)} /></label>
+                <label className="min-w-0 flex-1 text-xs text-slate-600"><input aria-label="상담 종료 시간" type="time" step="1800" className={inputClass} value={end} onChange={(event) => setHours(start || "08:30", event.target.value)} /></label>
               </div>
               {hours && (!start || !end) && <p className="mt-2 text-xs font-normal text-amber-700">저장된 시간 형식을 읽을 수 없습니다. 시작과 종료 시간을 다시 선택해 주세요.</p>}
             </div>

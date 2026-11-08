@@ -146,6 +146,30 @@ export function vehiclePayload(car: Car, categories: Category[]) {
 }
 export type VehiclePayload = ReturnType<typeof vehiclePayload>;
 
+type SpecialSettings = Pick<
+  VehiclePayload,
+  | "is_monthly_special"
+  | "monthly_special_price"
+  | "monthly_special_starts_on"
+  | "monthly_special_ends_on"
+>;
+
+/** 지정 해제를 저장하기 전에는 특가 가격과 기간을 변경할 수 없다. */
+export function lockedMonthlySpecialError(
+  current: SpecialSettings,
+  next: Partial<SpecialSettings>,
+): string | null {
+  if (!current.is_monthly_special) return null;
+  const fields = [
+    "monthly_special_price",
+    "monthly_special_starts_on",
+    "monthly_special_ends_on",
+  ] as const;
+  return fields.some((field) => field in next && next[field] !== current[field])
+    ? "지정 해제 후 수정하세요."
+    : null;
+}
+
 const nonNegativeInt = (value: unknown, max = Infinity) =>
   Number.isInteger(value) && (value as number) >= 0 && (value as number) <= max;
 const optional = (value: number | null, max: number) =>

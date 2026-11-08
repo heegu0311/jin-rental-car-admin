@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import {
   vehiclePayload,
   vehiclePayloadError,
+  lockedMonthlySpecialError,
   type Car,
 } from "@/lib/domain/vehicle-form";
 
@@ -28,6 +29,19 @@ export async function saveVehicle(id: string | null, car: Car) {
     const payload = vehiclePayload(car, categories ?? []);
     const invalid = vehiclePayloadError(payload);
     if (invalid) return { error: invalid };
+    if (id) {
+      const { data: current, error: loadError } = await db
+        .from("vehicles")
+        .select(
+          "is_monthly_special,monthly_special_price,monthly_special_starts_on,monthly_special_ends_on",
+        )
+        .eq("id", id)
+        .single();
+      if (loadError || !current)
+        return { error: "차량 정보를 불러오지 못했습니다." };
+      const lockedError = lockedMonthlySpecialError(current, payload);
+      if (lockedError) return { error: lockedError };
+    }
     // 요청에 추가된 임의 필드 대신 정규화된 차량 필드만 저장한다.
     const result = id
       ? await db

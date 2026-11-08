@@ -2,7 +2,10 @@
 
 import { requireAdmin } from "@/lib/auth";
 import { INCLUDED_KM_MAX, INSURANCE_LIMITS } from "@/lib/domain/contracts";
-import { vehicleSpecialError } from "@/lib/domain/vehicle-form";
+import {
+  lockedMonthlySpecialError,
+  vehicleSpecialError,
+} from "@/lib/domain/vehicle-form";
 import { createVehicleSheetColumns } from "@/lib/domain/vehicle-sheet";
 import type { VehicleSheetPatch } from "@/components/vehicles/VehicleSheet";
 
@@ -85,6 +88,8 @@ export async function patchVehicleSheet(id: string, patch: VehicleSheetPatch) {
     .single();
   if (loadError || !current)
     return { error: "차량 정보를 불러오지 못했습니다." };
+  const lockedError = lockedMonthlySpecialError(current, values);
+  if (lockedError) return { error: lockedError };
   const offer = {
     price_monthly: (values.price_monthly ?? current.price_monthly) as number,
     is_monthly_special: (values.is_monthly_special ??

@@ -4,6 +4,7 @@ import {
   carFromVehicle,
   vehiclePayload,
   vehiclePayloadError,
+  lockedMonthlySpecialError,
 } from "../lib/domain/vehicle-form.ts";
 
 const row = {
@@ -33,6 +34,37 @@ const categories = [
   { id: "c1", name: "중형" },
   { id: "c2", name: "SUV" },
 ];
+
+test("지정된 특가 가격과 기간은 해제를 저장하기 전까지 변경할 수 없다", () => {
+  const current = {
+    is_monthly_special: true,
+    monthly_special_price: 700000,
+    monthly_special_starts_on: "2026-11-01",
+    monthly_special_ends_on: "2026-11-30",
+  };
+  assert.match(
+    lockedMonthlySpecialError(current, { monthly_special_price: 690000 }),
+    /지정 해제 후 수정하세요/,
+  );
+  assert.match(
+    lockedMonthlySpecialError(current, {
+      is_monthly_special: false,
+      monthly_special_ends_on: "2026-12-01",
+    }),
+    /지정 해제 후 수정하세요/,
+  );
+  assert.equal(
+    lockedMonthlySpecialError(current, { is_monthly_special: false }),
+    null,
+  );
+  assert.equal(
+    lockedMonthlySpecialError(
+      { ...current, is_monthly_special: false },
+      { monthly_special_price: 690000 },
+    ),
+    null,
+  );
+});
 
 test("차량 행을 편집 상태로 바꾸고 실차 상태별 대수를 센다", () => {
   const car = carFromVehicle(row);

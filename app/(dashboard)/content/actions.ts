@@ -47,6 +47,17 @@ export async function saveContent(value: SiteContent) {
     return {
       error: `회사소개 항목은 각각 ${ABOUT_FIELD_MAX}자 이내로 입력해주세요.`,
     };
+  if (value.slug === "settings") {
+    const values = new Map(value.sections.map((section) => [section.title, section.body.trim()]));
+    const hours = values.get("상담시간") ?? "";
+    if (hours && !/^(?:(?:[01]\d|2[0-3]):[0-5]\d ~ (?:[01]\d|2[0-3]):[0-5]\d|(?:AM|PM|오전|오후)\s*\d{1,2}:[0-5]\d\s*~\s*(?:AM|PM|오전|오후)\s*\d{1,2}:[0-5]\d)$/i.test(hours))
+      return { error: "상담 시작과 종료 시간을 다시 선택해주세요." };
+    for (const field of ["카카오 채널", "네이버 톡톡", "인스타그램", "페이스북", "유튜브"]) {
+      const url = values.get(field) ?? "";
+      if (url && !/^https:\/\/[^\s/]+(?:\/[^\s]*)?$/i.test(url))
+        return { error: `${field} 주소는 HTTPS 링크로 입력해주세요.` };
+    }
+  }
   if (
     typeof value.image_url !== "string" ||
     value.image_url.length > 2000 ||

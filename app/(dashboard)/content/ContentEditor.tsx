@@ -17,6 +17,7 @@ import { notifySaved } from "@/lib/public-site";
 import { useSubmitLock } from "@/lib/hooks/use-submit-lock";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import { IMAGE_PREVIEWS, ImagePreview } from "./ImagePreview";
+import { SettingsFields } from "./SettingsFields";
 import {
   CONTENT_GUIDES,
   type ContentFieldGuide,
@@ -207,7 +208,9 @@ export function ContentEditor({
         disabled={busy}
         className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6"
       >
-        {guide.fixedFields ? (
+        {slug === "settings" ? (
+          <SettingsFields sections={draft.sections} inputClass={input} onChange={(sections) => update({ ...draft, sections })} />
+        ) : guide.fixedFields ? (
           <>
             {imageField}
             <FixedFields
@@ -286,7 +289,7 @@ export function ContentEditor({
           화면을 유지합니다. 연락처와 상담 채널은 실제 운영 정보를 입력해주세요.
         </p>
       </fieldset>
-      {guide.fixedFields || !shows.sections.isVisible ? null : (
+      {slug === "settings" || guide.fixedFields || !shows.sections.isVisible ? null : (
         <fieldset disabled={busy} className="space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>

@@ -132,7 +132,7 @@ export const CONTENT_GUIDES = {
       ),
       image: hiddenField("공통 설정에서는 대표 이미지를 사용하지 않습니다."),
       sections: visibleField(
-        "섹션 제목은 설정 항목명, 내용은 실제 표시값입니다. 기존 항목명을 바꾸면 연결이 끊길 수 있습니다.",
+        "고정된 항목에 실제 운영 정보를 입력합니다.",
       ),
     },
   },

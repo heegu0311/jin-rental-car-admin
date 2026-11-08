@@ -48,8 +48,17 @@ test("지정된 특가 가격과 기간은 해제를 저장하기 전까지 변�
     }),
     /지정 해제 후 수정하세요/,
   );
-  assert.equal(
+  assert.match(
     lockedMonthlySpecialError(current, { is_monthly_special: false }),
+    /지정 해제 후 수정하세요/,
+  );
+  assert.equal(
+    lockedMonthlySpecialError(current, {
+      is_monthly_special: false,
+      monthly_special_price: null,
+      monthly_special_starts_on: null,
+      monthly_special_ends_on: null,
+    }),
     null,
   );
   assert.equal(

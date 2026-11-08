@@ -238,7 +238,17 @@ export function VehicleModal({
                   type="checkbox"
                   checked={formData.is_monthly_special === true}
                   onChange={(e) =>
-                    update("is_monthly_special", e.target.checked)
+                    setFormData((current) =>
+                      e.target.checked
+                        ? { ...current, is_monthly_special: true }
+                        : {
+                            ...current,
+                            is_monthly_special: false,
+                            monthly_special_price: null,
+                            monthly_special_starts_on: null,
+                            monthly_special_ends_on: null,
+                          },
+                    )
                   }
                   className="mt-1 h-4 w-4 accent-blue-600"
                 />

@@ -216,6 +216,11 @@ export function VehicleSheet({
       }
       patch[dbColumn(column.key)] = result.value;
     }
+    if (patch.is_monthly_special === false) {
+      patch.monthly_special_price = null;
+      patch.monthly_special_starts_on = null;
+      patch.monthly_special_ends_on = null;
+    }
     setErrors((prev) => {
       const next = { ...prev, ...nextErrors };
       for (const id of cleared) delete next[id];

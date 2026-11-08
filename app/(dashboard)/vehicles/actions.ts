@@ -30,8 +30,6 @@ export async function saveVehicle(id: string | null, car: Car) {
     )
       return { error: "차량명과 월렌트 특가 지정 여부를 확인해주세요." };
     const payload = vehiclePayload(car, categories ?? []);
-    const invalid = vehiclePayloadError(payload);
-    if (invalid) return { error: invalid };
     if (id) {
       const { data: current, error: loadError } = await db
         .from("vehicles")
@@ -42,9 +40,16 @@ export async function saveVehicle(id: string | null, car: Car) {
         .single();
       if (loadError || !current)
         return { error: "차량 정보를 불러오지 못했습니다." };
+      if (current.is_monthly_special && !payload.is_monthly_special) {
+        payload.monthly_special_price = null;
+        payload.monthly_special_starts_on = null;
+        payload.monthly_special_ends_on = null;
+      }
       const lockedError = lockedMonthlySpecialError(current, payload);
       if (lockedError) return { error: lockedError };
     }
+    const invalid = vehiclePayloadError(payload);
+    if (invalid) return { error: invalid };
     // 요청에 추가된 임의 필드 대신 정규화된 차량 필드만 저장한다.
     const result = id
       ? await db

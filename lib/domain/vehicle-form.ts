@@ -143,6 +143,12 @@ export function lockedMonthlySpecialError(
   next: Partial<SpecialSettings>,
 ): string | null {
   if (!current.is_monthly_special) return null;
+  if (next.is_monthly_special === false)
+    return next.monthly_special_price === null &&
+      next.monthly_special_starts_on === null &&
+      next.monthly_special_ends_on === null
+      ? null
+      : "지정 해제 후 수정하세요.";
   const fields = [
     "monthly_special_price",
     "monthly_special_starts_on",

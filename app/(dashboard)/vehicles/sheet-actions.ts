@@ -91,6 +91,11 @@ export async function patchVehicleSheet(id: string, patch: VehicleSheetPatch) {
     .single();
   if (loadError || !current)
     return { error: "차량 정보를 불러오지 못했습니다." };
+  if (current.is_monthly_special && values.is_monthly_special === false) {
+    values.monthly_special_price = null;
+    values.monthly_special_starts_on = null;
+    values.monthly_special_ends_on = null;
+  }
   const lockedError = lockedMonthlySpecialError(current, values);
   if (lockedError) return { error: lockedError };
   const offer = {

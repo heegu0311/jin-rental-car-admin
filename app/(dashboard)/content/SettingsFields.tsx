@@ -46,7 +46,7 @@ export function SettingsFields({ sections, onChange, inputClass }: Props) {
           {SETTING_FIELDS.slice(0, 5).map((field) => field === "상담시간" ? (
             <div key={field} className="text-sm font-semibold text-slate-900">
               상담시간
-              <div className="mt-2 flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <label className="min-w-0 flex-1 text-xs text-slate-600"><input aria-label="상담 시작 시간" type="time" step="1800" className={inputClass} value={start} onChange={(event) => setHours(event.target.value, end || "20:00")} /></label>
                 <span aria-hidden="true">~</span>
                 <label className="min-w-0 flex-1 text-xs text-slate-600"><input aria-label="상담 종료 시간" type="time" step="1800" className={inputClass} value={end} onChange={(event) => setHours(start || "08:30", event.target.value)} /></label>

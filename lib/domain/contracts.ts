@@ -242,6 +242,7 @@ export interface InsurancePlan {
   details: InsuranceDetail[];
 }
 export interface InsuranceUnit {
+  /** 이전 저장 형식과의 호환용. 자차보험은 항상 선택이며 읽기·저장 시 false로 정규화한다. */
   required: boolean;
   plans: Record<InsuranceAgeGroup, InsurancePlan[]>;
 }
@@ -359,7 +360,7 @@ export function parseInsuranceConfig(value: unknown): InsuranceConfig | null {
   const units = {} as Record<RentalType, InsuranceUnit>;
   for (const type of RENTAL_TYPES) {
     const unit = rawUnits[type] as Record<string, unknown> | undefined;
-    if (!unit || typeof unit.required !== "boolean") return null;
+    if (!unit) return null;
     const rawPlans = unit.plans as Record<string, unknown> | undefined;
     if (!rawPlans || typeof rawPlans !== "object") return null;
     const plans = {} as Record<InsuranceAgeGroup, InsurancePlan[]>;
@@ -395,9 +396,7 @@ export function parseInsuranceConfig(value: unknown): InsuranceConfig | null {
         return null;
       plans[age] = parsed;
     }
-    if (unit.required && INSURANCE_AGE_GROUPS.some((age) => !plans[age].length))
-      return null;
-    units[type] = { required: unit.required, plans };
+    units[type] = { required: false, plans };
   }
   return { ccLimits: [...ccLimits], units };
 }
@@ -440,10 +439,10 @@ export function insuranceSelection(
 ): string | null {
   if (!(INSURANCE_AGE_GROUPS as readonly unknown[]).includes(age)) return null;
   const group = age as InsuranceAgeGroup;
-  const { required, plans } = config.units[type];
+  const { plans } = config.units[type];
   const prefix = `${RENTAL_UNIT_LABELS[type]} · ${group}`;
   if (plan === INSURANCE_NONE)
-    return required ? null : `${prefix} · ${INSURANCE_NONE}`;
+    return `${prefix} · ${INSURANCE_NONE}`;
   const found = plans[group].find((p) => p.name === plan);
   if (!found) return null;
   const classLabel =

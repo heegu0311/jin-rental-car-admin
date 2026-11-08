@@ -42,7 +42,6 @@ export function fillMissingDetails(config: InsuranceConfig) {
 const TIERS = Object.keys(TIER_DETAILS) as Tier[];
 
 function unit(
-  required: boolean,
   over26: [number, number, number],
   under26: [number, number, number],
 ): InsuranceUnit {
@@ -54,7 +53,7 @@ function unit(
       details: TIER_DETAILS[tier],
     }));
   return {
-    required,
+    required: false,
     plans: {
       "만 26세 이상": plans("26세", over26),
       "만 26세 미만": plans("21세", under26),
@@ -64,8 +63,8 @@ function unit(
 export const DEFAULT_INSURANCE: InsuranceConfig = {
   ccLimits: [],
   units: {
-    daily: unit(false, [10000, 15000, 20000], [20000, 30000, 40000]),
-    weekly: unit(true, [40000, 60000, 80000], [80000, 120000, 160000]),
-    monthly: unit(false, [100000, 150000, 200000], [200000, 300000, 400000]),
+    daily: unit([10000, 15000, 20000], [20000, 30000, 40000]),
+    weekly: unit([40000, 60000, 80000], [80000, 120000, 160000]),
+    monthly: unit([100000, 150000, 200000], [200000, 300000, 400000]),
   },
 };

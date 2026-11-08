@@ -253,25 +253,6 @@ export function InsuranceEditor({
             </button>
           ))}
         </div>
-        <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm">
-          <input
-            type="checkbox"
-            className="mt-0.5 size-4"
-            checked={current.required}
-            onChange={(e) =>
-              setCurrent({ ...current, required: e.target.checked })
-            }
-          />
-          <span>
-            <strong className="block text-slate-900">
-              {RENTAL_UNIT_LABELS[unit]} 자차보험 가입 필수
-            </strong>
-            <span className="mt-1 block text-xs text-slate-500">
-              켜면 고객 화면에서 &lsquo;선택 안함&rsquo;이 사라지고 보험을 꼭
-              골라야 접수됩니다.
-            </span>
-          </span>
-        </label>
         {INSURANCE_AGE_GROUPS.map((age) => (
           <Panel
             key={age}

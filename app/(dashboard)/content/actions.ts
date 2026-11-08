@@ -8,7 +8,10 @@ import {
 } from "@/lib/domain/contracts";
 import { revalidatePath } from "next/cache";
 import { refreshPublicSite } from "@/lib/web-revalidate";
+import { operationLog } from "@/lib/observability";
 export async function saveContent(value: SiteContent) {
+  const requestId = crypto.randomUUID();
+  const startedAt = performance.now();
   const { db } = await requireAdmin();
   if (
     !value ||
@@ -71,8 +74,19 @@ export async function saveContent(value: SiteContent) {
     .upsert(payload)
     .select("slug")
     .single();
-  if (error)
+  if (error) {
+    operationLog("content.save", requestId, "failure", "db_upsert", startedAt, {
+      table: "site_content",
+      recordId: value.slug,
+    });
     return { error: "저장하지 못했습니다. 연결 상태와 권한을 확인해주세요." };
+  }
+  operationLog("content.save", requestId, "success", "saved", startedAt, {
+    table: "site_content",
+    recordId: value.slug,
+    isPublished: payload.is_published,
+    sectionCount: payload.sections.length,
+  });
   revalidatePath("/content");
   revalidatePath(`/content/${value.slug}`);
   const site = await refreshPublicSite();

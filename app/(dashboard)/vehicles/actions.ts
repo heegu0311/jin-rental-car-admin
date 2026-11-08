@@ -55,15 +55,33 @@ export async function saveVehicle(id: string | null, car: Car) {
           .single()
       : await db.from("vehicles").insert(payload).select("id").single();
     if (result.error) {
-      operationLog("vehicle.save", requestId, "failure", "db_save", startedAt);
+      operationLog("vehicle.save", requestId, "failure", "db_save", startedAt, {
+        table: "vehicles",
+        action: id ? "update" : "insert",
+        recordId: id,
+      });
       return {
         error: "차량 저장에 실패했습니다. 입력값과 권한을 확인해주세요.",
       };
     }
-    operationLog("vehicle.save", requestId, "success", "saved", startedAt);
+    operationLog("vehicle.save", requestId, "success", "saved", startedAt, {
+      table: "vehicles",
+      action: id ? "update" : "insert",
+      recordId: result.data.id,
+      priceDaily: payload.price_daily,
+      priceWeekly: payload.price_weekly,
+      priceMonthly: payload.price_monthly,
+      isMonthlySpecial: payload.is_monthly_special,
+    });
     return { error: null };
   } catch {
-    operationLog("vehicle.save", requestId, "failure", "invalid_input", startedAt);
+    operationLog(
+      "vehicle.save",
+      requestId,
+      "failure",
+      "invalid_input",
+      startedAt,
+    );
     return { error: "차량 입력값을 확인해주세요." };
   }
 }

@@ -65,10 +65,27 @@ export async function updateRecord(
     .select("id")
     .single();
   if (error) {
-    operationLog("record.update", requestId, "failure", "db_update", startedAt);
+    operationLog(
+      "record.update",
+      requestId,
+      "failure",
+      "db_update",
+      startedAt,
+      {
+        table: kind,
+        recordId: id,
+        status,
+        hasAnswer: Boolean(answer.trim()),
+      },
+    );
     return { error: "저장하지 못했습니다. 데이터 또는 권한을 확인해주세요." };
   }
-  operationLog("record.update", requestId, "success", "updated", startedAt);
+  operationLog("record.update", requestId, "success", "updated", startedAt, {
+    table: kind,
+    recordId: id,
+    status,
+    hasAnswer: Boolean(answer.trim()),
+  });
   revalidateRecordPages(kind);
   return { success: true };
 }
@@ -85,10 +102,23 @@ export async function deleteRecord(kind: RecordKind, id: string) {
     .select("id")
     .single();
   if (error) {
-    operationLog("record.delete", requestId, "failure", "db_delete", startedAt);
+    operationLog(
+      "record.delete",
+      requestId,
+      "failure",
+      "db_delete",
+      startedAt,
+      {
+        table: kind,
+        recordId: id,
+      },
+    );
     return { error: "삭제에 실패했습니다." };
   }
-  operationLog("record.delete", requestId, "success", "deleted", startedAt);
+  operationLog("record.delete", requestId, "success", "deleted", startedAt, {
+    table: kind,
+    recordId: id,
+  });
   revalidateRecordPages(kind);
   return { success: true };
 }

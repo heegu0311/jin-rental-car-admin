@@ -3,6 +3,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { refreshPublicSiteOrNotify } from "@/lib/public-site";
+import {
+  deletePublishedRecord,
+  togglePublishedField,
+} from "@/lib/admin-mutations";
 
 type Order = { column: string; ascending: boolean };
 
@@ -40,13 +44,13 @@ export function useAdminTable<T extends { id: string }>(
   /** 참/거짓 열(노출·고정)을 뒤집는다. */
   async function toggle(row: T, field: keyof T & string, doneMessage: string) {
     const next = !row[field];
-    const { error } = await supabase
-      .from(table)
-      .update({ [field]: next })
-      .eq("id", row.id)
-      .select("id")
-      .single();
-    if (error) {
+    const result = await togglePublishedField(
+      table,
+      row.id,
+      field as "is_active" | "is_pinned",
+      Boolean(next),
+    );
+    if (result.error) {
       toast.error("변경을 저장하지 못했습니다.");
       return;
     }
@@ -61,13 +65,8 @@ export function useAdminTable<T extends { id: string }>(
     { confirm, done }: { confirm: string; done: string },
   ) {
     if (!window.confirm(confirm)) return;
-    const { error } = await supabase
-      .from(table)
-      .delete()
-      .eq("id", id)
-      .select("id")
-      .single();
-    if (error) {
+    const result = await deletePublishedRecord(table, id);
+    if (result.error) {
       toast.error("삭제하지 못했습니다.");
       return;
     }

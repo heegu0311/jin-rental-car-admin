@@ -6,6 +6,7 @@ import { compareCategory } from "@/lib/domain/contracts";
 import { X, Plus, Trash2, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { refreshPublicSiteOrNotify } from "@/lib/public-site";
+import { addCategory, deleteCategory } from "@/lib/admin-mutations";
 
 interface Category {
   id: string;
@@ -30,19 +31,15 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
       .order("created_at", { ascending: true });
     if (error) toast.error("카테고리를 불러오지 못했습니다.");
     if (data)
-      setCategories(
-        [...data].sort((a, b) => compareCategory(a.name, b.name)),
-      );
+      setCategories([...data].sort((a, b) => compareCategory(a.name, b.name)));
   };
 
   const handleAdd = async () => {
     if (!newCategory.trim()) return;
     setIsAdding(true);
-    const { error } = await supabase
-      .from("vehicle_categories")
-      .insert([{ name: newCategory.trim() }]);
+    const result = await addCategory(newCategory.trim());
 
-    if (!error) {
+    if (!result.error) {
       setNewCategory("");
       refreshPublicSiteOrNotify("카테고리를 추가했습니다.");
       fetchCategories();
@@ -61,12 +58,9 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
     )
       return;
 
-    const { error } = await supabase
-      .from("vehicle_categories")
-      .delete()
-      .eq("id", id);
+    const result = await deleteCategory(id);
 
-    if (error) {
+    if (result.error) {
       toast.error("카테고리를 삭제하지 못했습니다. 다시 시도해주세요.");
       return;
     }

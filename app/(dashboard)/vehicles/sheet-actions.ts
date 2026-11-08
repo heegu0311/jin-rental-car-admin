@@ -8,6 +8,7 @@ import {
 } from "@/lib/domain/vehicle-form";
 import { createVehicleSheetColumns } from "@/lib/domain/vehicle-sheet";
 import type { VehicleSheetPatch } from "@/components/vehicles/VehicleSheet";
+import { operationLog } from "@/lib/observability";
 
 const columns = createVehicleSheetColumns({
   price: INSURANCE_LIMITS.price,
@@ -18,6 +19,8 @@ const idPattern = /^[0-9a-f-]{36}$/i;
 
 /** 표 셀 입력을 서버에서 다시 확인하고, 특가 항목은 현재 DB 행과 합쳐 검증한다. */
 export async function patchVehicleSheet(id: string, patch: VehicleSheetPatch) {
+  const requestId = crypto.randomUUID();
+  const startedAt = performance.now();
   const { db } = await requireAdmin();
   if (
     !idPattern.test(id) ||
@@ -120,6 +123,30 @@ export async function patchVehicleSheet(id: string, patch: VehicleSheetPatch) {
     .eq("id", id)
     .select("id")
     .single();
+  operationLog(
+    "vehicle.patch",
+    requestId,
+    error ? "failure" : "success",
+    error ? "db_update" : "updated",
+    startedAt,
+    {
+      table: "vehicles",
+      recordId: id,
+      fields: Object.keys(values).sort().join(","),
+      ...("price_daily" in values
+        ? { priceDaily: Number(values.price_daily) }
+        : {}),
+      ...("price_weekly" in values
+        ? { priceWeekly: Number(values.price_weekly) }
+        : {}),
+      ...("price_monthly" in values
+        ? { priceMonthly: Number(values.price_monthly) }
+        : {}),
+      ...("is_monthly_special" in values
+        ? { isMonthlySpecial: Boolean(values.is_monthly_special) }
+        : {}),
+    },
+  );
   return {
     error: error ? "저장에 실패했습니다. 입력값과 권한을 확인해주세요." : null,
   };

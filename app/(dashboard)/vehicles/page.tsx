@@ -17,6 +17,7 @@ import {
 } from "@/components/vehicles/VehicleSheet";
 import { saveVehicle } from "./actions";
 import { patchVehicleSheet } from "./sheet-actions";
+import { deleteVehicle } from "@/lib/admin-mutations";
 import { VehicleModal } from "@/components/vehicles/VehicleModal";
 import { CategoryManager } from "@/components/vehicles/CategoryManager";
 import {
@@ -50,10 +51,7 @@ export default function VehiclesPage() {
 
   const loadData = useCallback(async () => {
     return Promise.all([
-      supabase
-        .from("vehicles")
-        .select("*")
-        .order("id", { ascending: false }),
+      supabase.from("vehicles").select("*").order("id", { ascending: false }),
       supabase
         .from("vehicle_categories")
         .select("*")
@@ -150,13 +148,8 @@ export default function VehiclesPage() {
 
   const handleDeleteCar = async (id: string) => {
     if (window.confirm("모델과 등록된 모든 차량 정보를 삭제하시겠습니까?")) {
-      const { error } = await supabase
-        .from("vehicles")
-        .delete()
-        .eq("id", id)
-        .select("id")
-        .single();
-      if (error) {
+      const result = await deleteVehicle(id);
+      if (result.error) {
         toast.error("삭제하지 못했습니다. 연결된 데이터를 확인해주세요.");
         return;
       }

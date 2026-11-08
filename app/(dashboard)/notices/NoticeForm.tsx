@@ -10,6 +10,7 @@ import { uploadAdminImage } from "@/lib/storage/upload-image";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { refreshPublicSiteOrNotify } from "@/lib/public-site";
+import { saveNotice } from "@/lib/admin-mutations";
 
 const RichEditor = dynamic(
   () => import("@/components/admin/RichEditor").then((mod) => mod.RichEditor),
@@ -65,27 +66,8 @@ export function NoticeForm({ initialData }: NoticeFormProps) {
     };
 
     try {
-      if (initialData?.id) {
-        // Update
-        const { error } = await supabase
-          .from("notices")
-          .update(noticeData)
-          .eq("id", initialData.id);
-
-        if (error) throw error;
-      } else {
-        // Create
-        // Note: author_id handles current user if needed, but schema allows null or we can get current user
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        const { error } = await supabase
-          .from("notices")
-          .insert([{ ...noticeData, author_id: user?.id }]);
-
-        if (error) throw error;
-      }
+      const result = await saveNotice({ ...noticeData, id: initialData?.id });
+      if (result.error) throw new Error(result.error);
 
       await refreshPublicSiteOrNotify("공지사항을 저장했습니다.");
       router.push("/notices");

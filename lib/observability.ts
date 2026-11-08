@@ -5,6 +5,7 @@ export function operationLog(
   outcome: "success" | "failure",
   code: string,
   startedAt: number,
+  details?: Record<string, string | number | boolean | null>,
 ) {
   const entry = {
     event: "operation",
@@ -14,6 +15,7 @@ export function operationLog(
     outcome,
     code,
     durationMs: Math.round(performance.now() - startedAt),
+    ...(details ? { details } : {}),
   };
   if (outcome === "failure") {
     console.error(JSON.stringify(entry));

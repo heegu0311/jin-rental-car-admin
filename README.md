@@ -24,7 +24,7 @@ pnpm build
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | 로그인 세션 + RLS로 관리자 데이터 접근 |
 | `WEB_REVALIDATE_URL`, `WEB_REVALIDATE_SECRET` | 저장 후 고객 웹 즉시 반영(서버 전용). 없으면 최대 3시간 뒤 반영 |
 
-서버 작업 로그는 Vercel Logs에서 `event=operation` 또는 `requestId`로 검색한다. 예약·문의 상태 변경, 차량 저장, 공개 사이트 재검증은 작업명, 결과 코드, 소요 시간만 남긴다. 고객 입력값과 공급자 오류 본문은 남기지 않는다. 재검증 요청의 ID는 고객 웹 로그에도 전달된다.
+서버 작업 로그는 Vercel Runtime Logs에서 `event=operation` 또는 `requestId`로 검색한다. DB 저장·수정·삭제에는 테이블과 행 ID, 작업 종류, 허용된 상태·요금·공개 여부·변경 필드를 `details`에 남긴다. 예약·문의 답변 본문, 고객 연락처, 게시물 HTML, 공급자 오류 본문은 남기지 않는다. 재검증 요청의 ID는 고객 웹 로그에도 전달된다. Vercel의 보관 기간 이후까지 변경 이력이 필요하면 별도 감사 로그 저장소가 필요하다.
 
 service-role 키는 이 앱에서 쓰지 않는다. 관리자 권한은 서버 세션 + `profiles.role` + RLS로 확인한다(`lib/auth.ts`의 `requireAdmin`).
 

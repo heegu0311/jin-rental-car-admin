@@ -6,8 +6,11 @@ import {
   parseInsuranceConfig,
 } from "@/lib/domain/contracts";
 import { refreshPublicSite } from "@/lib/web-revalidate";
+import { operationLog } from "@/lib/observability";
 
 export async function saveInsurance(value: unknown, isPublished: unknown) {
+  const requestId = crypto.randomUUID();
+  const startedAt = performance.now();
   const { db } = await requireAdmin();
   const config = parseInsuranceConfig(value);
   if (!config || typeof isPublished !== "boolean")
@@ -40,8 +43,25 @@ export async function saveInsurance(value: unknown, isPublished: unknown) {
     })
     .select("slug")
     .single();
-  if (error)
+  if (error) {
+    operationLog(
+      "insurance.save",
+      requestId,
+      "failure",
+      "db_upsert",
+      startedAt,
+      {
+        table: "site_content",
+        recordId: INSURANCE_CONTENT_SLUG,
+      },
+    );
     return { error: "저장하지 못했습니다. 연결 상태와 권한을 확인해주세요." };
+  }
+  operationLog("insurance.save", requestId, "success", "saved", startedAt, {
+    table: "site_content",
+    recordId: INSURANCE_CONTENT_SLUG,
+    isPublished,
+  });
   revalidatePath("/insurance");
   const site = await refreshPublicSite();
   return { success: true as const, site };

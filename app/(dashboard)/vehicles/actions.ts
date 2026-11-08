@@ -1,6 +1,7 @@
 "use server";
 
 import { requireAdmin } from "@/lib/auth";
+import { operationLog } from "@/lib/observability";
 import {
   vehiclePayload,
   vehiclePayloadError,
@@ -10,6 +11,8 @@ import {
 
 /** 세션·관리자 역할 확인 후 기존 RLS를 통해 저장한다. */
 export async function saveVehicle(id: string | null, car: Car) {
+  const requestId = crypto.randomUUID();
+  const startedAt = performance.now();
   const { db } = await requireAdmin();
   if (id !== null && (typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id)))
     return { error: "차량 ID를 확인해주세요." };
@@ -51,12 +54,16 @@ export async function saveVehicle(id: string | null, car: Car) {
           .select("id")
           .single()
       : await db.from("vehicles").insert(payload).select("id").single();
-    if (result.error)
+    if (result.error) {
+      operationLog("vehicle.save", requestId, "failure", "db_save", startedAt);
       return {
         error: "차량 저장에 실패했습니다. 입력값과 권한을 확인해주세요.",
       };
+    }
+    operationLog("vehicle.save", requestId, "success", "saved", startedAt);
     return { error: null };
   } catch {
+    operationLog("vehicle.save", requestId, "failure", "invalid_input", startedAt);
     return { error: "차량 입력값을 확인해주세요." };
   }
 }

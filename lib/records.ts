@@ -1,6 +1,7 @@
 "use server";
 import { requireAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { operationLog } from "@/lib/observability";
 
 export type RecordKind = "reservations" | "inquiries";
 
@@ -33,6 +34,8 @@ export async function updateRecord(
   status: string,
   answer = "",
 ) {
+  const requestId = crypto.randomUUID();
+  const startedAt = performance.now();
   const { db, user } = await requireAdmin();
   if (!validTarget(kind, id)) return { error: "올바르지 않은 요청입니다." };
   if (kind === "reservations" && !STATUSES.reservations.includes(status))
@@ -61,13 +64,18 @@ export async function updateRecord(
     .eq("id", id)
     .select("id")
     .single();
-  if (error)
+  if (error) {
+    operationLog("record.update", requestId, "failure", "db_update", startedAt);
     return { error: "저장하지 못했습니다. 데이터 또는 권한을 확인해주세요." };
+  }
+  operationLog("record.update", requestId, "success", "updated", startedAt);
   revalidateRecordPages(kind);
   return { success: true };
 }
 
 export async function deleteRecord(kind: RecordKind, id: string) {
+  const requestId = crypto.randomUUID();
+  const startedAt = performance.now();
   const { db } = await requireAdmin();
   if (!validTarget(kind, id)) return { error: "올바르지 않은 요청입니다." };
   const { error } = await db
@@ -76,7 +84,11 @@ export async function deleteRecord(kind: RecordKind, id: string) {
     .eq("id", id)
     .select("id")
     .single();
-  if (error) return { error: "삭제에 실패했습니다." };
+  if (error) {
+    operationLog("record.delete", requestId, "failure", "db_delete", startedAt);
+    return { error: "삭제에 실패했습니다." };
+  }
+  operationLog("record.delete", requestId, "success", "deleted", startedAt);
   revalidateRecordPages(kind);
   return { success: true };
 }

@@ -17,6 +17,7 @@ import {
   type VehicleSheetPatch,
 } from "@/components/vehicles/VehicleSheet";
 import { saveVehicle } from "./actions";
+import { patchVehicleSheet } from "./sheet-actions";
 import { VehicleModal } from "@/components/vehicles/VehicleModal";
 import { CategoryManager } from "@/components/vehicles/CategoryManager";
 import {
@@ -189,18 +190,8 @@ export default function VehiclesPage() {
 
   /** 표 편집 셀 저장. 고객 사이트 갱신은 연속 입력이 끝난 뒤 한 번만 요청한다. */
   const handlePatchCar = async (id: string, patch: VehicleSheetPatch) => {
-    const payload: VehicleSheetPatch & { type?: string } = { ...patch };
-    if ("category_id" in patch)
-      payload.type =
-        categories.find((c) => c.id === patch.category_id)?.name || "일반";
-    const { error } = await supabase
-      .from("vehicles")
-      .update(payload)
-      .eq("id", id)
-      .select("id")
-      .single();
-    if (error)
-      throw new Error("저장에 실패했습니다. 입력값과 권한을 확인해주세요.");
+    const result = await patchVehicleSheet(id, patch);
+    if (result.error) throw new Error(result.error);
     setCars((prev) =>
       prev.map((car) =>
         car.id === id ? applyVehiclePatch(car, patch, categories) : car,

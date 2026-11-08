@@ -44,7 +44,7 @@ const COLUMNS = createVehicleSheetColumns({
 
 type DbColumn = Exclude<VehicleSheetKey, "category"> | "category_id";
 export type VehicleSheetPatch = Partial<
-  Record<DbColumn, string | number | null>
+  Record<DbColumn, string | number | boolean | null>
 >;
 
 const dbColumn = (key: VehicleSheetKey): DbColumn =>
@@ -65,6 +65,13 @@ function baseValue(car: Car, key: VehicleSheetKey, categories: Category[]) {
       return n(car.pricePolicy.weekly);
     case "price_monthly":
       return n(car.pricePolicy.monthly);
+    case "is_monthly_special":
+      return car.is_monthly_special ? "지정" : "미지정";
+    case "monthly_special_price":
+      return n(car.monthly_special_price);
+    case "monthly_special_starts_on":
+    case "monthly_special_ends_on":
+      return car[key] ?? "";
     case "displacement_cc":
     case "extra_km_fee":
     case "km_daily":
@@ -85,7 +92,7 @@ export function applyVehiclePatch(
   const next: Car = { ...car, pricePolicy: { ...car.pricePolicy } };
   for (const [column, value] of Object.entries(patch) as [
     DbColumn,
-    string | number | null,
+    string | number | boolean | null,
   ][]) {
     switch (column) {
       case "category_id":
@@ -104,6 +111,16 @@ export function applyVehiclePatch(
       case "price_monthly":
         next.pricePolicy.monthly = value as number;
         next.price = String(value);
+        break;
+      case "is_monthly_special":
+        next.is_monthly_special = value as boolean;
+        break;
+      case "monthly_special_price":
+        next.monthly_special_price = value as number | null;
+        break;
+      case "monthly_special_starts_on":
+      case "monthly_special_ends_on":
+        next[column] = value as string | null;
         break;
       case "seats":
         next.seats = value as number;
@@ -448,7 +465,28 @@ export function VehicleSheet({
                           c === 0 && "sticky left-12 z-10",
                         )}
                       >
-                        {column.kind === "category" ? (
+                        {column.kind === "boolean" ? (
+                          <Select
+                            value={value}
+                            onValueChange={(next) =>
+                              saveRow(car, { [column.key]: next })
+                            }
+                          >
+                            <SelectTrigger
+                              {...common}
+                              className={cn(
+                                common.className,
+                                "rounded-none border-0 shadow-none data-[size=default]:h-9",
+                              )}
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="미지정">미지정</SelectItem>
+                              <SelectItem value="지정">지정</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : column.kind === "category" ? (
                           <div
                             onKeyDownCapture={(e) => {
                               // 트리거보다 먼저 받아 Enter는 행 이동으로 쓰고, 열린 목록 안의 키 입력은 넘긴다.

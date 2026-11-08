@@ -70,3 +70,31 @@ test("엑셀 TSV 붙여넣기와 따옴표 셀", () => {
   ];
   assert.deepEqual(parseClipboardGrid(toClipboardGrid(rows)), rows);
 });
+
+test("표 편집에서 특가 지정·특별가·한국 날짜를 읽고 잘못된 날짜를 거부한다", () => {
+  assert.deepEqual(parseSheetCell(cols.is_monthly_special, "지정"), {
+    ok: true,
+    value: true,
+  });
+  assert.deepEqual(parseSheetCell(cols.is_monthly_special, "미지정"), {
+    ok: true,
+    value: false,
+  });
+  assert.equal(parseSheetCell(cols.is_monthly_special, "true").ok, false);
+  assert.deepEqual(parseSheetCell(cols.monthly_special_price, "750,000원"), {
+    ok: true,
+    value: 750000,
+  });
+  assert.deepEqual(parseSheetCell(cols.monthly_special_price, ""), {
+    ok: true,
+    value: null,
+  });
+  assert.deepEqual(
+    parseSheetCell(cols.monthly_special_starts_on, "2026-11-08"),
+    { ok: true, value: "2026-11-08" },
+  );
+  assert.equal(
+    parseSheetCell(cols.monthly_special_ends_on, "2026-11-31").ok,
+    false,
+  );
+});

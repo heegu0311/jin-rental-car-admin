@@ -245,11 +245,56 @@ export function VehicleModal({
                 <span className="text-sm font-bold text-slate-900">
                   월렌트 특가 차량
                   <span className="mt-1 block text-xs font-normal leading-5 text-slate-600">
-                    메인 페이지의 월렌트 특가 목록에 등록된 월 요금으로
-                    표시합니다. 해제하면 특가 목록에서 제외됩니다.
+                    설정한 기간에 특별 월 요금으로 표시합니다. 기간이 끝나면
+                    자동으로 제외됩니다.
                   </span>
                 </span>
               </label>
+
+              <div className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 p-4 sm:grid-cols-3">
+                <label className="text-xs font-bold text-slate-700">
+                  특별 월 요금 (원)
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={formData.monthly_special_price ?? ""}
+                    onChange={(e) =>
+                      update(
+                        "monthly_special_price",
+                        e.target.value === "" ? null : Number(e.target.value),
+                      )
+                    }
+                    className="mt-2 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal"
+                    placeholder="특별가"
+                  />
+                </label>
+                <label className="text-xs font-bold text-slate-700">
+                  시작일
+                  <input
+                    type="date"
+                    value={formData.monthly_special_starts_on ?? ""}
+                    onChange={(e) =>
+                      update(
+                        "monthly_special_starts_on",
+                        e.target.value || null,
+                      )
+                    }
+                    className="mt-2 h-10 w-full rounded-lg border border-slate-200 px-2 text-sm font-normal"
+                  />
+                </label>
+                <label className="text-xs font-bold text-slate-700">
+                  종료일
+                  <input
+                    type="date"
+                    value={formData.monthly_special_ends_on ?? ""}
+                    onChange={(e) =>
+                      update("monthly_special_ends_on", e.target.value || null)
+                    }
+                    className="mt-2 h-10 w-full rounded-lg border border-slate-200 px-2 text-sm font-normal"
+                  />
+                </label>
+              </div>
 
               <VehicleImagesField
                 supabase={supabase}
@@ -450,7 +495,9 @@ export function VehicleModal({
                 max={45}
                 required
                 value={numberInputValue(formData.seats ?? 5)}
-                onChange={(e) => update("seats", parseNumberInput(e.target.value))}
+                onChange={(e) =>
+                  update("seats", parseNumberInput(e.target.value))
+                }
               />
             </label>
             <fieldset className="space-y-3">

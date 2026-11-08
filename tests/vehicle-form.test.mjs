@@ -82,7 +82,13 @@ test("저장 전 검증은 사진·연식·요금·배기량 범위를 거부한
 test("월렌트 특가 지정·해제·기존 차량 미지정이 저장 왕복에서 유지된다", () => {
   assert.equal(carFromVehicle(row).is_monthly_special, false);
   for (const value of [true, false]) {
-    const car = carFromVehicle({ ...row, is_monthly_special: value });
+    const car = carFromVehicle({
+      ...row,
+      is_monthly_special: value,
+      monthly_special_price: 750000,
+      monthly_special_starts_on: "2026-11-01",
+      monthly_special_ends_on: "2026-11-30",
+    });
     const payload = vehiclePayload(car, categories);
     assert.equal(payload.is_monthly_special, value);
     assert.equal(vehiclePayloadError(payload), null);
@@ -96,5 +102,44 @@ test("월렌트 특가 지정·해제·기존 차량 미지정이 저장 왕복�
   assert.match(
     vehiclePayloadError({ ...valid, is_monthly_special: "true" }),
     /특가/,
+  );
+});
+
+test("월렌트 특별가는 정가보다 낮고 유효한 기간을 가져야 한다", () => {
+  const ok = vehiclePayload(
+    carFromVehicle({
+      ...row,
+      is_monthly_special: true,
+      monthly_special_price: 750000,
+      monthly_special_starts_on: "2026-11-01",
+      monthly_special_ends_on: "2026-11-30",
+    }),
+    categories,
+  );
+  assert.equal(vehiclePayloadError(ok), null);
+  for (const invalid of [0, 900000, -1, 1.5])
+    assert.match(
+      vehiclePayloadError({ ...ok, monthly_special_price: invalid }),
+      /특별가/,
+    );
+  assert.match(
+    vehiclePayloadError({ ...ok, monthly_special_ends_on: "2026-10-31" }),
+    /기간/,
+  );
+  assert.match(
+    vehiclePayloadError({ ...ok, monthly_special_starts_on: "2026-11-31" }),
+    /기간/,
+  );
+  assert.match(
+    vehiclePayloadError({ ...ok, monthly_special_ends_on: null }),
+    /시작일/,
+  );
+  assert.equal(
+    vehiclePayloadError({
+      ...ok,
+      is_monthly_special: false,
+      monthly_special_price: null,
+    }),
+    null,
   );
 });

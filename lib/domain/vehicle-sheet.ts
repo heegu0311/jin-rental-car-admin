@@ -13,6 +13,10 @@ export type VehicleSheetKey =
   | "price_daily"
   | "price_weekly"
   | "price_monthly"
+  | "is_monthly_special"
+  | "monthly_special_price"
+  | "monthly_special_starts_on"
+  | "monthly_special_ends_on"
   | "extra_km_fee"
   | "km_daily"
   | "km_weekly"
@@ -21,7 +25,7 @@ export type VehicleSheetKey =
 export interface VehicleSheetColumn {
   key: VehicleSheetKey;
   label: string;
-  kind: "text" | "int" | "category";
+  kind: "text" | "int" | "category" | "boolean" | "date";
   /** 빈 값을 허용하면 null로 저장한다(int) 또는 빈 문자열로 저장한다(text). */
   optional?: boolean;
   /** 빈 값을 0으로 저장한다. 요금처럼 0이 "상담 문의"를 뜻하는 값에 쓴다. */
@@ -106,6 +110,32 @@ export function createVehicleSheetColumns(
     { key: "price_weekly", label: "주 요금", emptyAsZero: true, ...won },
     { key: "price_monthly", label: "월 요금", emptyAsZero: true, ...won },
     {
+      key: "is_monthly_special",
+      label: "월 특가 지정",
+      kind: "boolean",
+      width: 110,
+    },
+    {
+      key: "monthly_special_price",
+      label: "특별 월 요금",
+      optional: true,
+      ...won,
+    },
+    {
+      key: "monthly_special_starts_on",
+      label: "특가 시작일",
+      kind: "date",
+      optional: true,
+      width: 125,
+    },
+    {
+      key: "monthly_special_ends_on",
+      label: "특가 종료일",
+      kind: "date",
+      optional: true,
+      width: 125,
+    },
+    {
       key: "extra_km_fee",
       label: "초과 100km당",
       optional: true,
@@ -118,7 +148,8 @@ export function createVehicleSheetColumns(
 }
 
 export type SheetCellResult =
-  { ok: true; value: string | number | null } | { ok: false; error: string };
+  | { ok: true; value: string | number | boolean | null }
+  | { ok: false; error: string };
 
 /** "1,200,000원", "2,000cc", "3000 km" 같은 붙여넣기 값을 정수로 읽는다. */
 export function parseSheetInt(raw: string): number | null {
@@ -136,6 +167,30 @@ export function parseSheetCell(
   raw: string,
 ): SheetCellResult {
   const text = raw.trim();
+  if (column.kind === "boolean") {
+    if (text === "지정") return { ok: true, value: true };
+    if (text === "미지정") return { ok: true, value: false };
+    return {
+      ok: false,
+      error: `${column.label}은(는) 지정 또는 미지정으로 입력해주세요.`,
+    };
+  }
+  if (column.kind === "date") {
+    if (!text && column.optional) return { ok: true, value: null };
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(text)
+      ? new Date(`${text}T00:00:00Z`)
+      : null;
+    if (
+      !date ||
+      Number.isNaN(date.getTime()) ||
+      date.toISOString().slice(0, 10) !== text
+    )
+      return {
+        ok: false,
+        error: `${column.label}은(는) YYYY-MM-DD 형식의 날짜로 입력해주세요.`,
+      };
+    return { ok: true, value: text };
+  }
   if (column.kind === "text" || column.kind === "category") {
     if (!text && !column.optional && column.kind === "text")
       return { ok: false, error: `${column.label}을(를) 입력해주세요.` };

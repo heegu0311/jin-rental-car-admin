@@ -31,6 +31,9 @@ export interface Vehicle {
   image_urls?: string[] | null;
   /** 관리자가 지정한 월렌트 특가 차량. 미지정은 false. */
   is_monthly_special?: boolean;
+  monthly_special_price?: number | null;
+  monthly_special_starts_on?: string | null;
+  monthly_special_ends_on?: string | null;
   badge: string | null;
   condition: string | null;
   category_id: string | null;

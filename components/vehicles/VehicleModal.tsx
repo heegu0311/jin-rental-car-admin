@@ -23,7 +23,6 @@ import {
 } from "@/lib/domain/contracts";
 import type { Car, Category } from "./types";
 import { VehicleImagesField } from "./VehicleImagesField";
-import { VehicleUnitsSection } from "./VehicleUnitsSection";
 
 const NO_CATEGORY = "__none__";
 
@@ -549,7 +548,6 @@ export function VehicleModal({
               )}
             </fieldset>
           </div>
-          <VehicleUnitsSection supabase={supabase} vehicleId={car?.id} />
         </div>
 
         <div className="sticky bottom-0 bg-white p-6 border-t border-slate-100 flex gap-3">

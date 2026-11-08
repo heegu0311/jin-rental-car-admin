@@ -24,11 +24,6 @@ const row = {
   price_weekly: 300000,
   price_monthly: 900000,
   displacement_cc: 1598,
-  vehicle_units: [
-    { id: "u1", status: "available" },
-    { id: "u2", status: "rented" },
-    { id: "u3", status: "available" },
-  ],
 };
 const categories = [
   { id: "c1", name: "중형" },
@@ -66,7 +61,7 @@ test("지정된 특가 가격과 기간은 해제를 저장하기 전까지 변�
   );
 });
 
-test("차량 행을 편집 상태로 바꾸고 실차 상태별 대수를 센다", () => {
+test("차량 행을 재고 추적 정보 없이 편집 상태로 바꾼다", () => {
   const car = carFromVehicle(row);
   assert.equal(car.year, "2025");
   assert.equal(car.image, row.image_url);
@@ -75,10 +70,8 @@ test("차량 행을 편집 상태로 바꾸고 실차 상태별 대수를 센다
     weekly: 300000,
     monthly: 900000,
   });
-  assert.equal(car.unitCount, 3);
-  assert.equal(car.availableCount, 2);
-  assert.equal(car.rentedCount, 1);
-  assert.equal(car.maintenanceCount, 0);
+  assert.equal("unitCount" in car, false);
+  assert.equal("availableCount" in car, false);
   assert.equal(car.extra_km_fee, null);
 });
 

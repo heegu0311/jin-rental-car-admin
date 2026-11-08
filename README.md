@@ -57,7 +57,7 @@ components/
   shared/               화면 공통: PageHeading·EmptyState·Feedback·StatusBadge(feedback.tsx), DataTable,
                         Pagination, StatusChips, ListFilters(SearchInput·FilterPill), ImageUploadField, Panel
   consultations/        예약·문의 목록(RecordManager, ConsultationList)·상세(RecordDetailDialog)
-  vehicles/             차량 편집(VehicleModal = 폼 + VehicleImagesField + VehicleUnitsSection), 목록, 표
+  vehicles/             차량 편집(VehicleModal = 폼 + VehicleImagesField), 목록, 표
   admin/                셸·사이드바·에디터·푸시
 lib/
   domain/contracts.ts   web과 동일한 데이터 계약. 바꾸면 web 사본도 똑같이

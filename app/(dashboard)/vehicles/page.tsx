@@ -1,5 +1,4 @@
 "use client";
-import { VEHICLE_LABELS, type VehicleStatus } from "@/lib/domain/contracts";
 import { Feedback } from "@/components/shared/feedback";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -24,21 +23,11 @@ import {
   Search,
   Plus,
   Car as CarIcon,
-  CheckCircle2,
-  Clock,
   LayoutGrid,
   List,
-  Hash,
   Sheet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { refreshPublicSiteOrNotify } from "@/lib/public-site";
 
@@ -47,10 +36,8 @@ export default function VehiclesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [bulkUpdating, setBulkUpdating] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
-  const [unitFilter, setUnitFilter] = useState("all");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
   );
@@ -65,12 +52,7 @@ export default function VehiclesPage() {
     return Promise.all([
       supabase
         .from("vehicles")
-        .select(
-          `
-          *,
-          vehicle_units (id, status)
-        `,
-        )
+        .select("*")
         .order("id", { ascending: false }),
       supabase
         .from("vehicle_categories")
@@ -127,24 +109,8 @@ export default function VehiclesPage() {
     const matchesCategory = selectedCategoryId
       ? car.category_id === selectedCategoryId
       : true;
-    const matchesUnits =
-      unitFilter === "all" ||
-      (unitFilter === "available" && (car.availableCount || 0) > 0) ||
-      (unitFilter === "rented" && (car.rentedCount || 0) > 0) ||
-      (unitFilter === "maintenance" && (car.maintenanceCount || 0) > 0) ||
-      (unitFilter === "none" && (car.unitCount || 0) === 0);
-    return matchesSearch && matchesBadge && matchesCategory && matchesUnits;
+    return matchesSearch && matchesBadge && matchesCategory;
   });
-
-  const totalUnits = cars.reduce((acc, car) => acc + (car.unitCount || 0), 0);
-  const availableUnits = cars.reduce(
-    (acc, car) => acc + (car.availableCount || 0),
-    0,
-  );
-  const rentedUnits = cars.reduce(
-    (sum, car) => sum + (car.rentedCount || 0),
-    0,
-  );
 
   const stats = [
     {
@@ -153,27 +119,6 @@ export default function VehiclesPage() {
       icon: CarIcon,
       color: "text-slate-600",
       bg: "bg-slate-100",
-    },
-    {
-      label: "전체 차량(대)",
-      value: totalUnits,
-      icon: Hash,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-    },
-    {
-      label: "대여 가능",
-      value: availableUnits,
-      icon: CheckCircle2,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
-    },
-    {
-      label: "대여 중",
-      value: rentedUnits,
-      icon: Clock,
-      color: "text-amber-600",
-      bg: "bg-amber-50",
     },
   ];
 
@@ -223,58 +168,6 @@ export default function VehiclesPage() {
   const handleEditClick = (car: Car) => {
     setEditingCar(car);
     setIsModalOpen(true);
-  };
-
-  const handleBulkStatusChange = async (
-    carIds: string[],
-    status: VehicleStatus,
-  ) => {
-    const selectedCars = cars.filter((car) => carIds.includes(car.id));
-    const unitCount = selectedCars.reduce(
-      (total, car) => total + (car.unitCount || 0),
-      0,
-    );
-
-    if (unitCount === 0) {
-      toast.error("선택한 모델에 상태를 변경할 실물 차량이 없습니다.");
-      return false;
-    }
-
-    const confirmed = window.confirm(
-      `선택한 ${selectedCars.length}개 모델의 실물 차량 ${unitCount}대를 모두 '${VEHICLE_LABELS[status]}' 상태로 변경하시겠습니까?`,
-    );
-    if (!confirmed) return false;
-
-    setBulkUpdating(true);
-    try {
-      const result = await supabase
-        .from("vehicle_units")
-        .update({ status })
-        .in("vehicle_id", carIds)
-        .select("id");
-
-      if (result.error || result.data?.length !== unitCount) {
-        toast.error(
-          "선택한 차량의 상태를 모두 변경하지 못했습니다. 새로고침 후 현재 상태를 확인해주세요.",
-        );
-        await fetchData();
-        return false;
-      }
-
-      refreshPublicSiteOrNotify(
-        `${selectedCars.length}개 모델의 실물 차량 ${unitCount}대를 '${VEHICLE_LABELS[status]}' 상태로 변경했습니다.`,
-      );
-      await fetchData();
-      return true;
-    } catch {
-      toast.error(
-        "선택한 차량의 상태를 모두 변경하지 못했습니다. 새로고침 후 현재 상태를 확인해주세요.",
-      );
-      await fetchData();
-      return false;
-    } finally {
-      setBulkUpdating(false);
-    }
   };
 
   return (
@@ -381,19 +274,6 @@ export default function VehiclesPage() {
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium"
             />
           </div>
-          <Select value={unitFilter} onValueChange={setUnitFilter}>
-            <SelectTrigger aria-label="실차 상태" className="rounded-xl">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">전체 실차 상태</SelectItem>
-              <SelectItem value="available">대여 가능 차량 있음</SelectItem>
-              <SelectItem value="rented">대여 중 차량 있음</SelectItem>
-              <SelectItem value="maintenance">정비 중 차량 있음</SelectItem>
-              <SelectItem value="none">등록된 실차 없음</SelectItem>
-            </SelectContent>
-          </Select>
-
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth">
             <button
               onClick={() => setSelectedBadge(null)}
@@ -489,8 +369,6 @@ export default function VehiclesPage() {
           viewMode={viewMode}
           onEdit={handleEditClick}
           onDelete={handleDeleteCar}
-          onBulkStatusChange={handleBulkStatusChange}
-          bulkUpdating={bulkUpdating}
         />
       )}
 

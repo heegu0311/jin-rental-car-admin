@@ -31,10 +31,7 @@ export default async function DashboardPage() {
   const since = calendar[0].start;
   const result = await Promise.all([
     db.from("vehicles").select("id", { count: "exact", head: true }),
-    db
-      .from("vehicle_units")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "rented"),
+    db.from("reservations").select("id", { count: "exact", head: true }).eq("status", "pending"),
     db
       .from("reservations")
       .select("id", { count: "exact", head: true })
@@ -62,11 +59,11 @@ export default async function DashboardPage() {
     ),
   ]);
   if (result.some((r) => r.error)) throw new Error("대시보드 조회 실패");
-  const bookings = result[4].data as unknown as Reservation[],
-    inquiries = result[5].data as unknown as Inquiry[];
+  const bookings = result[4].data as Reservation[],
+    inquiries = result[5].data as Inquiry[];
   const stats = [
     ["전체 차량 모델", result[0].count, "대", "/vehicles"],
-    ["대여 중인 실차", result[1].count, "대", "/vehicles"],
+    ["처리 대기 상담", result[1].count, "건", "/reservations"],
     ["최근 7일 상담 접수", result[2].count, "건", "/reservations"],
     ["미답변 문의", result[3].count, "건", "/inquiries"],
   ];
@@ -94,7 +91,7 @@ export default async function DashboardPage() {
         ))}
       </div>
       <div className="grid gap-5 xl:grid-cols-[1.43fr_1fr]">
-        <Panel title="최근 예약 현황 (최근 7일)">
+        <Panel title="상담 접수 추이 (최근 7일)">
           <div
             className="flex h-[196px] items-end justify-between gap-4 pt-4"
             role="img"

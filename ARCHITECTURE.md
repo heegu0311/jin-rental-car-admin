@@ -34,7 +34,7 @@
 |---|---|---|
 | vehicles | /vehicles | 추천·필터·상세·신차 선택 |
 | vehicle_categories | /vehicles 카테고리 | 홈·검색 |
-| vehicle_units | /vehicles 차량별 실차 | 현재 재고 안내 (날짜별 예약 확정 아님) |
+| vehicle_units | 미사용(추후 차량 대여 현황표 도입 시 재검토) | 미사용 |
 | reservations | /reservations | 빠른 상담·차량/기간 상담·신차 상담 |
 | inquiries | /inquiries | /contact |
 | events | /events | /event, /event/[id], 홈 팝업 |
@@ -93,7 +93,7 @@
 - admin
   - `components/consultations/`: 예약·신차·문의 목록(RecordManager, ConsultationList)과 상세(RecordDetailDialog, PhoneLink). 분류·필터 규칙은 `lib/consultation.ts`, 한국 시간 날짜·전화번호 표시는 `lib/format.ts`.
   - 이벤트·공지 목록의 조회·전환·삭제는 `lib/hooks/use-admin-table.ts`, 검색·필터 버튼은 `components/shared/ListFilters.tsx`.
-  - 차량 편집은 `VehicleModal`(폼) + `VehicleImagesField` + `VehicleUnitsSection`. DB 행 ↔ 편집 상태 변환과 저장 전 검증은 `lib/domain/vehicle-form.ts`.
+  - 차량 편집은 `VehicleModal`(폼) + `VehicleImagesField`. DB 행 ↔ 편집 상태 변환과 저장 전 검증은 `lib/domain/vehicle-form.ts`.
   - lib 순수 모듈끼리는 `.ts` 확장자를 붙여 import한다(`allowImportingTsExtensions`, node 테스트 실행용).
 - web
   - 차량 상세의 선택 대여 조건은 `lib/hooks/use-selected-rental.ts` 하나에서 읽고 바꾼다. 화면은 `SelectedRentalConditions`(조건 카드), `RentalPriceSummary`(모바일 하단 바·저렴한 단위 안내), `VehicleQueryConsultation`(상담).

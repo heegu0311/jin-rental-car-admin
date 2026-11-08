@@ -56,7 +56,6 @@ export interface Vehicle {
   km_weekly?: number | null;
   km_monthly?: number | null;
   vehicle_categories?: { name: string } | null;
-  vehicle_units?: { id: string; status: VehicleStatus }[];
 }
 export interface Reservation {
   id: string;

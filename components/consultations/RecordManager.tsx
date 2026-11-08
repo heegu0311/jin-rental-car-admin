@@ -68,11 +68,12 @@ export function RecordManager({
     (kind === "reservations" ? "예약 상담 관리" : "1:1 문의 관리");
   const inquiryCategories =
     kind === "inquiries"
-      ? Array.from(new Set(rows.map(categoryOf))).sort()
+      ? ["대여 문의", "사고대차", "신차 장기렌트", "기타"]
       : [];
   const filtered = rows.filter(
     (row) =>
-      (category === "all" || categoryOf(row) === category) &&
+      ((kind === "inquiries" && (category === "all" || categoryOf(row) === category)) ||
+        (kind === "reservations" && (category === "all" || categoryOf(row) === category))) &&
       matchesRecordFilter(row, { query, status, month }),
   );
   /** 조건을 바꾸면 첫 페이지로 돌아간다. */
@@ -113,19 +114,7 @@ export function RecordManager({
           ]}
           onChange={changeFilter(setStatus)}
         />
-        {kind === "reservations" ? (
-          <StatusChips
-            label="상담 유형으로 보기"
-            group="type"
-            value={category}
-            options={[
-              { value: "all", label: "전체 상담" },
-              { value: "rental", label: "기간 렌트" },
-              { value: "new-car", label: "신차 장기" },
-            ]}
-            onChange={changeFilter(setCategory)}
-          />
-        ) : (
+        {kind === "inquiries" ? (
           <div className="flex flex-col gap-2 text-sm font-bold text-slate-700">
             <span id="inquiry-category-label">문의 분류로 보기</span>
             <Select value={category} onValueChange={changeFilter(setCategory)}>
@@ -146,7 +135,7 @@ export function RecordManager({
               </SelectContent>
             </Select>
           </div>
-        )}
+        ) : null}
         <ReceiptMonthFilter value={month} onChange={changeFilter(setMonth)} />
       </div>
       <p className="text-sm text-slate-500">총 {filtered.length}건</p>

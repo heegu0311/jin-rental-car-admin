@@ -35,8 +35,6 @@ export interface Car {
     weekly: number;
     monthly: number;
   };
-  unitCount?: number;
-  availableCount?: number;
   content?: string;
   options?: string[];
   manufacturer?: string;
@@ -50,14 +48,6 @@ export interface Car {
   km_daily?: number | null;
   km_weekly?: number | null;
   km_monthly?: number | null;
-  rentedCount?: number;
-  maintenanceCount?: number;
-}
-
-export interface VehicleUnit {
-  id: string;
-  plate_number: string;
-  status: "available" | "rented" | "maintenance";
 }
 
 export interface Category {
@@ -65,12 +55,9 @@ export interface Category {
   name: string;
 }
 
-/** vehicles 행(+ vehicle_units 상태 목록)을 편집 화면 상태로 바꾼다. */
+/** vehicles 행을 편집 화면 상태로 바꾼다. */
 export function carFromVehicle(v: Vehicle): Car {
   const images = vehicleImages(v);
-  const units = v.vehicle_units || [];
-  const count = (status: string) =>
-    units.filter((u) => u.status === status).length;
   return {
     id: v.id,
     name: v.name,
@@ -92,10 +79,6 @@ export function carFromVehicle(v: Vehicle): Car {
       weekly: v.price_weekly,
       monthly: v.price_monthly,
     },
-    unitCount: units.length,
-    availableCount: count("available"),
-    rentedCount: count("rented"),
-    maintenanceCount: count("maintenance"),
     content: v.content || "",
     options: v.options || [],
     manufacturer: v.manufacturer || "",

@@ -1,5 +1,3 @@
-import * as Sentry from "@sentry/nextjs";
-
 /** Fixed event names and codes only. Never pass request bodies or provider errors. */
 export function operationLog(
   operation: string,
@@ -19,14 +17,6 @@ export function operationLog(
   };
   if (outcome === "failure") {
     console.error(JSON.stringify(entry));
-    if (process.env.SENTRY_DSN) {
-      Sentry.withScope((scope) => {
-        scope.setTag("operation", operation);
-        scope.setTag("request_id", requestId);
-        scope.setTag("failure_code", code);
-        Sentry.captureMessage(`operation_failed:${operation}:${code}`, "error");
-      });
-    }
   } else {
     console.info(JSON.stringify(entry));
   }

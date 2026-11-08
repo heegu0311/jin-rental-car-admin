@@ -43,23 +43,65 @@ export default async function EditContent({
     is_published: false,
   }) as SiteContent;
   if (slug === "about") {
-    if (initial.title === "고객과 함께하는 진렌트카" || initial.title === "회사소개") initial.title = "30년 이상의 경험과 신뢰";
-    if (!initial.subtitle || initial.subtitle.startsWith("30년이 넘는 시간 동안")) initial.subtitle = "고객님의 여정에 항상 안전과 편안함을 더합니다.";
+    if (
+      initial.title === "고객과 함께하는 진렌트카" ||
+      initial.title === "회사소개"
+    )
+      initial.title = "30년 이상의 경험과 신뢰";
+    if (
+      !initial.subtitle ||
+      initial.subtitle.startsWith("30년이 넘는 시간 동안")
+    )
+      initial.subtitle = "고객님의 여정에 항상 안전과 편안함을 더합니다.";
   }
   if (slug === "settings") {
-    const { data: about, error: aboutError } = await db.from("site_content").select("sections").eq("slug", "about").maybeSingle();
+    const { data: about, error: aboutError } = await db
+      .from("site_content")
+      .select("sections")
+      .eq("slug", "about")
+      .maybeSingle();
     if (aboutError) throw new Error("조회 실패");
     const legacySections = (about?.sections ?? []) as SiteContent["sections"];
     for (const field of ["상호", "배차 시간"]) {
-      if (initial.sections.some((section) => section.title === field && section.body.trim())) continue;
-      const body = legacySections.find((section) => section.title === field)?.body.trim();
-      if (body) initial.sections = [...initial.sections.filter((section) => section.title !== field), { title: field, body }];
+      if (
+        initial.sections.some(
+          (section) => section.title === field && section.body.trim(),
+        )
+      )
+        continue;
+      const body = legacySections
+        .find((section) => section.title === field)
+        ?.body.trim();
+      if (body)
+        initial.sections = [
+          ...initial.sections.filter((section) => section.title !== field),
+          { title: field, body },
+        ];
     }
+  }
+  let contactSettings: { phone: string; hours: string } | undefined;
+  if (slug === "contact") {
+    const { data: settings, error: settingsError } = await db
+      .from("site_content")
+      .select("sections")
+      .eq("slug", "settings")
+      .maybeSingle();
+    if (settingsError) throw new Error("조회 실패");
+    const sections = (settings?.sections ?? []) as SiteContent["sections"];
+    contactSettings = {
+      phone:
+        sections.find((section) => section.title === "전화번호")?.body.trim() ??
+        "",
+      hours:
+        sections.find((section) => section.title === "상담시간")?.body.trim() ??
+        "",
+    };
   }
   return (
     <ContentEditor
       defaultImage={liveDefaultImage(slug as ContentSlug)}
       initial={initial}
+      contactSettings={contactSettings}
     />
   );
 }

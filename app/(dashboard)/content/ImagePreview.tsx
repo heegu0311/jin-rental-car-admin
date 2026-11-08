@@ -2,7 +2,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { Monitor, Smartphone } from "lucide-react";
-import type { ContentSlug, SiteContent } from "@/lib/domain/contracts";
+import {
+  mobileImageVariant,
+  type ContentSlug,
+  type SiteContent,
+} from "@/lib/domain/contracts";
 
 /**
  * 고객 사이트의 이미지 영역을 실제 픽셀 크기로 그린 뒤 축소해 보여준다.
@@ -71,8 +75,16 @@ export const IMAGE_PREVIEWS: Partial<Record<ContentSlug, BannerSpec>> = {
     overlay: "rgba(15,23,42,0.75)",
     subtitleColor: SLATE,
     text: (d) => ({
-      title: d.title && d.title !== "고객과 함께하는 진렌트카" && d.title !== "회사소개" ? d.title : "30년 이상의 경험과 신뢰",
-      subtitle: d.subtitle && !d.subtitle.startsWith("30년이 넘는 시간 동안") ? d.subtitle : "고객님의 여정에 항상 안전과 편안함을 더합니다.",
+      title:
+        d.title &&
+        d.title !== "고객과 함께하는 진렌트카" &&
+        d.title !== "회사소개"
+          ? d.title
+          : "30년 이상의 경험과 신뢰",
+      subtitle:
+        d.subtitle && !d.subtitle.startsWith("30년이 넘는 시간 동안")
+          ? d.subtitle
+          : "고객님의 여정에 항상 안전과 편안함을 더합니다.",
     }),
     desktop: {
       ...PAGE_DESKTOP,
@@ -202,11 +214,15 @@ function Banner({
   frame,
   image,
   draft,
+  slug,
+  contactSettings,
 }: {
   spec: BannerSpec;
   frame: Frame;
   image: string;
   draft: SiteContent;
+  slug: ContentSlug;
+  contactSettings?: { phone: string; hours: string };
 }) {
   const { title, subtitle } = spec.text(draft);
   const left = spec.align === "left";
@@ -217,13 +233,28 @@ function Banner({
         style={{ minHeight: frame.minHeight, padding: frame.padding }}
       >
         {image ? (
-          <Image src={image} alt="" fill unoptimized className="object-cover" />
+          <Image
+            src={
+              frame.width === 390 ? mobileImageVariant(image) || image : image
+            }
+            alt=""
+            fill
+            unoptimized
+            className="object-cover"
+          />
         ) : null}
         <div
           className="absolute inset-0"
           style={{ background: spec.overlay }}
         />
-        <div className="relative" style={{ wordBreak: "keep-all" }}>
+        <div
+          className="relative"
+          style={{
+            wordBreak: "keep-all",
+            width:
+              slug === "home" ? (frame.width === 390 ? 350 : 662) : undefined,
+          }}
+        >
           {spec.badge && frame.badge ? (
             <div
               className="flex items-center"
@@ -236,8 +267,10 @@ function Banner({
               <span
                 className="inline-block font-bold"
                 style={{
-                  background: spec.badge.color,
-                  borderRadius: spec.badge.radius,
+                  background: "#fff",
+                  color: "#1e293b",
+                  border: "1.5px solid #1e293b",
+                  borderRadius: 12,
                   fontSize: frame.badge[0],
                   lineHeight: `${frame.badge[1]}px`,
                   padding: frame.badge[2],
@@ -259,7 +292,15 @@ function Banner({
               ) : null}
             </div>
           ) : spec.eyebrow && frame.eyebrow ? (
-            <em className="mb-3 block font-medium not-italic text-sky-500" style={{ fontSize: frame.eyebrow[0], lineHeight: `${frame.eyebrow[1]}px` }}>{spec.eyebrow}</em>
+            <em
+              className="mb-3 block font-medium not-italic text-sky-500"
+              style={{
+                fontSize: frame.eyebrow[0],
+                lineHeight: `${frame.eyebrow[1]}px`,
+              }}
+            >
+              {spec.eyebrow}
+            </em>
           ) : null}
           <h1
             className="whitespace-pre-line font-extrabold"
@@ -284,8 +325,92 @@ function Banner({
           >
             {subtitle}
           </p>
+          {slug === "home" && (
+            <div
+              className="mt-8 flex w-[618px] max-w-full overflow-hidden rounded-lg"
+              style={{ gap: frame.width === 390 ? 10 : 0 }}
+            >
+              {(
+                [
+                  "카카오 채널 빠른 상담",
+                  "네이버 톡톡 빠른 상담",
+                  "전화 연결 빠른 상담",
+                ] as const
+              ).map((label, index) => (
+                <div
+                  key={label}
+                  className="flex flex-1 items-center justify-between p-4 font-bold"
+                  style={{
+                    height: frame.width === 390 ? 56 : 90,
+                    borderRadius: frame.width === 390 ? 12 : 0,
+                    justifyContent:
+                      frame.width === 390 ? "center" : "space-between",
+                    background: ["#eab308", "#16a34a", "#0f172a"][index],
+                    color: index === 0 ? "#111827" : "#fff",
+                    fontSize: frame.width === 390 ? 11 : 13,
+                  }}
+                >
+                  {frame.width !== 390 && <span>{label}</span>}
+                  <Image
+                    src={`/channel-${["kakao", "naver", "phone"][index]}.svg`}
+                    width={24}
+                    height={24}
+                    alt=""
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+      {slug === "contact" && (
+        <div
+          className="relative mx-auto grid gap-6"
+          style={{
+            marginTop: frame.width === 390 ? 24 : -80,
+            width: frame.width === 390 ? 358 : 1200,
+            gridTemplateColumns: frame.width === 390 ? "1fr" : "400px 1fr",
+            paddingBottom: 80,
+          }}
+        >
+          <aside className="rounded-xl border border-slate-200 bg-white p-8 text-slate-900 shadow-sm">
+            <h2 className="text-xl font-bold">고객센터</h2>
+            <p className="mt-8 text-sm text-slate-500">대표 전화</p>
+            <strong className="mt-1 block text-4xl">
+              {contactSettings?.phone || "전화번호 미등록"}
+            </strong>
+            <p className="text-sm text-slate-500">{contactSettings?.hours}</p>
+            <div className="mt-7 space-y-4 border-t border-slate-200 pt-7">
+              <div className="rounded-lg bg-yellow-500 p-3 text-center font-bold">
+                카카오톡 상담 바로가기
+              </div>
+              <div className="rounded-lg bg-green-600 p-3 text-center font-bold text-white">
+                네이버 톡톡 상담 바로가기
+              </div>
+              <div className="rounded-lg border border-slate-300 p-3 text-center font-bold">
+                전화 상담 신청
+              </div>
+            </div>
+          </aside>
+          <div className="rounded-xl border border-slate-200 bg-white p-8 text-slate-900">
+            <h2 className="text-xl font-bold">1:1 문의</h2>
+            <div className="mt-6 grid gap-5">
+              {[
+                "성함",
+                "연락처",
+                "문의 유형",
+                "문의 내용",
+                "개인정보 수집 및 이용",
+              ].map((label) => (
+                <div key={label}>
+                  <p className="mb-2 text-sm font-semibold">{label}</p>
+                  <div className="h-11 rounded-lg border border-slate-200 bg-white" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </Scaled>
   );
 }
@@ -299,18 +424,20 @@ export function ImagePreview({
   slug,
   draft,
   defaultImage,
+  contactSettings,
 }: {
   slug: ContentSlug;
   draft: SiteContent;
   /** 이미지를 비웠을 때 운영 사이트가 표시하는 기본 이미지 주소. */
   defaultImage?: string;
+  contactSettings?: { phone: string; hours: string };
 }) {
   const spec = IMAGE_PREVIEWS[slug];
   if (!spec) return null;
   const image = draft.image_url;
   const shown = image || defaultImage || "";
   const note = image
-    ? null
+    ? " 현재 등록된 대표 이미지 URL을 초기값으로 사용합니다."
     : defaultImage
       ? " 지금은 운영 중인 기본 이미지를 보여주고 있습니다. 새 이미지를 넣으면 바로 바뀝니다."
       : " 이미지를 비워 두면 웹사이트의 기본 이미지가 표시됩니다(고객 사이트 주소 설정이 없어 여기서는 불러오지 못했습니다).";
@@ -332,7 +459,14 @@ export function ImagePreview({
               <Icon size={14} aria-hidden="true" />
               {label}
             </figcaption>
-            <Banner spec={spec} frame={spec[key]} image={shown} draft={draft} />
+            <Banner
+              spec={spec}
+              frame={spec[key]}
+              image={shown}
+              draft={draft}
+              slug={slug}
+              contactSettings={contactSettings}
+            />
           </figure>
         ))}
       </div>

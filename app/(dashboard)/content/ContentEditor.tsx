@@ -87,10 +87,12 @@ function LocationGuide({ guide }: { guide: ContentGuide }) {
 export function ContentEditor({
   initial,
   defaultImage,
+  contactSettings,
 }: {
   initial: SiteContent;
   /** 이미지를 비웠을 때 고객 사이트가 실제로 표시하는 이미지 주소. */
   defaultImage?: string;
+  contactSettings?: { phone: string; hours: string };
 }) {
   const [draft, setDraft] = useState(initial);
   const { busy, run } = useSubmitLock();
@@ -119,7 +121,12 @@ export function ContentEditor({
       </div>
       {IMAGE_PREVIEWS[slug] ? (
         <div className="mt-4">
-          <ImagePreview slug={slug} draft={draft} defaultImage={defaultImage} />
+          <ImagePreview
+            slug={slug}
+            draft={draft}
+            defaultImage={defaultImage}
+            contactSettings={contactSettings}
+          />
         </div>
       ) : null}
     </div>
@@ -162,7 +169,11 @@ export function ContentEditor({
         className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6"
       >
         {slug === "settings" ? (
-          <SettingsFields sections={draft.sections} inputClass={input} onChange={(sections) => update({ ...draft, sections })} />
+          <SettingsFields
+            sections={draft.sections}
+            inputClass={input}
+            onChange={(sections) => update({ ...draft, sections })}
+          />
         ) : (
           <>
             {shows.title.isVisible && (
@@ -228,8 +239,8 @@ export function ContentEditor({
           </span>
         </label>
         <p className="text-xs leading-6 text-slate-500">
-          초안은 웹사이트에 노출되지 않습니다. 안내 페이지의 초안은 기존
-          화면을 유지합니다. 연락처와 상담 채널은 실제 운영 정보를 입력해주세요.
+          초안은 웹사이트에 노출되지 않습니다. 안내 페이지의 초안은 기존 화면을
+          유지합니다. 연락처와 상담 채널은 실제 운영 정보를 입력해주세요.
         </p>
       </fieldset>
       {slug === "settings" || !shows.sections.isVisible ? null : (

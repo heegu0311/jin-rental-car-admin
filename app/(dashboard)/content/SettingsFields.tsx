@@ -3,7 +3,7 @@
 import type { SiteContent } from "@/lib/domain/contracts";
 
 export const SETTING_FIELDS = [
-  "전화번호", "상담시간", "주소", "대표자", "사업자등록번호",
+  "전화번호", "상담시간", "주소", "대표자", "상호", "사업자등록번호", "배차 시간",
   "카카오 채널", "네이버 톡톡", "인스타그램", "페이스북", "유튜브",
 ] as const;
 
@@ -43,7 +43,7 @@ export function SettingsFields({ sections, onChange, inputClass }: Props) {
       <div>
         <h2 className="text-base font-bold text-slate-900">연락처와 사업자 정보</h2>
         <div className="mt-4 grid gap-5 md:grid-cols-2">
-          {SETTING_FIELDS.slice(0, 5).map((field) => field === "상담시간" ? (
+          {SETTING_FIELDS.slice(0, 7).map((field) => field === "상담시간" ? (
             <div key={field} className="text-sm font-semibold text-slate-900">
               상담시간
               <div className="flex items-center gap-3">
@@ -65,7 +65,7 @@ export function SettingsFields({ sections, onChange, inputClass }: Props) {
         <h2 className="text-base font-bold text-slate-900">상담 채널</h2>
         <p className="mt-1 text-xs text-slate-500">사용하는 채널의 HTTPS 주소를 입력하세요. 비워 둔 채널은 고객센터로 연결됩니다.</p>
         <div className="mt-4 grid gap-5 md:grid-cols-2">
-          {SETTING_FIELDS.slice(5).map((field) => (
+          {SETTING_FIELDS.slice(7).map((field) => (
             <label key={field} className="block text-sm font-semibold text-slate-900">{field}
               <input className={inputClass} type="url" inputMode="url" maxLength={2000} placeholder="https://" value={get(field)} onChange={(event) => set(field, event.target.value)} />
             </label>

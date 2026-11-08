@@ -3,10 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Eye, ImageIcon, LayoutTemplate, MapPin, Type } from "lucide-react";
 import {
-  ABOUT_FIELD_MAX,
-  ABOUT_FIELDS,
   CONTENT_PAGES,
-  type AboutField,
   type ContentSlug,
   type SiteContent,
 } from "@/lib/domain/contracts";
@@ -87,55 +84,11 @@ function LocationGuide({ guide }: { guide: ContentGuide }) {
   );
 }
 
-function FixedFields({
-  draft,
-  fallbacks,
-  input,
-  onChange,
-}: {
-  draft: SiteContent;
-  fallbacks?: Partial<Record<AboutField, string>>;
-  input: string;
-  onChange: (sections: SiteContent["sections"]) => void;
-}) {
-  const valueOf = (field: AboutField) =>
-    draft.sections.find((s) => s.title === field)?.body ?? "";
-  return (
-    <div className="space-y-5">
-      {ABOUT_FIELDS.map((field) => (
-        <label key={field} className="block text-sm font-semibold">
-          {field}
-          <input
-            className={input}
-            maxLength={ABOUT_FIELD_MAX}
-            value={valueOf(field)}
-            placeholder={fallbacks?.[field] || undefined}
-            onChange={(e) =>
-              onChange(
-                ABOUT_FIELDS.map((f) => ({
-                  title: f,
-                  body: f === field ? e.target.value : valueOf(f),
-                })),
-              )
-            }
-          />
-        </label>
-      ))}
-      <p className="text-xs font-normal leading-6 text-slate-500">
-        흐린 글씨는 비워 두었을 때 표시되는 값입니다. 대표자·주소·대표
-        전화·영업시간을 비워 두면 사업자·상담 채널 설정과 같은 값이 유지됩니다.
-      </p>
-    </div>
-  );
-}
-
 export function ContentEditor({
   initial,
-  fallbacks,
   defaultImage,
 }: {
   initial: SiteContent;
-  fallbacks?: Partial<Record<AboutField, string>>;
   /** 이미지를 비웠을 때 고객 사이트가 실제로 표시하는 이미지 주소. */
   defaultImage?: string;
 }) {
@@ -210,16 +163,6 @@ export function ContentEditor({
       >
         {slug === "settings" ? (
           <SettingsFields sections={draft.sections} inputClass={input} onChange={(sections) => update({ ...draft, sections })} />
-        ) : guide.fixedFields ? (
-          <>
-            {imageField}
-            <FixedFields
-              draft={draft}
-              fallbacks={fallbacks}
-              input={input}
-              onChange={(sections) => update({ ...draft, sections })}
-            />
-          </>
         ) : (
           <>
             {shows.title.isVisible && (
@@ -289,7 +232,7 @@ export function ContentEditor({
           화면을 유지합니다. 연락처와 상담 채널은 실제 운영 정보를 입력해주세요.
         </p>
       </fieldset>
-      {slug === "settings" || guide.fixedFields || !shows.sections.isVisible ? null : (
+      {slug === "settings" || !shows.sections.isVisible ? null : (
         <fieldset disabled={busy} className="space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>

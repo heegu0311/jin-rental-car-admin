@@ -1,13 +1,9 @@
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import {
-  ABOUT_DEFAULTS,
-  ABOUT_FIELDS,
-  ABOUT_SETTING_KEYS,
   CONTENT_DEFAULT_IMAGES,
   CONTENT_PAGES,
   type ContentSlug,
-  type AboutField,
   type SiteContent,
 } from "@/lib/domain/contracts";
 import { ContentEditor } from "../ContentEditor";
@@ -38,26 +34,6 @@ export default async function EditContent({
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw new Error("조회 실패");
-  // 회사소개 항목을 비웠을 때 웹에 표시될 값을 입력 안내로 보여준다.
-  let fallbacks: Partial<Record<AboutField, string>> | undefined;
-  if (slug === "about") {
-    const { data: settings, error: settingsError } = await db
-      .from("site_content")
-      .select("sections")
-      .eq("slug", "settings")
-      .maybeSingle();
-    if (settingsError) throw new Error("조회 실패");
-    const sections = (settings?.sections ?? []) as SiteContent["sections"];
-    fallbacks = Object.fromEntries(
-      ABOUT_FIELDS.map((field) => {
-        const key = ABOUT_SETTING_KEYS[field];
-        const value = key
-          ? sections.find((s) => s.title === key)?.body.trim()
-          : undefined;
-        return [field, value || ABOUT_DEFAULTS[field] || ""];
-      }),
-    );
-  }
   const initial = (data || {
     slug,
     title: CONTENT_PAGES[slug as keyof typeof CONTENT_PAGES],
@@ -66,15 +42,22 @@ export default async function EditContent({
     image_url: "",
     is_published: false,
   }) as SiteContent;
-  // 회사소개는 고정 항목만 저장하므로 이전 자유 섹션은 항목 순서로 정리해 편집한다.
-  if (slug === "about")
-    initial.sections = ABOUT_FIELDS.map((field) => ({
-      title: field,
-      body: initial.sections.find((s) => s.title === field)?.body ?? "",
-    }));
+  if (slug === "about") {
+    if (initial.title === "고객과 함께하는 진렌트카" || initial.title === "회사소개") initial.title = "30년 이상의 경험과 신뢰";
+    if (!initial.subtitle || initial.subtitle.startsWith("30년이 넘는 시간 동안")) initial.subtitle = "고객님의 여정에 항상 안전과 편안함을 더합니다.";
+  }
+  if (slug === "settings") {
+    const { data: about, error: aboutError } = await db.from("site_content").select("sections").eq("slug", "about").maybeSingle();
+    if (aboutError) throw new Error("조회 실패");
+    const legacySections = (about?.sections ?? []) as SiteContent["sections"];
+    for (const field of ["상호", "배차 시간"]) {
+      if (initial.sections.some((section) => section.title === field && section.body.trim())) continue;
+      const body = legacySections.find((section) => section.title === field)?.body.trim();
+      if (body) initial.sections = [...initial.sections.filter((section) => section.title !== field), { title: field, body }];
+    }
+  }
   return (
     <ContentEditor
-      fallbacks={fallbacks}
       defaultImage={liveDefaultImage(slug as ContentSlug)}
       initial={initial}
     />

@@ -69,7 +69,6 @@ export function VehicleModal({
   const { busy: saving, run } = useSubmitLock();
 
   const [supabase] = useState(createClient);
-  const specialFieldsLocked = car?.is_monthly_special === true;
   const selectedOptions = vehicleOptions(formData.options || []);
   const legacyOptions = (formData.options || []).filter(
     (option) => !VEHICLE_OPTIONS.some((allowed) => allowed === option),
@@ -262,11 +261,6 @@ export function VehicleModal({
               </label>
 
               <div className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 p-4 sm:grid-cols-3">
-                {specialFieldsLocked && (
-                  <p className="text-xs font-semibold text-slate-600 sm:col-span-3">
-                    지정 해제 후 수정하세요. 해제한 내용을 먼저 저장해야 합니다.
-                  </p>
-                )}
                 <label className="text-xs font-bold text-slate-700">
                   특별 월 요금 (원)
                   <input
@@ -274,14 +268,13 @@ export function VehicleModal({
                     min={1}
                     step={1}
                     value={formData.monthly_special_price ?? ""}
-                    disabled={specialFieldsLocked}
                     onChange={(e) =>
                       update(
                         "monthly_special_price",
                         e.target.value === "" ? null : Number(e.target.value),
                       )
                     }
-                    className="mt-2 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                    className="mt-2 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal"
                     placeholder="특별가"
                   />
                 </label>
@@ -290,14 +283,13 @@ export function VehicleModal({
                   <input
                     type="date"
                     value={formData.monthly_special_starts_on ?? ""}
-                    disabled={specialFieldsLocked}
                     onChange={(e) =>
                       update(
                         "monthly_special_starts_on",
                         e.target.value || null,
                       )
                     }
-                    className="mt-2 h-10 w-full rounded-lg border border-slate-200 px-2 text-sm font-normal disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                    className="mt-2 h-10 w-full rounded-lg border border-slate-200 px-2 text-sm font-normal"
                   />
                 </label>
                 <label className="text-xs font-bold text-slate-700">
@@ -305,11 +297,10 @@ export function VehicleModal({
                   <input
                     type="date"
                     value={formData.monthly_special_ends_on ?? ""}
-                    disabled={specialFieldsLocked}
                     onChange={(e) =>
                       update("monthly_special_ends_on", e.target.value || null)
                     }
-                    className="mt-2 h-10 w-full rounded-lg border border-slate-200 px-2 text-sm font-normal disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                    className="mt-2 h-10 w-full rounded-lg border border-slate-200 px-2 text-sm font-normal"
                   />
                 </label>
               </div>

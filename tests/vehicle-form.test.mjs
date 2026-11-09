@@ -4,7 +4,7 @@ import {
   carFromVehicle,
   vehiclePayload,
   vehiclePayloadError,
-  lockedMonthlySpecialError,
+  monthlySpecialUnassignError,
 } from "../lib/domain/vehicle-form.ts";
 
 const row = {
@@ -30,30 +30,37 @@ const categories = [
   { id: "c2", name: "SUV" },
 ];
 
-test("지정된 특가 가격과 기간은 해제를 저장하기 전까지 변경할 수 없다", () => {
+test("지정된 특가의 가격과 기간을 수정할 수 있고 해제 시 세 값을 비운다", () => {
   const current = {
     is_monthly_special: true,
     monthly_special_price: 700000,
     monthly_special_starts_on: "2026-11-01",
     monthly_special_ends_on: "2026-11-30",
   };
-  assert.match(
-    lockedMonthlySpecialError(current, { monthly_special_price: 690000 }),
-    /지정 해제 후 수정하세요/,
+  assert.equal(
+    monthlySpecialUnassignError(current, { monthly_special_price: 690000 }),
+    null,
+  );
+  assert.equal(
+    monthlySpecialUnassignError(current, {
+      monthly_special_starts_on: "2026-11-09",
+      monthly_special_ends_on: "2026-12-09",
+    }),
+    null,
   );
   assert.match(
-    lockedMonthlySpecialError(current, {
+    monthlySpecialUnassignError(current, {
       is_monthly_special: false,
       monthly_special_ends_on: "2026-12-01",
     }),
     /지정 해제 후 수정하세요/,
   );
   assert.match(
-    lockedMonthlySpecialError(current, { is_monthly_special: false }),
+    monthlySpecialUnassignError(current, { is_monthly_special: false }),
     /지정 해제 후 수정하세요/,
   );
   assert.equal(
-    lockedMonthlySpecialError(current, {
+    monthlySpecialUnassignError(current, {
       is_monthly_special: false,
       monthly_special_price: null,
       monthly_special_starts_on: null,
@@ -62,7 +69,7 @@ test("지정된 특가 가격과 기간은 해제를 저장하기 전까지 변�
     null,
   );
   assert.equal(
-    lockedMonthlySpecialError(
+    monthlySpecialUnassignError(
       { ...current, is_monthly_special: false },
       { monthly_special_price: 690000 },
     ),

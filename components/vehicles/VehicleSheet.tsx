@@ -146,10 +146,6 @@ const omit = (record: Record<string, string>, id: string) => {
   return next;
 };
 const cellId = (carId: string, key: VehicleSheetKey) => `${carId}:${key}`;
-const isSpecialValueKey = (key: VehicleSheetKey) =>
-  key === "monthly_special_price" ||
-  key === "monthly_special_starts_on" ||
-  key === "monthly_special_ends_on";
 
 interface VehicleSheetProps {
   cars: Car[];
@@ -197,10 +193,6 @@ export function VehicleSheet({
     for (const column of COLUMNS) {
       const raw = values[column.key];
       if (raw === undefined) continue;
-      if (car.is_monthly_special && isSpecialValueKey(column.key)) {
-        toast.error(`${car.name}: 지정 해제 후 수정하세요.`);
-        continue;
-      }
       const id = cellId(car.id, column.key);
       submitted.current.set(id, raw);
       const result = parse(column, raw);
@@ -303,7 +295,6 @@ export function VehicleSheet({
     event.preventDefault();
     const grid = parseClipboardGrid(text.replace(/\r?\n$/, ""));
     let skipped = 0;
-    let locked = 0;
     const nextDrafts: Record<string, string> = {};
     const rowsToSave: [Car, Partial<Record<VehicleSheetKey, string>>][] = [];
     grid.forEach((cells, r) => {
@@ -316,10 +307,6 @@ export function VehicleSheet({
       cells.forEach((value, c) => {
         const column = COLUMNS[col + c];
         if (!column) return;
-        if (car.is_monthly_special && isSpecialValueKey(column.key)) {
-          locked += 1;
-          return;
-        }
         values[column.key] = value;
         nextDrafts[cellId(car.id, column.key)] = value;
       });
@@ -327,8 +314,6 @@ export function VehicleSheet({
     });
     setDrafts((prev) => ({ ...prev, ...nextDrafts }));
     rowsToSave.forEach(([car, values]) => saveRow(car, values));
-    if (locked)
-      toast.warning(`${locked}칸은 특가 지정 해제 후 수정하세요.`);
     if (skipped)
       toast.warning(
         `표 아래로 넘친 ${skipped}행은 붙여넣지 않았습니다. 새 차량은 '새 차량 등록'으로 추가해주세요.`,
@@ -370,8 +355,7 @@ export function VehicleSheet({
           <p className="mt-1 text-xs text-slate-500">
             셀을 수정하고 다른 칸으로 이동하거나 Enter를 누르면 바로 저장됩니다.
             엑셀·구글 시트에서 여러 칸을 복사해 시작 셀에 붙여넣을 수 있습니다.
-            Esc는 저장 전 입력을 취소합니다. 지정된 특가의 가격과 기간은
-            지정 해제 후 수정하세요.
+            Esc는 저장 전 입력을 취소합니다.
           </p>
           {pendingErrors > 0 && (
             <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-red-600">
@@ -460,8 +444,6 @@ export function VehicleSheet({
                       draft ?? baseValue(car, column.key, categories);
                     const error = errors[id];
                     const dirty = draft !== undefined;
-                    const specialFieldsLocked =
-                      car.is_monthly_special && isSpecialValueKey(column.key);
                     const handlers = {
                       onKeyDown: (e: KeyboardEvent<HTMLElement>) =>
                         handleKeyDown(e, car, r, c),
@@ -472,15 +454,12 @@ export function VehicleSheet({
                       "data-cell": `${r}:${c}`,
                       "aria-label": `${car.name} ${column.label}`,
                       "aria-invalid": Boolean(error),
-                      title: specialFieldsLocked
-                        ? "지정 해제 후 수정하세요."
-                        : error,
+                      title: error,
                       className: cn(
                         "h-9 w-full bg-transparent px-2 text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500",
                         column.kind === "int" && "text-right tabular-nums",
                         dirty && "bg-amber-50",
                         error && "bg-red-50 ring-1 ring-inset ring-red-400",
-                        specialFieldsLocked && "cursor-not-allowed bg-slate-100 text-slate-400",
                       ),
                     };
                     return (
@@ -565,7 +544,6 @@ export function VehicleSheet({
                           <input
                             {...common}
                             {...handlers}
-                            disabled={specialFieldsLocked}
                             type="text"
                             placeholder={
                               column.kind === "date" ? "YYYY-MM-DD" : undefined

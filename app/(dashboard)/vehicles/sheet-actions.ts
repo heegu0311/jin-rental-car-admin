@@ -3,7 +3,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { INCLUDED_KM_MAX, INSURANCE_LIMITS } from "@/lib/domain/contracts";
 import {
-  lockedMonthlySpecialError,
+  monthlySpecialUnassignError,
   vehicleSpecialError,
 } from "@/lib/domain/vehicle-form";
 import { createVehicleSheetColumns } from "@/lib/domain/vehicle-sheet";
@@ -96,8 +96,8 @@ export async function patchVehicleSheet(id: string, patch: VehicleSheetPatch) {
     values.monthly_special_starts_on = null;
     values.monthly_special_ends_on = null;
   }
-  const lockedError = lockedMonthlySpecialError(current, values);
-  if (lockedError) return { error: lockedError };
+  const unassignError = monthlySpecialUnassignError(current, values);
+  if (unassignError) return { error: unassignError };
   const offer = {
     price_monthly: (values.price_monthly ?? current.price_monthly) as number,
     is_monthly_special: (values.is_monthly_special ??

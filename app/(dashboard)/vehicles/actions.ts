@@ -5,7 +5,7 @@ import { operationLog } from "@/lib/observability";
 import {
   vehiclePayload,
   vehiclePayloadError,
-  lockedMonthlySpecialError,
+  monthlySpecialUnassignError,
   type Car,
 } from "@/lib/domain/vehicle-form";
 
@@ -45,8 +45,8 @@ export async function saveVehicle(id: string | null, car: Car) {
         payload.monthly_special_starts_on = null;
         payload.monthly_special_ends_on = null;
       }
-      const lockedError = lockedMonthlySpecialError(current, payload);
-      if (lockedError) return { error: lockedError };
+      const unassignError = monthlySpecialUnassignError(current, payload);
+      if (unassignError) return { error: unassignError };
     }
     const invalid = vehiclePayloadError(payload);
     if (invalid) return { error: invalid };

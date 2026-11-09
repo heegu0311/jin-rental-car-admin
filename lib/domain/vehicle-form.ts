@@ -137,8 +137,8 @@ type SpecialSettings = Pick<
   | "monthly_special_ends_on"
 >;
 
-/** 지정 해제를 저장하기 전에는 특가 가격과 기간을 변경할 수 없다. */
-export function lockedMonthlySpecialError(
+/** 특가 지정을 해제할 때 가격과 기간도 함께 비워야 한다. */
+export function monthlySpecialUnassignError(
   current: SpecialSettings,
   next: Partial<SpecialSettings>,
 ): string | null {
@@ -149,14 +149,7 @@ export function lockedMonthlySpecialError(
       next.monthly_special_ends_on === null
       ? null
       : "지정 해제 후 수정하세요.";
-  const fields = [
-    "monthly_special_price",
-    "monthly_special_starts_on",
-    "monthly_special_ends_on",
-  ] as const;
-  return fields.some((field) => field in next && next[field] !== current[field])
-    ? "지정 해제 후 수정하세요."
-    : null;
+  return null;
 }
 
 const nonNegativeInt = (value: unknown, max = Infinity) =>

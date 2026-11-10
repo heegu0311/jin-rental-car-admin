@@ -137,7 +137,7 @@ export const ABOUT_SETTING_KEYS: Partial<Record<AboutField, string>> = {
 /** settings에 대응 항목이 없는 회사소개 항목의 기본 표시값(Figma 원본). */
 export const ABOUT_DEFAULTS: Partial<Record<AboutField, string>> = {
   상호: "주식회사진렌트카",
-  "배차 시간": "평일, 주말 08:30~18:30 (배달 18:00 마감)",
+  "배차 시간": "평일, 주말 08:30~18:30 (탁송 18:00 마감)",
 };
 export const RESERVATION_LABELS: Record<ReservationStatus, string> = {
   pending: "대기중",

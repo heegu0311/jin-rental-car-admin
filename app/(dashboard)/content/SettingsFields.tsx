@@ -66,7 +66,7 @@ export function SettingsFields({ sections, onChange, inputClass }: Props) {
     set("상담시간", `${from} ~ ${to}`);
   const dispatch = get("배차 시간");
   const [dispatchStart, dispatchEnd] = timeParts(dispatch);
-  const cutoff = dispatch.match(/배달\s*([0-2]\d:[0-5]\d)\s*마감/)?.[1] ?? "";
+  const cutoff = dispatch.match(/(?:탁송|배달)\s*([0-2]\d:[0-5]\d)\s*마감/)?.[1] ?? "";
   const days =
     dispatch
       .match(/^([^0-9]*?)(?:(?:AM|PM|오전|오후)\s*)?\d{1,2}:/i)?.[1]
@@ -79,7 +79,7 @@ export function SettingsFields({ sections, onChange, inputClass }: Props) {
   ) =>
     set(
       "배차 시간",
-      `${nextDays.trim()} ${from}~${to}${nextCutoff ? ` (배달 ${nextCutoff} 마감)` : ""}`.trim(),
+      `${nextDays.trim()} ${from}~${to}${nextCutoff ? ` (탁송 ${nextCutoff} 마감)` : ""}`.trim(),
     );
 
   return (
@@ -205,7 +205,7 @@ export function SettingsFields({ sections, onChange, inputClass }: Props) {
             </div>
           </div>
           <label className="block text-sm font-semibold">
-            배달 마감 시간 (선택)
+            탁송 마감 시간 (선택)
             <input
               type="time"
               step="1800"

@@ -13,10 +13,14 @@ export default async function StaffRequestDetailPage({ params }: { params: Promi
   const { data: profile, error: profileError } = await db.from("profiles").select("role").eq("id", user.id).single();
   if (profileError || !profile || profile.role !== "staff") redirect("/");
   const { data: request, error } = await db.from("reservations")
-    .select("id,car_name,start_date,period,package_km,options,user_name,user_phone,status,created_at,staff_request_note")
-    .eq("id", id).eq("assigned_staff_id", user.id).maybeSingle();
+    .select("id,car_name,start_date,period,package_km,options,user_name,user_phone,status,created_at")
+    .eq("id", id).maybeSingle();
   if (error) throw new Error("예약 요청을 불러오지 못했습니다.");
   if (!request) notFound();
+  const noteResult = await db.from("reservations").select("staff_request_note").eq("id", id).maybeSingle();
+  if (noteResult.error && noteResult.error.code !== "42703" && noteResult.error.code !== "PGRST204")
+    throw new Error("담당자 처리 요청 사항을 불러오지 못했습니다.");
+  const staffRequestNote = noteResult.data?.staff_request_note || "";
 
   return <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900"><article className="mx-auto max-w-3xl space-y-5">
     <div className="flex items-center justify-between gap-3"><Link href="/staff/requests" className="text-sm font-semibold text-blue-700 underline">← 목록</Link><a href={`/staff/requests/${id}`} className="text-sm font-semibold text-blue-700 underline">새로고침</a></div>
@@ -25,6 +29,6 @@ export default async function StaffRequestDetailPage({ params }: { params: Promi
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2"><div><dt className="font-medium text-slate-600">대여 시작</dt><dd>{request.start_date}</dd></div><div><dt className="font-medium text-slate-600">기간</dt><dd>{request.period}</dd></div><div><dt className="font-medium text-slate-600">주행거리</dt><dd>{request.package_km}</dd></div><div><dt className="font-medium text-slate-600">고객 연락처</dt><dd>{request.user_name} · <a className="text-blue-700 underline" href={`tel:${request.user_phone.replace(/[^\d+]/g, "")}`}>{request.user_phone}</a></dd></div></dl>
       {request.options?.length ? <div className="mt-4 text-sm"><h3 className="font-medium">선택 사항 및 고객 요청</h3><ul className="mt-2 list-disc pl-5">{(request.options as string[]).map((option: string, index: number) => <li key={index}>{option}</li>)}</ul></div> : null}
     </section>
-    <section className="rounded-xl border border-blue-100 bg-blue-50 p-5"><h2 className="font-semibold text-blue-900">담당자 처리 요청 사항 (관리자)</h2><p className="mt-2 whitespace-pre-wrap text-sm leading-6">{request.staff_request_note || "등록된 요청 사항이 없습니다."}</p></section>
+    <section className="rounded-xl border border-blue-100 bg-blue-50 p-5"><h2 className="font-semibold text-blue-900">담당자 처리 요청 사항 (관리자)</h2><p className="mt-2 whitespace-pre-wrap text-sm leading-6">{staffRequestNote || "등록된 요청 사항이 없습니다."}</p></section>
   </article></main>;
 }

@@ -22,7 +22,6 @@ export default async function StaffRequestsPage({ searchParams }: { searchParams
 
   let query = db.from("reservations")
     .select("id,car_name,start_date,user_name,status,created_at")
-    .eq("assigned_staff_id", user.id)
     .order("created_at", { ascending: false }).limit(100);
   if (status !== "all") query = query.eq("status", status);
   const { data, error } = await query;
@@ -31,7 +30,7 @@ export default async function StaffRequestsPage({ searchParams }: { searchParams
   return <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
     <div className="mx-auto max-w-3xl space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <div><h1 className="text-2xl font-bold">예약 처리 요청</h1><p className="mt-1 text-sm text-slate-600">담당자로 지정된 상담건입니다. 상담완료는 배차 확정을 뜻하지 않습니다.</p></div>
+        <div><h1 className="text-2xl font-bold">예약 처리 요청</h1><p className="mt-1 text-sm text-slate-600">예약 상담 접수 내역입니다. 상담완료는 배차 확정을 뜻하지 않습니다.</p></div>
         <form action={logout}><button className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm">로그아웃</button></form>
       </header>
       <nav aria-label="처리 상태 필터" className="flex flex-wrap gap-2">

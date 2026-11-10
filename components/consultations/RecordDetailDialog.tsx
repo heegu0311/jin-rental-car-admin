@@ -20,7 +20,6 @@ export function RecordDetailDialog({
   record,
   title,
   labels,
-  staffOptions,
   onClose,
   onSaved,
   onDeleted,
@@ -29,7 +28,6 @@ export function RecordDetailDialog({
   record: RecordRow;
   title: string;
   labels: Record<string, string>;
-  staffOptions: { id: string; email: string }[];
   onClose: () => void;
   onSaved: (record: RecordRow) => void;
   onDeleted: (id: string) => void;
@@ -38,7 +36,6 @@ export function RecordDetailDialog({
   const [answer, setAnswer] = useState(
     "answer_content" in record ? record.answer_content || "" : "",
   );
-  const [assignedStaffId, setAssignedStaffId] = useState("car_name" in record ? record.assigned_staff_id || "" : "");
   const [staffRequestNote, setStaffRequestNote] = useState("car_name" in record ? record.staff_request_note || "" : "");
   const { busy, run } = useSubmitLock();
 
@@ -54,7 +51,7 @@ export function RecordDetailDialog({
       try {
         const result = remove
           ? await deleteRecord(kind, record.id)
-          : await updateRecord(kind, record.id, status, answer, assignedStaffId, staffRequestNote);
+          : await updateRecord(kind, record.id, status, answer, staffRequestNote);
         if (result.error) {
           toast.error(result.error);
           return;
@@ -64,7 +61,7 @@ export function RecordDetailDialog({
           onSaved({
             ...record,
             status,
-            ...(kind === "inquiries" ? { answer_content: answer } : { assigned_staff_id: assignedStaffId || null, staff_request_note: staffRequestNote }),
+            ...(kind === "inquiries" ? { answer_content: answer } : { staff_request_note: staffRequestNote }),
           } as RecordRow);
         toast.success(
           remove ? "내역을 삭제했습니다." : "처리 상태를 저장했습니다.",
@@ -113,12 +110,6 @@ export function RecordDetailDialog({
             </div>
           )}
           {kind === "reservations" && <div className="space-y-4 border-t border-slate-200 pt-4">
-            <label className="block text-sm font-semibold">담당자
-              <select disabled={busy} value={assignedStaffId} onChange={(e) => setAssignedStaffId(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-200 bg-white p-3 font-normal">
-                <option value="">지정 안 함</option>
-                {staffOptions.map((staff) => <option key={staff.id} value={staff.id}>{staff.email}</option>)}
-              </select>
-            </label>
             <label className="block text-sm font-semibold">담당자 처리 요청 사항 (관리자)
               <textarea disabled={busy} value={staffRequestNote} onChange={(e) => setStaffRequestNote(e.target.value)} maxLength={5000} rows={5} className="mt-2 w-full rounded-lg border border-slate-200 p-3 font-normal" />
               <span className="text-xs font-normal text-slate-500">지정된 담당자에게만 표시됩니다. 고객에게 자동 발송되지 않습니다.</span>

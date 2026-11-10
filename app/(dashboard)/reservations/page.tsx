@@ -8,13 +8,12 @@ export default async function Page({
 }) {
   const { record } = await searchParams;
   const { db } = await requireAdmin();
-  const { data: staff, error: staffError } = await db.from("profiles").select("id,email").eq("role", "staff").order("email");
   const { data, error } = await db
     .from("reservations")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(500);
-  if (error || staffError) throw new Error("조회 실패");
+  if (error) throw new Error("조회 실패");
   return (
     <RecordManager
       kind="reservations"
@@ -22,7 +21,6 @@ export default async function Page({
       initialCategory="rental"
       initialSelectedId={record}
       initial={(data || []) as Reservation[]}
-      staffOptions={staff || []}
     />
   );
 }

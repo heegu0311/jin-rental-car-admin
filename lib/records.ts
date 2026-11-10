@@ -33,7 +33,6 @@ export async function updateRecord(
   id: string,
   status: string,
   answer = "",
-  assignedStaffId = "",
   staffRequestNote = "",
 ) {
   const requestId = crypto.randomUUID();
@@ -43,14 +42,8 @@ export async function updateRecord(
   if (kind === "reservations" && !STATUSES.reservations.includes(status))
     return { error: "상태를 확인해주세요." };
   if (kind === "reservations") {
-    if (typeof staffRequestNote !== "string" || staffRequestNote.length > 5000 ||
-      typeof assignedStaffId !== "string" ||
-      (assignedStaffId !== "" && !/^[0-9a-f-]{36}$/i.test(assignedStaffId)))
-      return { error: "담당자 또는 처리 요청 사항을 확인해주세요." };
-    if (assignedStaffId) {
-      const { data: staff, error: staffError } = await db.from("profiles").select("id").eq("id", assignedStaffId).eq("role", "staff").single();
-      if (staffError || !staff) return { error: "유효한 담당자를 선택해주세요." };
-    }
+    if (typeof staffRequestNote !== "string" || staffRequestNote.length > 5000)
+      return { error: "담당자 처리 요청 사항을 확인해주세요. (최대 5,000자)" };
   }
   if (
     kind === "inquiries" &&
@@ -63,20 +56,27 @@ export async function updateRecord(
   const answered = status === "answered";
   const payload =
     kind === "reservations"
-      ? { status, assigned_staff_id: assignedStaffId || null, staff_request_note: staffRequestNote.trim() }
+      ? { status, staff_request_note: staffRequestNote.trim() }
       : {
           status,
           answer_content: answered ? answer.trim() : null,
           answered_by: answered ? user.id : null,
           answered_at: answered ? new Date().toISOString() : null,
         };
-  const { error } = await db
+  let { error } = await db
     .from(kind)
     .update(payload)
     .eq("id", id)
     .select("id")
     .single();
+  if (kind === "reservations" && !staffRequestNote.trim() &&
+      (error?.code === "42703" || error?.code === "PGRST204")) {
+    const fallback = await db.from("reservations").update({ status }).eq("id", id).select("id").single();
+    error = fallback.error;
+  }
   if (error) {
+    if (kind === "reservations" && (error.code === "42703" || error.code === "PGRST204"))
+      return { error: "담당자 요청 메모를 저장하려면 DB 마이그레이션을 먼저 적용해야 합니다." };
     operationLog(
       "record.update",
       requestId,

@@ -15,6 +15,10 @@ const cols = Object.fromEntries(
 );
 
 test("붙여넣은 금액·거리 표기를 정수로 저장", () => {
+  assert.deepEqual(parseSheetCell(cols.deposit_amount, "500,000원"), {
+    ok: true,
+    value: 500000,
+  });
   assert.deepEqual(parseSheetCell(cols.price_daily, "1,200,000원"), {
     ok: true,
     value: 1200000,
@@ -30,6 +34,10 @@ test("붙여넣은 금액·거리 표기를 정수로 저장", () => {
 });
 
 test("빈 값: 요금은 0(상담 문의), 선택 항목은 null, 필수 항목은 거부", () => {
+  assert.deepEqual(parseSheetCell(cols.deposit_amount, " "), {
+    ok: true,
+    value: null,
+  });
   assert.deepEqual(parseSheetCell(cols.price_monthly, ""), {
     ok: true,
     value: 0,
@@ -44,6 +52,8 @@ test("빈 값: 요금은 0(상담 문의), 선택 항목은 null, 필수 항목�
 
 test("범위·형식을 벗어난 값 거부", () => {
   for (const [key, raw] of [
+    ["deposit_amount", "-1"],
+    ["deposit_amount", "1000000001"],
     ["price_daily", "-1"],
     ["price_daily", "12.5"],
     ["price_daily", "10000001"],

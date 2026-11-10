@@ -13,6 +13,7 @@ export type VehicleSheetKey =
   | "price_daily"
   | "price_weekly"
   | "price_monthly"
+  | "deposit_amount"
   | "is_monthly_special"
   | "monthly_special_price"
   | "monthly_special_starts_on"
@@ -109,6 +110,7 @@ export function createVehicleSheetColumns(
     { key: "price_daily", label: "일 요금", emptyAsZero: true, ...won },
     { key: "price_weekly", label: "주 요금", emptyAsZero: true, ...won },
     { key: "price_monthly", label: "월 요금", emptyAsZero: true, ...won },
+    { key: "deposit_amount", label: "월 보증금", optional: true, kind: "int", min: 0, max: 1_000_000_000, width: 120 },
     {
       key: "is_monthly_special",
       label: "월 특가 지정",

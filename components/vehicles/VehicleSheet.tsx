@@ -65,6 +65,8 @@ function baseValue(car: Car, key: VehicleSheetKey, categories: Category[]) {
       return n(car.pricePolicy.weekly);
     case "price_monthly":
       return n(car.pricePolicy.monthly);
+    case "deposit_amount":
+      return n(car.deposit_amount);
     case "is_monthly_special":
       return car.is_monthly_special ? "지정" : "미지정";
     case "monthly_special_price":
@@ -111,6 +113,9 @@ export function applyVehiclePatch(
       case "price_monthly":
         next.pricePolicy.monthly = value as number;
         next.price = String(value);
+        break;
+      case "deposit_amount":
+        next.deposit_amount = value as number | null;
         break;
       case "is_monthly_special":
         next.is_monthly_special = value as boolean;

@@ -30,6 +30,7 @@ export interface Car {
   images?: string[];
   fuel?: string;
   category_id?: string;
+  deposit_amount?: number | null;
   pricePolicy: {
     daily: number;
     weekly: number;
@@ -74,6 +75,7 @@ export function carFromVehicle(v: Vehicle): Car {
     images,
     fuel: v.fuel || "",
     category_id: v.category_id || "",
+    deposit_amount: v.deposit_amount ?? null,
     pricePolicy: {
       daily: v.price_daily,
       weekly: v.price_weekly,
@@ -111,6 +113,7 @@ export function vehiclePayload(car: Car, categories: Category[]) {
     price_daily: car.pricePolicy.daily,
     price_weekly: car.pricePolicy.weekly,
     price_monthly: car.pricePolicy.monthly,
+    deposit_amount: car.deposit_amount ?? null,
     type:
       categories.find((c) => c.id === car.category_id)?.name ||
       car.type ||
@@ -215,6 +218,7 @@ export function vehiclePayloadError(payload: VehiclePayload): string | null {
     ![payload.price_daily, payload.price_weekly, payload.price_monthly].every(
       (p) => nonNegativeInt(p),
     ) ||
+    !optional(payload.deposit_amount, 1000000000) ||
     !optional(payload.displacement_cc, INSURANCE_LIMITS.cc) ||
     !optional(payload.extra_km_fee, INSURANCE_LIMITS.price) ||
     ![payload.km_daily, payload.km_weekly, payload.km_monthly].every((km) =>

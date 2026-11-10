@@ -42,6 +42,7 @@ export interface Vehicle {
   price_daily: number;
   price_weekly: number;
   price_monthly: number;
+  deposit_amount?: number | null;
   options?: string[];
   seats?: number;
   manufacturer?: string;
@@ -475,4 +476,9 @@ export function vehicleImages(
 ): string[] {
   const list = car.image_urls?.length ? car.image_urls : [car.image_url];
   return [...new Set(list.filter(safeImageUrl))].slice(0, VEHICLE_IMAGE_MAX);
+}
+
+/** 미설정 차량의 안내 보증금. */
+export function vehicleDeposit(car: Pick<Vehicle, "deposit_amount">): number {
+  return car.deposit_amount ?? 500000;
 }

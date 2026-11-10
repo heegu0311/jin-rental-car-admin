@@ -43,6 +43,7 @@ export function RecordManager({
   title: customTitle,
   initialCategory = "all",
   initialSelectedId,
+  staffOptions = [],
   description = "최근 500건을 조회합니다. 고객 정보와 요청 내용을 확인하고 처리 상태를 관리하세요.",
 }: {
   kind: RecordKind;
@@ -50,6 +51,7 @@ export function RecordManager({
   title?: string;
   initialCategory?: "all" | "new-car" | "rental";
   initialSelectedId?: string;
+  staffOptions?: { id: string; email: string }[];
   description?: string;
 }) {
   const [rows, setRows] = useState(initial);
@@ -207,6 +209,7 @@ export function RecordManager({
           record={selected}
           title={title}
           labels={labels}
+          staffOptions={staffOptions}
           onClose={() => setSelected(null)}
           onSaved={(saved) =>
             closeWith((prev) =>

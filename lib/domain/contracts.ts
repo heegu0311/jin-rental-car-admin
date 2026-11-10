@@ -60,6 +60,8 @@ export interface Vehicle {
 }
 export interface Reservation {
   id: string;
+  assigned_staff_id?: string | null;
+  staff_request_note?: string;
   car_name: string;
   start_date: string;
   period: string;

@@ -33,6 +33,8 @@ export async function updateRecord(
   id: string,
   status: string,
   answer = "",
+  assignedStaffId = "",
+  staffRequestNote = "",
 ) {
   const requestId = crypto.randomUUID();
   const startedAt = performance.now();
@@ -40,6 +42,16 @@ export async function updateRecord(
   if (!validTarget(kind, id)) return { error: "올바르지 않은 요청입니다." };
   if (kind === "reservations" && !STATUSES.reservations.includes(status))
     return { error: "상태를 확인해주세요." };
+  if (kind === "reservations") {
+    if (typeof staffRequestNote !== "string" || staffRequestNote.length > 5000 ||
+      typeof assignedStaffId !== "string" ||
+      (assignedStaffId !== "" && !/^[0-9a-f-]{36}$/i.test(assignedStaffId)))
+      return { error: "담당자 또는 처리 요청 사항을 확인해주세요." };
+    if (assignedStaffId) {
+      const { data: staff, error: staffError } = await db.from("profiles").select("id").eq("id", assignedStaffId).eq("role", "staff").single();
+      if (staffError || !staff) return { error: "유효한 담당자를 선택해주세요." };
+    }
+  }
   if (
     kind === "inquiries" &&
     (!STATUSES.inquiries.includes(status) ||
@@ -51,7 +63,7 @@ export async function updateRecord(
   const answered = status === "answered";
   const payload =
     kind === "reservations"
-      ? { status }
+      ? { status, assigned_staff_id: assignedStaffId || null, staff_request_note: staffRequestNote.trim() }
       : {
           status,
           answer_content: answered ? answer.trim() : null,
@@ -89,6 +101,7 @@ export async function updateRecord(
     hasAnswer: Boolean(answer.trim()),
   });
   revalidateRecordPages(kind);
+  if (kind === "reservations") revalidatePath("/staff/requests");
   return { success: true };
 }
 

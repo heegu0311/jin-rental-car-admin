@@ -19,7 +19,7 @@ export async function login(formData: FormData) {
     return { error: error.message }
   }
 
-  // 관리자 권한 확인
+  let destination = '/'
   if (user) {
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -27,15 +27,16 @@ export async function login(formData: FormData) {
       .eq('id', user.id)
       .single()
 
-    if (profileError || !profile || !['admin', 'superadmin'].includes(profile.role)) {
+    if (profileError || !profile || !['admin', 'superadmin', 'staff'].includes(profile.role)) {
       // 권한이 없으면 로그아웃 처리
       await supabase.auth.signOut()
-      return { error: '관리자 권한이 없습니다. 관리자에게 문의하세요.' }
+      return { error: '접근 권한이 없습니다. 관리자에게 문의하세요.' }
     }
+    if (profile.role === 'staff') destination = '/staff/requests'
   }
 
   revalidatePath('/', 'layout')
-  redirect('/')
+  redirect(destination)
 }
 
 export async function signup(formData: FormData) {

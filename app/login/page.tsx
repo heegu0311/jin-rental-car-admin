@@ -19,7 +19,7 @@ function LoginContent() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const error =
     searchParams.get("error") === "unauthorized"
-      ? "관리자 권한이 없는 계정입니다. 관리자에게 문의하세요."
+      ? "접근 권한이 없는 계정입니다. 관리자에게 문의하세요."
       : null;
 
   const supabase = createClient();
@@ -71,10 +71,10 @@ function LoginContent() {
             className="mb-4 h-[84px] w-[180px] object-contain"
           />
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-            진렌트카 관리자
+            진렌트카 업무 로그인
           </h1>
           <p className="text-slate-500 mt-2 text-sm text-center">
-            서비스 관리를 위한 관리자 전용 로그인입니다
+            관리자와 직원 계정으로 로그인할 수 있습니다
           </p>
         </div>
 

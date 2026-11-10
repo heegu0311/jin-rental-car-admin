@@ -19,20 +19,21 @@ export async function GET(request: Request) {
         .eq('id', data.user.id)
         .single()
 
-      if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+      if (!profile || !['admin', 'superadmin', 'staff'].includes(profile.role)) {
         await supabase.auth.signOut()
         return NextResponse.redirect(`${origin}/login?error=unauthorized`)
       }
 
+      const destination = profile.role === 'staff' ? '/staff/requests' : next.startsWith('/') && !next.startsWith('//') ? next : '/'
       const forwardedHost = request.headers.get('x-forwarded-host') 
       const isLocalEnv = process.env.NODE_ENV === 'development'
       if (isLocalEnv) {
         // we can be sure that origin is localhost
-        return NextResponse.redirect(`${origin}${next}`)
+        return NextResponse.redirect(`${origin}${destination}`)
       } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`)
+        return NextResponse.redirect(`https://${forwardedHost}${destination}`)
       } else {
-        return NextResponse.redirect(`${origin}${next}`)
+        return NextResponse.redirect(`${origin}${destination}`)
       }
     }
   }

@@ -393,7 +393,7 @@ export function VehicleModal({
                   </div>
                 </div>
               </div>
-              <label className="block text-sm font-semibold text-slate-700">보증금 (원, 미설정 시 500,000원 안내)
+              <label className="block text-sm font-semibold text-slate-700">월 렌트 보증금 (원, 미설정 시 500,000원 안내)
                 <input type="number" min="0" step="1" value={formData.deposit_amount ?? ""}
                   onChange={(e) => setFormData((current) => ({ ...current, deposit_amount: e.target.value === "" ? null : Number(e.target.value) }))}
                   className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-500" />

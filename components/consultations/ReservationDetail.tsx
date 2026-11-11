@@ -108,6 +108,17 @@ function composeStaffRequest(summary: string, note: string) {
   return `${summary ? `${summary.trimEnd()}\n\n` : ""}${STAFF_REQUEST_MARKER}${note.trim() ? `\n${note.trim()}` : ""}`;
 }
 
+function copyStaffRequest(value: string): Promise<boolean> {
+  try {
+    return navigator.clipboard?.writeText(value).then(
+      () => true,
+      () => false,
+    ) ?? Promise.resolve(false);
+  } catch {
+    return Promise.resolve(false);
+  }
+}
+
 function normalizeDateTime(value: string) {
   if (!value) return "";
   const normalized = value.replace(" ", "T");
@@ -601,6 +612,8 @@ export function ReservationDetail({
         toast.error("담당자 처리 요청사항을 5,000자 이내로 줄여주세요.");
         return;
       }
+      // iOS PWA requires the clipboard request to start in the button's user gesture.
+      const copyResult = copyStaffRequest(value);
       try {
         const result = await saveReservationStaffRequest(
           reservation.id,
@@ -612,13 +625,22 @@ export function ReservationDetail({
         }
         setSavedStaffRequest(result.staffRequest);
         onStaffRequestSaved(result.staffRequest);
-        try {
-          await navigator.clipboard.writeText(result.staffRequest.staff_request);
+        if (await copyResult) {
           toast.success(
             "저장 완료되고 담당자에게 전할 내용이 클립보드에 복사되었습니다.",
           );
-        } catch {
-          toast.warning("저장되었지만 클립보드 복사에 실패했습니다.");
+        } else {
+          toast.warning("저장되었습니다. 메시지 복사를 다시 눌러주세요.", {
+            action: {
+              label: "메시지 복사",
+              onClick: () => {
+                void copyStaffRequest(value).then((copied) => {
+                  if (copied) toast.success("담당자에게 전할 내용을 복사했습니다.");
+                  else toast.error("복사할 수 없습니다. 입력창 내용을 길게 눌러 복사해주세요.");
+                });
+              },
+            },
+          });
         }
       } catch {
         toast.error("담당자 처리 요청사항을 저장하지 못했습니다.");

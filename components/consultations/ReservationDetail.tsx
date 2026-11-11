@@ -365,22 +365,28 @@ export function ReservationDetail({
     Number(depositAmount) <= 100_000_000;
   const comparisonRows = [
     {
+      label: "차량",
+      requested: reservation.car_name,
+      current: selectedCar?.name ?? "차량 미선택",
+      changed: (selectedCar?.name ?? "") !== reservation.car_name,
+    },
+    {
       label: "대여 시작 일시",
       requested: customerStart.replace("T", " ") || "미지정",
       current: rentalStart.replace("T", " ") || "미지정",
       changed: customerStart !== rentalStart,
     },
     {
+      label: "렌트 기간",
+      requested: requestedPeriodLabel,
+      current: currentPeriodLabel,
+      changed: requestedPeriodLabel !== currentPeriodLabel,
+    },
+    {
       label: "반납 일시",
       requested: customerEnd.replace("T", " ") || "미지정",
       current: rentalEnd.replace("T", " ") || "미지정",
       changed: customerEnd !== rentalEnd,
-    },
-    {
-      label: "차량",
-      requested: reservation.car_name,
-      current: selectedCar?.name ?? "차량 미선택",
-      changed: (selectedCar?.name ?? "") !== reservation.car_name,
     },
     {
       label: "희망 옵션",
@@ -391,12 +397,6 @@ export function ReservationDetail({
       changed:
         [...vehicle].sort().join("\u0000") !==
         [...selectedVehicleOptions].sort().join("\u0000"),
-    },
-    {
-      label: "렌트 기간",
-      requested: requestedPeriodLabel,
-      current: currentPeriodLabel,
-      changed: requestedPeriodLabel !== currentPeriodLabel,
     },
     {
       label: "약정 거리",
@@ -543,25 +543,67 @@ export function ReservationDetail({
     switch (row.label) {
       case "대여 시작 일시":
         return (
-          <input
-            aria-label="상담 결과 대여 시작 일시"
-            type="datetime-local"
-            step={1800}
-            value={rentalStart}
-            onChange={(event) => updateRentalStart(event.target.value)}
-            className={inputClass}
-          />
+          <div className="grid min-w-0 gap-1 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+            <input
+              aria-label="상담 결과 대여 시작 날짜"
+              type="date"
+              value={rentalStart.slice(0, 10)}
+              onChange={(event) =>
+                updateRentalStart(
+                  event.target.value
+                    ? `${event.target.value}T${rentalStart.slice(11, 16) || "00:00"}`
+                    : "",
+                )
+              }
+              className={`${inputClass} max-w-full`}
+            />
+            <input
+              aria-label="상담 결과 대여 시작 시간"
+              type="time"
+              step={1800}
+              value={rentalStart.slice(11, 16)}
+              onChange={(event) =>
+                updateRentalStart(
+                  rentalStart
+                    ? `${rentalStart.slice(0, 10)}T${event.target.value}`
+                    : "",
+                )
+              }
+              className={`${inputClass} max-w-full`}
+            />
+          </div>
         );
       case "반납 일시":
         return (
-          <input
-            aria-label="상담 결과 반납 일시"
-            type="datetime-local"
-            step={1800}
-            value={rentalEnd}
-            onChange={(event) => setRentalEnd(event.target.value)}
-            className={inputClass}
-          />
+          <div className="grid min-w-0 gap-1 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+            <input
+              aria-label="상담 결과 반납 날짜"
+              type="date"
+              value={rentalEnd.slice(0, 10)}
+              onChange={(event) =>
+                setRentalEnd(
+                  event.target.value
+                    ? `${event.target.value}T${rentalEnd.slice(11, 16) || "00:00"}`
+                    : "",
+                )
+              }
+              className={`${inputClass} max-w-full`}
+            />
+            <input
+              aria-label="상담 결과 반납 시간"
+              type="time"
+              step={1800}
+              value={rentalEnd.slice(11, 16)}
+              onChange={(event) =>
+                setRentalEnd(
+                  rentalEnd
+                    ? `${rentalEnd.slice(0, 10)}T${event.target.value}`
+                    : "",
+                )
+              }
+              className={`${inputClass} max-w-full`}
+            />
+          </div>
         );
       case "차량":
         return (

@@ -637,6 +637,9 @@ export function ReservationDetail({
   };
   return (
     <div className="space-y-4">
+      <p className="text-xs text-slate-500">
+        접수일 {formatKstDateTime(reservation.created_at)}
+      </p>
       <section className="rounded-xl border border-slate-200 p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -785,10 +788,6 @@ export function ReservationDetail({
           {memo || <span className="text-slate-500">작성한 메모 없음</span>}
         </p>
       </section>
-      <p className="text-xs text-slate-500">
-        접수일 {formatKstDateTime(reservation.created_at)}
-      </p>
-
     </div>
   );
 }

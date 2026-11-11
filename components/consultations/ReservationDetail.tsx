@@ -614,7 +614,7 @@ export function ReservationDetail({
     switch (row.label) {
       case "대여 시작 일시":
         return (
-          <div className="grid min-w-0 gap-1 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+          <div className="grid min-w-0 w-full gap-1">
             <input
               aria-label="상담 결과 대여 시작 날짜"
               type="date"
@@ -655,7 +655,7 @@ export function ReservationDetail({
             </p>
           );
         return (
-          <div className="grid min-w-0 gap-1 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+          <div className="grid min-w-0 w-full gap-1">
             <input
               aria-label="상담 결과 반납 날짜"
               type="date"
@@ -924,7 +924,7 @@ export function ReservationDetail({
                 {comparisonRows.map((row) => (
                   <div
                     key={row.label}
-                    className="col-span-2 grid min-w-0 grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-2 border-b border-blue-100 py-2 last:border-b-0"
+                    className={`col-span-2 grid min-w-0 gap-2 border-b border-blue-100 py-2 last:border-b-0 ${row.label === "대여 시작 일시" || row.label === "반납 일시" ? "grid-cols-1 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]" : "grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]"}`}
                   >
                     <div className="min-w-0">
                       <p className="text-[10px] text-slate-500">{row.label}</p>

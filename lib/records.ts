@@ -2,6 +2,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { operationLog } from "@/lib/observability";
+import type { ReservationConsultationResultInput } from "@/lib/domain/consultation-result";
 
 export type RecordKind = "reservations" | "inquiries";
 
@@ -90,6 +91,107 @@ export async function updateRecord(
   });
   revalidateRecordPages(kind);
   return { success: true };
+}
+
+const OUTCOME_MAX_AMOUNT = 100_000_000;
+const OUTCOME_MAX_NOTE = 1000;
+
+export async function saveReservationOutcome(
+  id: string,
+  outcome: ReservationConsultationResultInput,
+) {
+  const requestId = crypto.randomUUID();
+  const startedAt = performance.now();
+  const { db, user } = await requireAdmin();
+  const validAmount = (value: number | null) =>
+    value === null ||
+    (Number.isInteger(value) && value >= 0 && value <= OUTCOME_MAX_AMOUNT);
+  const maxPeriod =
+    outcome?.rental_type === "daily"
+      ? 30
+      : outcome?.rental_type === "weekly"
+        ? 8
+        : 60;
+  if (
+    !validTarget("reservations", id) ||
+    !outcome ||
+    !["daily", "weekly", "monthly"].includes(outcome.rental_type) ||
+    !Number.isInteger(outcome.period_count) ||
+    outcome.period_count < 1 ||
+    outcome.period_count > maxPeriod ||
+    typeof outcome.car_name !== "string" ||
+    outcome.car_name.length < 1 ||
+    outcome.car_name.length > 200 ||
+    (outcome.vehicle_id !== null &&
+      (typeof outcome.vehicle_id !== "string" ||
+        !/^[0-9a-f-]{36}$/i.test(outcome.vehicle_id))) ||
+    typeof outcome.rental_start !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(outcome.rental_start) ||
+    (outcome.rental_end !== null &&
+      (typeof outcome.rental_end !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(outcome.rental_end))) ||
+    typeof outcome.package_km !== "string" ||
+    outcome.package_km.length > 80 ||
+    typeof outcome.insurance_age !== "string" ||
+    outcome.insurance_age.length > 40 ||
+    typeof outcome.insurance_plan !== "string" ||
+    outcome.insurance_plan.length > 100 ||
+    !validAmount(outcome.rental_total) ||
+    !validAmount(outcome.insurance_min) ||
+    !validAmount(outcome.insurance_max) ||
+    (outcome.insurance_min !== null &&
+      outcome.insurance_max !== null &&
+      outcome.insurance_max < outcome.insurance_min) ||
+    !validAmount(outcome.total_min) ||
+    !validAmount(outcome.total_max) ||
+    (outcome.total_min !== null &&
+      outcome.total_max !== null &&
+      outcome.total_max < outcome.total_min) ||
+    !validAmount(outcome.deposit_amount) ||
+    typeof outcome.note !== "string" ||
+    outcome.note.length > OUTCOME_MAX_NOTE
+  )
+    return { error: "상담 결과를 확인해주세요." };
+
+  const stored = {
+    ...outcome,
+    note: outcome.note.trim().replace(/[\r\n]+/g, " "),
+    reservation_id: id,
+    updated_by: user.id,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await db
+    .from("reservation_consultation_results")
+    .upsert(stored, { onConflict: "reservation_id" })
+    .select("reservation_id")
+    .single();
+  if (error) {
+    operationLog(
+      "reservation.outcome.save",
+      requestId,
+      "failure",
+      "db_update",
+      startedAt,
+      {
+        actorUserId: user.id,
+        recordId: id,
+      },
+    );
+    return { error: "상담 결과를 저장하지 못했습니다." };
+  }
+  operationLog(
+    "reservation.outcome.save",
+    requestId,
+    "success",
+    "saved",
+    startedAt,
+    {
+      actorUserId: user.id,
+      recordId: id,
+    },
+  );
+  revalidateRecordPages("reservations");
+  return { success: true, outcome: stored };
 }
 
 export async function deleteRecord(kind: RecordKind, id: string) {

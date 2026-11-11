@@ -2,8 +2,14 @@
 import { useState } from "react";
 import { Dialog } from "radix-ui";
 import { toast } from "sonner";
-import type { Inquiry, Reservation } from "@/lib/domain/contracts";
+import type {
+  Inquiry,
+  Reservation,
+  Vehicle,
+  InsuranceConfig,
+} from "@/lib/domain/contracts";
 import { deleteRecord, updateRecord, type RecordKind } from "@/lib/records";
+import type { ReservationConsultationResult } from "@/lib/domain/consultation-result";
 import { useSubmitLock } from "@/lib/hooks/use-submit-lock";
 import { StatusChips } from "@/components/shared/StatusChips";
 import { PhoneLink } from "./PhoneLink";
@@ -23,6 +29,10 @@ export function RecordDetailDialog({
   onClose,
   onSaved,
   onDeleted,
+  onOutcomeSaved,
+  vehicles = [],
+  insurance = null,
+  consultationResult = null,
 }: {
   kind: RecordKind;
   record: RecordRow;
@@ -31,6 +41,10 @@ export function RecordDetailDialog({
   onClose: () => void;
   onSaved: (record: RecordRow) => void;
   onDeleted: (id: string) => void;
+  onOutcomeSaved: (result: ReservationConsultationResult) => void;
+  vehicles?: Vehicle[];
+  insurance?: InsuranceConfig | null;
+  consultationResult?: ReservationConsultationResult | null;
 }) {
   const [status, setStatus] = useState<string>(record.status);
   const [answer, setAnswer] = useState(
@@ -96,7 +110,13 @@ export function RecordDetailDialog({
             </div>
           </Dialog.Description>
           {"car_name" in record ? (
-            <ReservationDetail reservation={record} />
+            <ReservationDetail
+              reservation={record}
+              vehicles={vehicles}
+              insurance={insurance}
+              outcome={consultationResult}
+              onOutcomeSaved={onOutcomeSaved}
+            />
           ) : (
             <div className="space-y-3 rounded-xl bg-slate-50 p-4">
               <h3 className="font-semibold">{record.title}</h3>

@@ -14,6 +14,8 @@ import { StatusChips } from "@/components/shared/StatusChips";
 import {
   type Inquiry,
   type Reservation,
+  type Vehicle,
+  type InsuranceConfig,
   INQUIRY_LABELS,
   RESERVATION_LABELS,
 } from "@/lib/domain/contracts";
@@ -25,6 +27,7 @@ import {
 } from "@/lib/consultation";
 import { formatKstDateTime, kstMonth } from "@/lib/format";
 import type { RecordKind } from "@/lib/records";
+import type { ReservationConsultationResult } from "@/lib/domain/consultation-result";
 import { ReceiptMonthFilter } from "./ReceiptMonthFilter";
 import { RecordDetailDialog } from "./RecordDetailDialog";
 
@@ -43,6 +46,9 @@ export function RecordManager({
   title: customTitle,
   initialCategory = "all",
   initialSelectedId,
+  vehicles = [],
+  insurance = null,
+  consultationResults: initialConsultationResults = {},
   description = "최근 500건을 조회합니다. 고객 정보와 요청 내용을 확인하고 처리 상태를 관리하세요.",
 }: {
   kind: RecordKind;
@@ -50,9 +56,15 @@ export function RecordManager({
   title?: string;
   initialCategory?: "all" | "new-car" | "rental";
   initialSelectedId?: string;
+  vehicles?: Vehicle[];
+  insurance?: InsuranceConfig | null;
+  consultationResults?: Record<string, ReservationConsultationResult>;
   description?: string;
 }) {
   const [rows, setRows] = useState(initial);
+  const [consultationResults, setConsultationResults] = useState(
+    initialConsultationResults,
+  );
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
   const [category, setCategory] = useState<string>(initialCategory);
@@ -72,8 +84,10 @@ export function RecordManager({
       : [];
   const filtered = rows.filter(
     (row) =>
-      ((kind === "inquiries" && (category === "all" || categoryOf(row) === category)) ||
-        (kind === "reservations" && (category === "all" || categoryOf(row) === category))) &&
+      ((kind === "inquiries" &&
+        (category === "all" || categoryOf(row) === category)) ||
+        (kind === "reservations" &&
+          (category === "all" || categoryOf(row) === category))) &&
       matchesRecordFilter(row, { query, status, month }),
   );
   /** 조건을 바꾸면 첫 페이지로 돌아간다. */
@@ -205,6 +219,9 @@ export function RecordManager({
           key={selected.id}
           kind={kind}
           record={selected}
+          vehicles={vehicles}
+          insurance={insurance}
+          consultationResult={consultationResults[selected.id] ?? null}
           title={title}
           labels={labels}
           onClose={() => setSelected(null)}
@@ -216,6 +233,12 @@ export function RecordManager({
           onDeleted={(id) =>
             closeWith((prev) => prev.filter((r) => r.id !== id))
           }
+          onOutcomeSaved={(saved) => {
+            setConsultationResults((prev) => ({
+              ...prev,
+              [saved.reservation_id]: saved,
+            }));
+          }}
         />
       )}
     </div>

@@ -96,6 +96,7 @@ export async function updateRecord(
 
 const OUTCOME_MAX_AMOUNT = 100_000_000;
 const OUTCOME_MAX_NOTE = 1000;
+const OUTCOME_MAX_STAFF_REQUEST = 5000;
 
 export async function saveReservationOutcome(
   id: string,
@@ -211,7 +212,7 @@ export async function saveReservationStaffRequest(
   if (
     !validTarget("reservations", id) ||
     typeof staffRequest !== "string" ||
-    staffRequest.length > OUTCOME_MAX_NOTE
+    staffRequest.length > OUTCOME_MAX_STAFF_REQUEST
   )
     return { error: "담당자 처리 요청사항을 확인해주세요." };
   const { data, error } = await db

@@ -434,6 +434,13 @@ export function ReservationDetail({
       changed: customerTotalMin !== totalMin || customerTotalMax !== totalMax,
     },
   ];
+  const staffRequestSummary = [
+    `[상담 결과 요약 · ${formatKstDateTime(new Date())}]`,
+    ...comparisonRows.map(
+      (row) => `${row.label}: 고객 요청 ${row.requested} / 상담 결과 ${row.current}`,
+    ),
+    `상담 특이사항: ${consultationNote.trim() || "없음"}`,
+  ].join("\n");
   const currentMatchesSaved = Boolean(
     savedOutcome &&
     savedOutcome.vehicle_id === selectedCarId &&
@@ -461,6 +468,11 @@ export function ReservationDetail({
     runSaveOutcome(async () => {
       if (!selectedCar || !validDeposit || !rentalStart) {
         toast.error("차량, 대여 시작 일시와 보증금 금액을 확인해주세요.");
+        return;
+      }
+      const appendedStaffRequest = `${staffRequest.trim()}${staffRequest.trim() ? "\n\n" : ""}${staffRequestSummary}`;
+      if (appendedStaffRequest.length > 5000) {
+        toast.error("담당자 처리 요청사항이 길어졌습니다. 내용을 줄인 뒤 저장해주세요.");
         return;
       }
       const outcome = {
@@ -492,7 +504,27 @@ export function ReservationDetail({
         }
         setSavedOutcome(result.outcome);
         onOutcomeSaved(result.outcome);
-        toast.success("상담 결과를 저장했습니다.");
+        setStaffRequest(appendedStaffRequest);
+        try {
+          const staffRequestResult = await saveReservationStaffRequest(
+            reservation.id,
+            appendedStaffRequest,
+          );
+          if ("error" in staffRequestResult) {
+            toast.error(
+              "상담 결과는 저장했지만 담당자 요청사항 요약은 저장하지 못했습니다. 담당자 저장 버튼으로 다시 저장해주세요.",
+            );
+            return;
+          }
+          setSavedStaffRequest(staffRequestResult.staffRequest);
+          onStaffRequestSaved(staffRequestResult.staffRequest);
+        } catch {
+          toast.error(
+            "상담 결과는 저장했지만 담당자 요청사항 요약은 저장하지 못했습니다. 담당자 저장 버튼으로 다시 저장해주세요.",
+          );
+          return;
+        }
+        toast.success("상담 결과와 담당자 요청사항 요약을 저장했습니다.");
       } catch {
         toast.error("상담 결과를 저장하지 못했습니다. 다시 시도해주세요.");
       }
@@ -882,7 +914,9 @@ export function ReservationDetail({
                 )}
                 <button
                   type="button"
-                  disabled={savingOutcome || !selectedCar || !validDeposit}
+                  disabled={
+                    savingOutcome || savingStaffRequest || !selectedCar || !validDeposit
+                  }
                   onClick={saveOutcome}
                   className="ml-auto rounded-lg bg-blue-700 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -904,7 +938,7 @@ export function ReservationDetail({
           <label className="block text-sm font-semibold text-slate-900">
             담당자 처리 요청사항
             <textarea
-              maxLength={1000}
+              maxLength={5000}
               rows={3}
               value={staffRequest}
               onChange={(event) => setStaffRequest(event.target.value)}
@@ -924,7 +958,7 @@ export function ReservationDetail({
             )}
             <button
               type="button"
-              disabled={savingStaffRequest}
+              disabled={savingStaffRequest || savingOutcome}
               onClick={saveStaffRequest}
               className="ml-auto rounded-lg bg-blue-700 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >

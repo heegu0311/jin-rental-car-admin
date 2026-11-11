@@ -250,9 +250,6 @@ export function ReservationDetail({
   const [packageKm, setPackageKm] = useState(
     outcome?.package_km ?? reservation.package_km,
   );
-  const [selectedVehicleOptions, setSelectedVehicleOptions] = useState<
-    VehicleOption[]
-  >(() => outcome?.vehicle_options ?? vehicle);
   const updateRentalStart = (value: string) => {
     setRentalStart(value);
     setRentalEnd(addRentalPeriod(value, rentalType, periodCount));
@@ -452,16 +449,6 @@ export function ReservationDetail({
       changed: customerEnd !== effectiveRentalEnd,
     },
     {
-      label: "희망 옵션",
-      requested: vehicle.length ? vehicle.join(" · ") : "미지정",
-      current: selectedVehicleOptions.length
-        ? selectedVehicleOptions.join(" · ")
-        : "미선택",
-      changed:
-        [...vehicle].sort().join("\u0000") !==
-        [...selectedVehicleOptions].sort().join("\u0000"),
-    },
-    {
       label: "약정 거리",
       requested: reservation.package_km || "미지정",
       current: packageKm || "미지정",
@@ -527,8 +514,6 @@ export function ReservationDetail({
     savedOutcome.rental_start === rentalStart &&
     savedOutcome.rental_end === (effectiveRentalEnd || null) &&
     savedOutcome.package_km === packageKm &&
-    [...(savedOutcome.vehicle_options ?? vehicle)].sort().join("\u0000") ===
-      [...selectedVehicleOptions].sort().join("\u0000") &&
     savedOutcome.rental_total === rentalTotal &&
     savedOutcome.insurance_min ===
       (insurancePlanName === INSURANCE_NONE ? 0 : (premium?.min ?? null)) &&
@@ -559,7 +544,7 @@ export function ReservationDetail({
         rental_start: rentalStart,
         rental_end: effectiveRentalEnd || null,
         package_km: packageKm,
-        vehicle_options: selectedVehicleOptions,
+        vehicle_options: savedOutcome?.vehicle_options ?? vehicle,
         insurance_age: ageGroup,
         insurance_plan: insurancePlanName || "선택 전",
         rental_total: rentalTotal,
@@ -760,31 +745,6 @@ export function ReservationDetail({
               </option>
             ))}
           </select>
-        );
-      case "희망 옵션":
-        return (
-          <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
-            {VEHICLE_OPTIONS.map((option) => {
-              const selected = selectedVehicleOptions.includes(option);
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() =>
-                    setSelectedVehicleOptions((current) =>
-                      selected
-                        ? current.filter((item) => item !== option)
-                        : [...current, option],
-                    )
-                  }
-                  className={`min-h-8 rounded border px-1 py-1 text-[10px] leading-3 ${selected ? "border-blue-500 bg-blue-50 font-semibold text-blue-800" : "border-slate-200 bg-white text-slate-600"}`}
-                >
-                  {option}
-                </button>
-              );
-            })}
-          </div>
         );
       case "렌트 기간":
         return (

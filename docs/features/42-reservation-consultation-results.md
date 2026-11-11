@@ -13,7 +13,7 @@
 ## Admin behavior
 
 - The rental details dialog combines the request/result comparison with the collapsible quote calculator.
-- Start and return date/time, vehicle, requested options, rental unit, duration, mileage package, insurance, rental price, total and deposit are compared side by side. Differences are highlighted. The consultation result and `reservations.staff_request` have separate save buttons; staff follow-up is stored as a reservation property.
+- Start and return date/time, vehicle, rental unit, duration, mileage package, insurance, rental price, total and deposit are compared side by side. Vehicle options are outside the scope of this dialog, so they are not shown or edited here; existing option data is retained on save. Differences are highlighted. The consultation result and `reservations.staff_request` have separate save buttons; staff follow-up is stored as a reservation property.
 - On mobile, the detail dialog uses a full-screen layout with compact 8px spacing; desktop keeps the centered dialog.
 - `상담 결과 저장` upserts the confirmed terms to `reservation_consultation_results` and writes a fixed-format summary of consultation result values to `reservations.staff_request`. The full summary and final `• 담당자 요청 사항` section appear in one generously sized editable textarea. The separate staff request button saves and copies that full text to the clipboard. The existing status save remains separate.
 - Saving records the authenticated admin and timestamp. A later save replaces the current result for that reservation.

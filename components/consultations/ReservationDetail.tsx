@@ -105,7 +105,7 @@ function splitStaffRequest(value: string) {
 }
 
 function composeStaffRequest(summary: string, note: string) {
-  return `${summary ? `${summary.trimEnd()}\n` : ""}${STAFF_REQUEST_MARKER}${note.trim() ? `\n${note.trim()}` : ""}`;
+  return `${summary ? `${summary.trimEnd()}\n\n` : ""}${STAFF_REQUEST_MARKER}${note.trim() ? `\n${note.trim()}` : ""}`;
 }
 
 function normalizeDateTime(value: string) {
@@ -223,12 +223,7 @@ export function ReservationDetail({
   const [consultationNote, setConsultationNote] = useState(
     outcome?.note ?? legacyNote ?? "",
   );
-  const [staffSummary, setStaffSummary] = useState(
-    () => splitStaffRequest(staffRequestRecord?.staff_request ?? "").summary,
-  );
-  const [staffNote, setStaffNote] = useState(
-    () => splitStaffRequest(staffRequestRecord?.staff_request ?? "").note,
-  );
+  const [staffRequest, setStaffRequest] = useState<string | null>(null);
   const [savedStaffRequest, setSavedStaffRequest] =
     useState(staffRequestRecord);
   const [rentalStart, setRentalStart] = useState(
@@ -485,7 +480,7 @@ export function ReservationDetail({
       changed: currentDeposit !== registeredDeposit,
     },
     {
-      label: "예상 합계",
+      label: "예상 합계(보증금 제외)",
       requested: formatAmountRange(customerTotalMin, customerTotalMax),
       current:
         totalMin == null
@@ -498,11 +493,16 @@ export function ReservationDetail({
   ];
   const staffRequestSummary = [
     `[상담 결과 요약 · ${formatKstDateTime(new Date())}]`,
-    "",
     ...comparisonRows.map((row) => `• ${row.label} : ${row.current}`),
     "• 상담 특이사항",
     consultationNote.trim() || "없음",
   ].join("\n");
+  const staffRequestValue =
+    staffRequest ??
+    composeStaffRequest(
+      staffRequestSummary,
+      splitStaffRequest(staffRequestRecord?.staff_request ?? "").note,
+    );
   const currentMatchesSaved = Boolean(
     savedOutcome &&
     savedOutcome.vehicle_id === selectedCarId &&
@@ -532,7 +532,10 @@ export function ReservationDetail({
         toast.error("차량, 대여 시작 일시와 보증금 금액을 확인해주세요.");
         return;
       }
-      const nextStaffRequest = composeStaffRequest(staffRequestSummary, staffNote);
+      const nextStaffRequest = composeStaffRequest(
+        staffRequestSummary,
+        splitStaffRequest(staffRequestValue).note,
+      );
       if (nextStaffRequest.length > 5000) {
         toast.error("담당자 처리 요청사항이 길어졌습니다. 내용을 줄인 뒤 저장해주세요.");
         return;
@@ -566,7 +569,7 @@ export function ReservationDetail({
         }
         setSavedOutcome(result.outcome);
         onOutcomeSaved(result.outcome);
-        setStaffSummary(staffRequestSummary);
+        setStaffRequest(nextStaffRequest);
         try {
           const staffRequestResult = await saveReservationStaffRequest(
             reservation.id,
@@ -593,7 +596,7 @@ export function ReservationDetail({
     });
   const saveStaffRequest = () =>
     runSaveStaffRequest(async () => {
-      const value = composeStaffRequest(staffSummary, staffNote);
+      const value = staffRequestValue;
       if (value.length > 5000) {
         toast.error("담당자 처리 요청사항을 5,000자 이내로 줄여주세요.");
         return;
@@ -1037,26 +1040,19 @@ export function ReservationDetail({
           <h3 className="text-sm font-semibold text-slate-900">
             담당자 처리 요청사항
           </h3>
-          {staffSummary && (
-            <pre className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-slate-50 p-2 font-sans text-xs leading-5 text-slate-700 sm:p-3">
-              {staffSummary}
-            </pre>
-          )}
-          <label className="mt-2 block text-sm font-semibold text-slate-900">
-            {STAFF_REQUEST_MARKER}
+          <label className="mt-2 block">
+            <span className="sr-only">담당자 처리 요청사항 내용</span>
             <textarea
               maxLength={5000}
-              rows={3}
-              value={staffNote}
-              onChange={(event) => setStaffNote(event.target.value)}
-              placeholder="담당자가 후속으로 확인하거나 처리할 내용을 적어주세요."
-              className="mt-2 w-full resize-y rounded-lg border border-slate-200 p-2 text-sm font-normal text-slate-900 sm:p-3"
+              rows={18}
+              value={staffRequestValue}
+              onChange={(event) => setStaffRequest(event.target.value)}
+              className="w-full resize-y rounded-lg border border-slate-200 p-2 font-mono text-sm font-normal leading-6 text-slate-900 sm:p-3"
             />
           </label>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
             {savedStaffRequest &&
-              savedStaffRequest.staff_request !==
-                composeStaffRequest(staffSummary, staffNote) && (
+              savedStaffRequest.staff_request !== staffRequestValue && (
                 <p className="text-[10px] text-slate-500">저장 전 변경사항</p>
               )}
             <button

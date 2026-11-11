@@ -83,6 +83,31 @@ function normalizeDateTime(value: string) {
   return match?.[1] ?? "";
 }
 
+function addRentalPeriod(
+  start: string,
+  type: RentalType,
+  count: number,
+) {
+  const match = start.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+  if (!match || !Number.isInteger(count) || count < 1) return "";
+  const [, year, month, day, hour, minute] = match;
+  const y = Number(year);
+  const m = Number(month) - 1;
+  const d = Number(day);
+  let result: Date;
+  if (type === "monthly") {
+    const targetMonth = m + count;
+    const lastDay = new Date(Date.UTC(y, targetMonth + 1, 0)).getUTCDate();
+    result = new Date(
+      Date.UTC(y, targetMonth, Math.min(d, lastDay), Number(hour), Number(minute)),
+    );
+  } else {
+    const addDays = count * (type === "weekly" ? 7 : 1);
+    result = new Date(Date.UTC(y, m, d + addDays, Number(hour), Number(minute)));
+  }
+  return result.toISOString().slice(0, 16);
+}
+
 export function ReservationDetail({
   reservation,
   vehicles = [],
@@ -173,6 +198,21 @@ export function ReservationDetail({
   const [packageKm, setPackageKm] = useState(
     outcome?.package_km ?? reservation.package_km,
   );
+  const updateRentalStart = (value: string) => {
+    setRentalStart(value);
+    setRentalEnd(addRentalPeriod(value, rentalType, periodCount));
+  };
+  const updateRentalType = (value: RentalType) => {
+    setRentalType(value);
+    setInsurancePlanName("");
+    setRentalEnd(addRentalPeriod(rentalStart, value, periodCount));
+  };
+  const updatePeriodCount = (value: number) => {
+    const max = rentalType === "daily" ? 30 : rentalType === "weekly" ? 8 : 60;
+    const count = Math.min(max, Math.max(1, value || 1));
+    setPeriodCount(count);
+    setRentalEnd(addRentalPeriod(rentalStart, rentalType, count));
+  };
   const { busy: savingOutcome, run: runSaveOutcome } = useSubmitLock();
   const selectedCar = vehicles.find((car) => car.id === selectedCarId);
   const days =
@@ -455,7 +495,7 @@ export function ReservationDetail({
             type="datetime-local"
             step={1800}
             value={rentalStart}
-            onChange={(event) => setRentalStart(event.target.value)}
+            onChange={(event) => updateRentalStart(event.target.value)}
             className={inputClass}
           />
         );
@@ -492,10 +532,9 @@ export function ReservationDetail({
             <select
               aria-label="상담 결과 렌트 단위"
               value={rentalType}
-              onChange={(event) => {
-                setRentalType(event.target.value as RentalType);
-                setInsurancePlanName("");
-              }}
+              onChange={(event) =>
+                updateRentalType(event.target.value as RentalType)
+              }
               className={inputClass}
             >
               <option value="daily">일</option>
@@ -508,14 +547,7 @@ export function ReservationDetail({
               min={1}
               max={rentalType === "daily" ? 30 : rentalType === "weekly" ? 8 : 60}
               value={periodCount}
-              onChange={(event) =>
-                setPeriodCount(
-                  Math.min(
-                    rentalType === "daily" ? 30 : rentalType === "weekly" ? 8 : 60,
-                    Math.max(1, Number(event.target.value) || 1),
-                  ),
-                )
-              }
+              onChange={(event) => updatePeriodCount(Number(event.target.value))}
               className={inputClass}
             />
           </div>

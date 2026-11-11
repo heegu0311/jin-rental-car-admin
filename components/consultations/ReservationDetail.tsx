@@ -1011,15 +1011,10 @@ export function ReservationDetail({
             />
           </label>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-            {savedStaffRequest ? (
-              <p className="text-[10px] text-emerald-700">
-                {savedStaffRequest.staff_request === staffRequest
-                  ? "담당자 요청 저장됨"
-                  : "저장 전 변경사항"}
-              </p>
-            ) : (
-              <span />
-            )}
+            {savedStaffRequest &&
+              savedStaffRequest.staff_request !== staffRequest && (
+                <p className="text-[10px] text-slate-500">저장 전 변경사항</p>
+              )}
             <button
               type="button"
               disabled={savingStaffRequest || savingOutcome}

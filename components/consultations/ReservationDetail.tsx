@@ -85,6 +85,29 @@ function formatAmountRange(min: number | null, max: number | null) {
     : `${formatAmount(min)}~${formatAmount(max)}`;
 }
 
+const STAFF_REQUEST_MARKER = "• 담당자 요청 사항";
+
+function splitStaffRequest(value: string) {
+  const markerIndex = value.indexOf(STAFF_REQUEST_MARKER);
+  if (markerIndex >= 0)
+    return {
+      summary: value.slice(0, markerIndex).trimEnd(),
+      note: value.slice(markerIndex + STAFF_REQUEST_MARKER.length).trimStart(),
+    };
+  const legacySummaryIndex = value.indexOf("[상담 결과 요약");
+  return {
+    summary: "",
+    note:
+      legacySummaryIndex >= 0
+        ? value.slice(0, legacySummaryIndex).trimEnd()
+        : value,
+  };
+}
+
+function composeStaffRequest(summary: string, note: string) {
+  return `${summary ? `${summary.trimEnd()}\n` : ""}${STAFF_REQUEST_MARKER}${note.trim() ? `\n${note.trim()}` : ""}`;
+}
+
 function normalizeDateTime(value: string) {
   if (!value) return "";
   const normalized = value.replace(" ", "T");
@@ -200,8 +223,11 @@ export function ReservationDetail({
   const [consultationNote, setConsultationNote] = useState(
     outcome?.note ?? legacyNote ?? "",
   );
-  const [staffRequest, setStaffRequest] = useState(
-    staffRequestRecord?.staff_request ?? "",
+  const [staffSummary, setStaffSummary] = useState(
+    () => splitStaffRequest(staffRequestRecord?.staff_request ?? "").summary,
+  );
+  const [staffNote, setStaffNote] = useState(
+    () => splitStaffRequest(staffRequestRecord?.staff_request ?? "").note,
   );
   const [savedStaffRequest, setSavedStaffRequest] =
     useState(staffRequestRecord);
@@ -472,13 +498,10 @@ export function ReservationDetail({
   ];
   const staffRequestSummary = [
     `[상담 결과 요약 · ${formatKstDateTime(new Date())}]`,
-    ...comparisonRows.flatMap((row) => [
-      `• ${row.label}`,
-      `  고객 요청: ${row.requested}`,
-      `  상담 결과: ${row.current}`,
-    ]),
+    "",
+    ...comparisonRows.map((row) => `• ${row.label} : ${row.current}`),
     "• 상담 특이사항",
-    `  ${consultationNote.trim() || "없음"}`,
+    consultationNote.trim() || "없음",
   ].join("\n");
   const currentMatchesSaved = Boolean(
     savedOutcome &&
@@ -509,8 +532,8 @@ export function ReservationDetail({
         toast.error("차량, 대여 시작 일시와 보증금 금액을 확인해주세요.");
         return;
       }
-      const appendedStaffRequest = `${staffRequest.trim()}${staffRequest.trim() ? "\n\n" : ""}${staffRequestSummary}`;
-      if (appendedStaffRequest.length > 5000) {
+      const nextStaffRequest = composeStaffRequest(staffRequestSummary, staffNote);
+      if (nextStaffRequest.length > 5000) {
         toast.error("담당자 처리 요청사항이 길어졌습니다. 내용을 줄인 뒤 저장해주세요.");
         return;
       }
@@ -543,11 +566,11 @@ export function ReservationDetail({
         }
         setSavedOutcome(result.outcome);
         onOutcomeSaved(result.outcome);
-        setStaffRequest(appendedStaffRequest);
+        setStaffSummary(staffRequestSummary);
         try {
           const staffRequestResult = await saveReservationStaffRequest(
             reservation.id,
-            appendedStaffRequest,
+            nextStaffRequest,
           );
           if ("error" in staffRequestResult) {
             toast.error(
@@ -570,10 +593,15 @@ export function ReservationDetail({
     });
   const saveStaffRequest = () =>
     runSaveStaffRequest(async () => {
+      const value = composeStaffRequest(staffSummary, staffNote);
+      if (value.length > 5000) {
+        toast.error("담당자 처리 요청사항을 5,000자 이내로 줄여주세요.");
+        return;
+      }
       try {
         const result = await saveReservationStaffRequest(
           reservation.id,
-          staffRequest,
+          value,
         );
         if ("error" in result) {
           toast.error(result.error);
@@ -581,7 +609,14 @@ export function ReservationDetail({
         }
         setSavedStaffRequest(result.staffRequest);
         onStaffRequestSaved(result.staffRequest);
-        toast.success("담당자 처리 요청사항을 저장했습니다.");
+        try {
+          await navigator.clipboard.writeText(result.staffRequest.staff_request);
+          toast.success(
+            "저장 완료되고 담당자에게 전할 내용이 클립보드에 복사되었습니다.",
+          );
+        } catch {
+          toast.warning("저장되었지만 클립보드 복사에 실패했습니다.");
+        }
       } catch {
         toast.error("담당자 처리 요청사항을 저장하지 못했습니다.");
       }
@@ -999,20 +1034,29 @@ export function ReservationDetail({
       </section>
       {!isNewCar && (
         <section>
-          <label className="block text-sm font-semibold text-slate-900">
+          <h3 className="text-sm font-semibold text-slate-900">
             담당자 처리 요청사항
+          </h3>
+          {staffSummary && (
+            <pre className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-slate-50 p-2 font-sans text-xs leading-5 text-slate-700 sm:p-3">
+              {staffSummary}
+            </pre>
+          )}
+          <label className="mt-2 block text-sm font-semibold text-slate-900">
+            {STAFF_REQUEST_MARKER}
             <textarea
               maxLength={5000}
               rows={3}
-              value={staffRequest}
-              onChange={(event) => setStaffRequest(event.target.value)}
+              value={staffNote}
+              onChange={(event) => setStaffNote(event.target.value)}
               placeholder="담당자가 후속으로 확인하거나 처리할 내용을 적어주세요."
               className="mt-2 w-full resize-y rounded-lg border border-slate-200 p-2 text-sm font-normal text-slate-900 sm:p-3"
             />
           </label>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
             {savedStaffRequest &&
-              savedStaffRequest.staff_request !== staffRequest && (
+              savedStaffRequest.staff_request !==
+                composeStaffRequest(staffSummary, staffNote) && (
                 <p className="text-[10px] text-slate-500">저장 전 변경사항</p>
               )}
             <button

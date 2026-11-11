@@ -160,12 +160,16 @@ export function ReservationDetail({
   const initialType = outcome?.rental_type ?? requestedType;
   const requestedCount = Number(reservation.period.match(/\d+/)?.[0] ?? 1);
   const initialCount = outcome?.period_count ?? requestedCount;
+  const initialMax =
+    initialType === "daily" ? 30 : initialType === "weekly" ? 8 : 60;
   const [selectedCarId, setSelectedCarId] = useState(
     () => outcome?.vehicle_id ?? customerCar?.id ?? "",
   );
   const [rentalType, setRentalType] = useState<RentalType>(initialType);
   const [periodCount, setPeriodCount] = useState(
-    Number.isInteger(initialCount) && initialCount > 0 ? initialCount : 1,
+    Number.isInteger(initialCount) && initialCount > 0
+      ? Math.min(initialCount, initialMax)
+      : 1,
   );
   const requestedAgeGroup: InsuranceAgeGroup = insuranceField.includes(
     "만 26세 미만",
@@ -226,9 +230,12 @@ export function ReservationDetail({
     setRentalEnd(addRentalPeriod(value, rentalType, periodCount));
   };
   const updateRentalType = (value: RentalType) => {
+    const max = value === "daily" ? 30 : value === "weekly" ? 8 : 60;
+    const count = Math.min(periodCount, max);
     setRentalType(value);
+    setPeriodCount(count);
     setInsurancePlanName("");
-    setRentalEnd(addRentalPeriod(rentalStart, value, periodCount));
+    setRentalEnd(addRentalPeriod(rentalStart, value, count));
   };
   const updatePeriodCount = (value: number) => {
     const max = rentalType === "daily" ? 30 : rentalType === "weekly" ? 8 : 60;
@@ -236,6 +243,10 @@ export function ReservationDetail({
     setPeriodCount(count);
     setRentalEnd(addRentalPeriod(rentalStart, rentalType, count));
   };
+  const periodChoices = Array.from(
+    { length: rentalType === "daily" ? 30 : rentalType === "weekly" ? 8 : 60 },
+    (_, index) => index + 1,
+  );
   const { busy: savingOutcome, run: runSaveOutcome } = useSubmitLock();
   const { busy: savingStaffRequest, run: runSaveStaffRequest } =
     useSubmitLock();
@@ -721,15 +732,18 @@ export function ReservationDetail({
               <option value="weekly">주</option>
               <option value="monthly">개월</option>
             </select>
-            <input
+            <select
               aria-label="상담 결과 기간 수"
-              type="number"
-              min={1}
-              max={rentalType === "daily" ? 30 : rentalType === "weekly" ? 8 : 60}
               value={periodCount}
               onChange={(event) => updatePeriodCount(Number(event.target.value))}
               className={inputClass}
-            />
+            >
+              {periodChoices.map((count) => (
+                <option key={count} value={count}>
+                  {count}
+                </option>
+              ))}
+            </select>
           </div>
         );
       case "약정 거리":

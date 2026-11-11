@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/auth";
+import { operationLog } from "@/lib/observability";
 import { RecordManager } from "@/components/consultations/RecordManager";
 import type { Reservation } from "@/lib/domain/contracts";
 import type { ReservationConsultationResult } from "@/lib/domain/consultation-result";
@@ -15,6 +16,8 @@ export default async function Page({
 }) {
   const { record } = await searchParams;
   const { db } = await requireAdmin();
+  const requestId = crypto.randomUUID();
+  const startedAt = performance.now();
   const [{ data, error }, { data: vehicles }, { data: insuranceRow }] =
     await Promise.all([
       db
@@ -37,7 +40,17 @@ export default async function Page({
       .from("reservation_consultation_results")
       .select("*")
       .in("reservation_id", reservationIds);
-    if (resultQuery.error) throw new Error("상담 결과 조회 실패");
+    if (resultQuery.error) {
+      operationLog(
+        "reservation.consultation_result.read",
+        requestId,
+        "failure",
+        resultQuery.error.code ?? "unknown",
+        startedAt,
+        { table: "reservation_consultation_results" },
+      );
+      throw new Error("상담 결과 조회 실패");
+    }
     results = (resultQuery.data ?? []) as ReservationConsultationResult[];
   }
   let insurance: InsuranceConfig | null = null;

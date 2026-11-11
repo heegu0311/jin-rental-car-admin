@@ -10,6 +10,7 @@ import { Pagination } from "@/components/shared/Pagination";
 import { StatusChips } from "@/components/shared/StatusChips";
 import {
   matchesRecordFilter,
+  isQuickRentalConsultation,
   recordSubject,
   reservationCategory,
 } from "@/lib/consultation";
@@ -119,7 +120,10 @@ export function ConsultationList({
           {
             key: "kind",
             label: "접수 유형",
-            render: (row) => typeLabel[row.kind],
+            render: (row) =>
+              row.kind === "rental" && isQuickRentalConsultation(row.record)
+                ? "빠른 렌트 상담"
+                : typeLabel[row.kind],
           },
           {
             key: "status",

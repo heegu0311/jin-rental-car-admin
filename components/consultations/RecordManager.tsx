@@ -21,6 +21,7 @@ import {
 } from "@/lib/domain/contracts";
 import {
   inquiryCategory,
+  isQuickRentalConsultation,
   matchesRecordFilter,
   recordSubject,
   reservationCategory,
@@ -169,7 +170,11 @@ export function RecordManager({
                   key: "consultationType",
                   label: "상담 구분",
                   render: (r: RecordRow) =>
-                    categoryOf(r) === "new-car" ? "신차 상담" : "예약 상담",
+                    categoryOf(r) === "new-car"
+                      ? "신차 상담"
+                      : "options" in r && isQuickRentalConsultation(r)
+                        ? "빠른 렌트 상담"
+                        : "예약 상담",
                 },
               ]
             : []),

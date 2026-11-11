@@ -10,6 +10,16 @@ import { kstMonth } from "./format.ts";
 export type ReservationCategory = "rental" | "new-car";
 export const GENERAL_INQUIRY = "일반 문의";
 
+export function isQuickRentalConsultation(
+  reservation: Pick<Reservation, "options">,
+) {
+  return (reservation.options ?? []).some(
+    (option) =>
+      option === "접수 경로: 빠른 렌트 상담" ||
+      /(^|\n)나이 확인: 만 (21|26)세 이상 확인/.test(option),
+  );
+}
+
 export function reservationCategory(r: Pick<Reservation, "car_name">) {
   return (
     r.car_name.startsWith("[신차]") ? "new-car" : "rental"

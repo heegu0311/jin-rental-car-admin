@@ -30,6 +30,7 @@ import type {
 import { useSubmitLock } from "@/lib/hooks/use-submit-lock";
 import { StatusBadge } from "@/components/shared/feedback";
 import { formatKstDateTime } from "@/lib/format";
+import { isQuickRentalConsultation } from "@/lib/consultation";
 
 // web의 submitConsultation이 message 앞뒤에 붙이는 라벨만 구조화한다.
 const LABELED_LINES = [
@@ -49,6 +50,7 @@ function splitOptions(options: string[] | null | undefined) {
     memo: string[] = [];
   for (const item of options ?? []) {
     if (item.startsWith("상담 결과: ")) continue;
+    if (item === "접수 경로: 빠른 렌트 상담") continue;
     const vehicleOption = VEHICLE_OPTIONS.find((option) => option === item);
     if (vehicleOption) {
       vehicle.push(vehicleOption);
@@ -135,6 +137,7 @@ export function ReservationDetail({
 }) {
   const { vehicle, fields, memo } = splitOptions(reservation.options);
   const isNewCar = reservation.car_name.startsWith("[신차]");
+  const isQuickConsultation = isQuickRentalConsultation(reservation);
   const customerCar = vehicles.find((car) => car.name === reservation.car_name);
   const legacyDeposit = reservation.options
     .find((option) => option.startsWith("통화 확인 보증금:"))
@@ -818,6 +821,11 @@ export function ReservationDetail({
             <p className="mt-1 break-keep text-base font-bold text-slate-900">
               {reservation.car_name}
             </p>
+            {isQuickConsultation && (
+              <p className="mt-1 text-xs font-semibold text-blue-700">
+                빠른 렌트 상담 · 입력한 차종
+              </p>
+            )}
           </div>
           <StatusBadge tone={reservation.status}>
             {RESERVATION_LABELS[reservation.status]}
@@ -837,6 +845,11 @@ export function ReservationDetail({
       </section>
       {!isNewCar && (
         <section className="rounded-lg border border-blue-200 bg-blue-50/60 p-2 sm:rounded-xl sm:p-3">
+          {isQuickConsultation && !selectedCar && (
+            <p className="mb-2 text-xs text-blue-800">
+              고객이 차종을 직접 입력했습니다. 요금을 계산하려면 아래에서 등록 차량을 선택해주세요.
+            </p>
+          )}
           <button
             type="button"
             aria-expanded={calculatorOpen}

@@ -1063,7 +1063,7 @@ export function ReservationDetail({
             >
               {savingStaffRequest
                 ? "저장 중…"
-                : "담당자 처리 요청 저장"}
+                : "담당자 처리 요청 저장 & 메시지 복사"}
             </button>
           </div>
         </section>

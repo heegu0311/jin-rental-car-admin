@@ -436,10 +436,13 @@ export function ReservationDetail({
   ];
   const staffRequestSummary = [
     `[상담 결과 요약 · ${formatKstDateTime(new Date())}]`,
-    ...comparisonRows.map(
-      (row) => `${row.label}: 고객 요청 ${row.requested} / 상담 결과 ${row.current}`,
-    ),
-    `상담 특이사항: ${consultationNote.trim() || "없음"}`,
+    ...comparisonRows.flatMap((row) => [
+      `• ${row.label}`,
+      `  고객 요청: ${row.requested}`,
+      `  상담 결과: ${row.current}`,
+    ]),
+    "• 상담 특이사항",
+    `  ${consultationNote.trim() || "없음"}`,
   ].join("\n");
   const currentMatchesSaved = Boolean(
     savedOutcome &&

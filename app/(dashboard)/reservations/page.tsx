@@ -2,7 +2,10 @@ import { requireAdmin } from "@/lib/auth";
 import { operationLog } from "@/lib/observability";
 import { RecordManager } from "@/components/consultations/RecordManager";
 import type { Reservation } from "@/lib/domain/contracts";
-import type { ReservationConsultationResult } from "@/lib/domain/consultation-result";
+import type {
+  ReservationConsultationResult,
+  ReservationStaffRequest,
+} from "@/lib/domain/consultation-result";
 import {
   INSURANCE_CONTENT_SLUG,
   parseInsuranceConfig,
@@ -35,6 +38,7 @@ export default async function Page({
   if (error) throw new Error("조회 실패");
   const reservationIds = (data ?? []).map((reservation) => reservation.id);
   let results: ReservationConsultationResult[] = [];
+  let staffRequests: ReservationStaffRequest[] = [];
   if (reservationIds.length) {
     const resultQuery = await db
       .from("reservation_consultation_results")
@@ -52,6 +56,25 @@ export default async function Page({
       throw new Error("상담 결과 조회 실패");
     }
     results = (resultQuery.data ?? []) as ReservationConsultationResult[];
+    const staffRequestQuery = await db
+      .from("reservations")
+      .select("id, staff_request")
+      .in("id", reservationIds);
+    if (staffRequestQuery.error) {
+      operationLog(
+        "reservation.staff_request.read",
+        requestId,
+        "failure",
+        staffRequestQuery.error.code ?? "unknown",
+        startedAt,
+        { table: "reservations", field: "staff_request" },
+      );
+      throw new Error("담당자 처리 요청사항 조회 실패");
+    }
+    staffRequests = (staffRequestQuery.data ?? []).map((row) => ({
+      reservation_id: row.id,
+      staff_request: row.staff_request,
+    })) as ReservationStaffRequest[];
   }
   let insurance: InsuranceConfig | null = null;
   try {
@@ -76,6 +99,9 @@ export default async function Page({
           result.reservation_id,
           result as ReservationConsultationResult,
         ]),
+      )}
+      staffRequests={Object.fromEntries(
+        staffRequests.map((request) => [request.reservation_id, request]),
       )}
     />
   );

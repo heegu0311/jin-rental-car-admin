@@ -9,7 +9,10 @@ import type {
   InsuranceConfig,
 } from "@/lib/domain/contracts";
 import { deleteRecord, updateRecord, type RecordKind } from "@/lib/records";
-import type { ReservationConsultationResult } from "@/lib/domain/consultation-result";
+import type {
+  ReservationConsultationResult,
+  ReservationStaffRequest,
+} from "@/lib/domain/consultation-result";
 import { useSubmitLock } from "@/lib/hooks/use-submit-lock";
 import { StatusChips } from "@/components/shared/StatusChips";
 import { PhoneLink } from "./PhoneLink";
@@ -30,9 +33,11 @@ export function RecordDetailDialog({
   onSaved,
   onDeleted,
   onOutcomeSaved,
+  onStaffRequestSaved,
   vehicles = [],
   insurance = null,
   consultationResult = null,
+  staffRequestRecord = null,
 }: {
   kind: RecordKind;
   record: RecordRow;
@@ -42,9 +47,11 @@ export function RecordDetailDialog({
   onSaved: (record: RecordRow) => void;
   onDeleted: (id: string) => void;
   onOutcomeSaved: (result: ReservationConsultationResult) => void;
+  onStaffRequestSaved: (request: ReservationStaffRequest) => void;
   vehicles?: Vehicle[];
   insurance?: InsuranceConfig | null;
   consultationResult?: ReservationConsultationResult | null;
+  staffRequestRecord?: ReservationStaffRequest | null;
 }) {
   const [status, setStatus] = useState<string>(record.status);
   const [answer, setAnswer] = useState(
@@ -115,7 +122,9 @@ export function RecordDetailDialog({
               vehicles={vehicles}
               insurance={insurance}
               outcome={consultationResult}
+              staffRequestRecord={staffRequestRecord}
               onOutcomeSaved={onOutcomeSaved}
+              onStaffRequestSaved={onStaffRequestSaved}
             />
           ) : (
             <div className="space-y-3 rounded-xl bg-slate-50 p-4">

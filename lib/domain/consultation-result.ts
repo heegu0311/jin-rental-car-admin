@@ -11,7 +11,6 @@ export interface ReservationConsultationResult {
   rental_end: string | null;
   package_km: string;
   vehicle_options: VehicleOption[] | null;
-  staff_request: string;
   insurance_age: string;
   insurance_plan: string;
   rental_total: number | null;
@@ -23,6 +22,11 @@ export interface ReservationConsultationResult {
   note: string;
   updated_by: string;
   updated_at: string;
+}
+
+export interface ReservationStaffRequest {
+  reservation_id: string;
+  staff_request: string;
 }
 
 export type ReservationConsultationResultInput = Omit<

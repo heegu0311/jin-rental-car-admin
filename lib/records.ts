@@ -139,8 +139,6 @@ export async function saveReservationOutcome(
     !outcome.vehicle_options.every((option) =>
       (VEHICLE_OPTIONS as readonly string[]).includes(option),
     ) ||
-    typeof outcome.staff_request !== "string" ||
-    outcome.staff_request.length > OUTCOME_MAX_NOTE ||
     typeof outcome.insurance_age !== "string" ||
     outcome.insurance_age.length > 40 ||
     typeof outcome.insurance_plan !== "string" ||
@@ -201,6 +199,54 @@ export async function saveReservationOutcome(
   );
   revalidateRecordPages("reservations");
   return { success: true, outcome: stored };
+}
+
+export async function saveReservationStaffRequest(
+  id: string,
+  staffRequest: string,
+) {
+  const requestId = crypto.randomUUID();
+  const startedAt = performance.now();
+  const { db, user } = await requireAdmin();
+  if (
+    !validTarget("reservations", id) ||
+    typeof staffRequest !== "string" ||
+    staffRequest.length > OUTCOME_MAX_NOTE
+  )
+    return { error: "담당자 처리 요청사항을 확인해주세요." };
+  const { data, error } = await db
+    .from("reservations")
+    .update({ staff_request: staffRequest.trim() })
+    .eq("id", id)
+    .select("id, staff_request")
+    .single();
+  if (error) {
+    operationLog(
+      "reservation.staff_request.save",
+      requestId,
+      "failure",
+      "db_update",
+      startedAt,
+      { actorUserId: user.id, recordId: id },
+    );
+    return { error: "담당자 처리 요청사항을 저장하지 못했습니다." };
+  }
+  operationLog(
+    "reservation.staff_request.save",
+    requestId,
+    "success",
+    "saved",
+    startedAt,
+    { actorUserId: user.id, recordId: id },
+  );
+  revalidateRecordPages("reservations");
+  return {
+    success: true as const,
+    staffRequest: {
+      reservation_id: data.id,
+      staff_request: data.staff_request,
+    },
+  };
 }
 
 export async function deleteRecord(kind: RecordKind, id: string) {

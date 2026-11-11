@@ -27,7 +27,10 @@ import {
 } from "@/lib/consultation";
 import { formatKstDateTime, kstMonth } from "@/lib/format";
 import type { RecordKind } from "@/lib/records";
-import type { ReservationConsultationResult } from "@/lib/domain/consultation-result";
+import type {
+  ReservationConsultationResult,
+  ReservationStaffRequest,
+} from "@/lib/domain/consultation-result";
 import { ReceiptMonthFilter } from "./ReceiptMonthFilter";
 import { RecordDetailDialog } from "./RecordDetailDialog";
 
@@ -49,6 +52,7 @@ export function RecordManager({
   vehicles = [],
   insurance = null,
   consultationResults: initialConsultationResults = {},
+  staffRequests: initialStaffRequests = {},
   description = "최근 500건을 조회합니다. 고객 정보와 요청 내용을 확인하고 처리 상태를 관리하세요.",
 }: {
   kind: RecordKind;
@@ -59,12 +63,14 @@ export function RecordManager({
   vehicles?: Vehicle[];
   insurance?: InsuranceConfig | null;
   consultationResults?: Record<string, ReservationConsultationResult>;
+  staffRequests?: Record<string, ReservationStaffRequest>;
   description?: string;
 }) {
   const [rows, setRows] = useState(initial);
   const [consultationResults, setConsultationResults] = useState(
     initialConsultationResults,
   );
+  const [staffRequests, setStaffRequests] = useState(initialStaffRequests);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
   const [category, setCategory] = useState<string>(initialCategory);
@@ -222,6 +228,7 @@ export function RecordManager({
           vehicles={vehicles}
           insurance={insurance}
           consultationResult={consultationResults[selected.id] ?? null}
+          staffRequestRecord={staffRequests[selected.id] ?? null}
           title={title}
           labels={labels}
           onClose={() => setSelected(null)}
@@ -235,6 +242,12 @@ export function RecordManager({
           }
           onOutcomeSaved={(saved) => {
             setConsultationResults((prev) => ({
+              ...prev,
+              [saved.reservation_id]: saved,
+            }));
+          }}
+          onStaffRequestSaved={(saved) => {
+            setStaffRequests((prev) => ({
               ...prev,
               [saved.reservation_id]: saved,
             }));

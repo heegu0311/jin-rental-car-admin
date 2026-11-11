@@ -19,8 +19,14 @@ import {
   formatWon,
   vehicleDeposit,
 } from "@/lib/domain/contracts";
-import { saveReservationOutcome } from "@/lib/records";
-import type { ReservationConsultationResult } from "@/lib/domain/consultation-result";
+import {
+  saveReservationOutcome,
+  saveReservationStaffRequest,
+} from "@/lib/records";
+import type {
+  ReservationConsultationResult,
+  ReservationStaffRequest,
+} from "@/lib/domain/consultation-result";
 import { useSubmitLock } from "@/lib/hooks/use-submit-lock";
 import { StatusBadge } from "@/components/shared/feedback";
 import { formatKstDateTime } from "@/lib/format";
@@ -115,13 +121,17 @@ export function ReservationDetail({
   vehicles = [],
   insurance = null,
   outcome = null,
+  staffRequestRecord = null,
   onOutcomeSaved,
+  onStaffRequestSaved,
 }: {
   reservation: Reservation;
   vehicles?: Vehicle[];
   insurance?: InsuranceConfig | null;
   outcome?: ReservationConsultationResult | null;
+  staffRequestRecord?: ReservationStaffRequest | null;
   onOutcomeSaved: (result: ReservationConsultationResult) => void;
+  onStaffRequestSaved: (request: ReservationStaffRequest) => void;
 }) {
   const { vehicle, fields, memo } = splitOptions(reservation.options);
   const isNewCar = reservation.car_name.startsWith("[신차]");
@@ -188,8 +198,10 @@ export function ReservationDetail({
     outcome?.note ?? legacyNote ?? "",
   );
   const [staffRequest, setStaffRequest] = useState(
-    outcome?.staff_request ?? "",
+    staffRequestRecord?.staff_request ?? "",
   );
+  const [savedStaffRequest, setSavedStaffRequest] =
+    useState(staffRequestRecord);
   const [rentalStart, setRentalStart] = useState(
     outcome?.rental_start ?? normalizeDateTime(reservation.start_date),
   );
@@ -222,6 +234,8 @@ export function ReservationDetail({
     setRentalEnd(addRentalPeriod(rentalStart, rentalType, count));
   };
   const { busy: savingOutcome, run: runSaveOutcome } = useSubmitLock();
+  const { busy: savingStaffRequest, run: runSaveStaffRequest } =
+    useSubmitLock();
   const selectedCar = vehicles.find((car) => car.id === selectedCarId);
   const days =
     rentalType === "daily" && rentalStart && rentalEnd
@@ -430,7 +444,6 @@ export function ReservationDetail({
     savedOutcome.insurance_plan === (insurancePlanName || "선택 전") &&
     savedOutcome.deposit_amount === currentDeposit &&
     savedOutcome.note === consultationNote &&
-    savedOutcome.staff_request === staffRequest &&
     savedOutcome.rental_start === rentalStart &&
     savedOutcome.rental_end === (rentalEnd || null) &&
     savedOutcome.package_km === packageKm &&
@@ -470,7 +483,6 @@ export function ReservationDetail({
         total_max: totalMax,
         deposit_amount: Number(depositAmount),
         note: consultationNote,
-        staff_request: staffRequest,
       };
       try {
         const result = await saveReservationOutcome(reservation.id, outcome);
@@ -483,6 +495,24 @@ export function ReservationDetail({
         toast.success("상담 결과를 저장했습니다.");
       } catch {
         toast.error("상담 결과를 저장하지 못했습니다. 다시 시도해주세요.");
+      }
+    });
+  const saveStaffRequest = () =>
+    runSaveStaffRequest(async () => {
+      try {
+        const result = await saveReservationStaffRequest(
+          reservation.id,
+          staffRequest,
+        );
+        if ("error" in result) {
+          toast.error(result.error);
+          return;
+        }
+        setSavedStaffRequest(result.staffRequest);
+        onStaffRequestSaved(result.staffRequest);
+        toast.success("담당자 처리 요청사항을 저장했습니다.");
+      } catch {
+        toast.error("담당자 처리 요청사항을 저장하지 못했습니다.");
       }
     });
   const end = fields.find((f) => f.label === "반납일시");
@@ -797,6 +827,26 @@ export function ReservationDetail({
                   초기 요청은 유지되고 상담 결과만 별도로 저장됩니다.
                 </p>
               </div>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-blue-100 pt-2">
+                {savedOutcome ? (
+                  <p className="text-[10px] text-emerald-700">
+                    {currentMatchesSaved ? "상담 결과 저장됨" : "저장 전 변경사항"}
+                    {savedOutcome.updated_at
+                      ? ` · ${formatKstDateTime(savedOutcome.updated_at)}`
+                      : ""}
+                  </p>
+                ) : (
+                  <span />
+                )}
+                <button
+                  type="button"
+                  disabled={savingOutcome || !selectedCar || !validDeposit}
+                  onClick={saveOutcome}
+                  className="ml-auto rounded-lg bg-blue-700 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {savingOutcome ? "저장 중…" : "상담 결과 저장"}
+                </button>
+              </div>
             </div>
           )}
         </section>
@@ -821,20 +871,24 @@ export function ReservationDetail({
             />
           </label>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-            {savedOutcome?.updated_at ? (
+            {savedStaffRequest ? (
               <p className="text-[10px] text-emerald-700">
-                최근 저장 {formatKstDateTime(savedOutcome.updated_at)}
+                {savedStaffRequest.staff_request === staffRequest
+                  ? "담당자 요청 저장됨"
+                  : "저장 전 변경사항"}
               </p>
             ) : (
               <span />
             )}
             <button
               type="button"
-              disabled={savingOutcome || !selectedCar || !validDeposit}
-              onClick={saveOutcome}
+              disabled={savingStaffRequest}
+              onClick={saveStaffRequest}
               className="ml-auto rounded-lg bg-blue-700 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {savingOutcome ? "저장 중…" : "상담 결과 저장"}
+              {savingStaffRequest
+                ? "저장 중…"
+                : "담당자 처리 요청 저장"}
             </button>
           </div>
         </section>

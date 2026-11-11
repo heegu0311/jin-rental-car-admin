@@ -929,8 +929,8 @@ export function ReservationDetail({
                   : "고객 대여료는 현재 차량 등록 요금 기준이며, 접수 이후 요금 변경 시 당시 안내 금액과 다를 수 있습니다."}
                 {" "}표시 합계는 대여료와 자차보험 기준이며 보증금·탁송비·초과료는 별도로 확인해주세요.
               </p>
-              <div className="mt-3 grid gap-2 border-t border-blue-100 pt-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-                <label className="text-xs font-semibold text-slate-600">
+              <div className="mt-3 border-t border-blue-100 pt-3">
+                <label className="block text-xs font-semibold text-slate-600">
                   상담 특이사항
                   <textarea
                     maxLength={1000}
@@ -941,9 +941,6 @@ export function ReservationDetail({
                     className="mt-1 w-full resize-y rounded-md border border-slate-200 bg-white px-2.5 py-2 text-xs font-normal text-slate-900"
                   />
                 </label>
-                <p className="self-end text-[10px] text-slate-500">
-                  초기 요청은 유지되고 상담 결과만 별도로 저장됩니다.
-                </p>
               </div>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-blue-100 pt-2">
                 {savedOutcome ? (

@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { operationLog } from "@/lib/observability";
 import type { ReservationConsultationResultInput } from "@/lib/domain/consultation-result";
+import { VEHICLE_OPTIONS } from "@/lib/domain/contracts";
 
 export type RecordKind = "reservations" | "inquiries";
 
@@ -132,6 +133,14 @@ export async function saveReservationOutcome(
         !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(outcome.rental_end))) ||
     typeof outcome.package_km !== "string" ||
     outcome.package_km.length > 80 ||
+    !Array.isArray(outcome.vehicle_options) ||
+    outcome.vehicle_options.length > VEHICLE_OPTIONS.length ||
+    new Set(outcome.vehicle_options).size !== outcome.vehicle_options.length ||
+    !outcome.vehicle_options.every((option) =>
+      (VEHICLE_OPTIONS as readonly string[]).includes(option),
+    ) ||
+    typeof outcome.staff_request !== "string" ||
+    outcome.staff_request.length > OUTCOME_MAX_NOTE ||
     typeof outcome.insurance_age !== "string" ||
     outcome.insurance_age.length > 40 ||
     typeof outcome.insurance_plan !== "string" ||

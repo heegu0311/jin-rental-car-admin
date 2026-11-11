@@ -94,12 +94,12 @@ export function RecordDetailDialog({
     >
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-900/50" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100%-32px)] max-w-xl -translate-x-1/2 -translate-y-1/2 space-y-5 overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
-          <Dialog.Title className="text-xl font-bold">
+        <Dialog.Content className="fixed inset-0 z-50 h-[100dvh] max-h-[100dvh] w-screen max-w-none space-y-2 overflow-x-hidden overflow-y-auto overscroll-contain rounded-none bg-white p-2 shadow-xl sm:inset-auto sm:left-1/2 sm:top-1/2 sm:h-auto sm:max-h-[90vh] sm:w-[calc(100%-32px)] sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:space-y-5 sm:rounded-2xl sm:p-6">
+          <Dialog.Title className="px-2 pt-2 text-xl font-bold sm:px-0 sm:pt-0">
             {title} 상세
           </Dialog.Title>
           <Dialog.Description asChild>
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 p-2 sm:gap-3 sm:rounded-xl sm:px-4 sm:py-3">
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-slate-500">신청자</p>
                 <p className="mt-0.5 text-lg font-bold text-slate-900">
@@ -128,8 +128,7 @@ export function RecordDetailDialog({
               )}
             </div>
           )}
-          <div className="space-y-2 text-sm font-semibold">
-            <p>처리 상태</p>
+          <div className="space-y-2 text-sm font-semibold sm:space-y-2">
             <StatusChips
               label="처리 상태"
               value={status}
@@ -150,7 +149,7 @@ export function RecordDetailDialog({
                 onChange={(e) => setAnswer(e.target.value)}
                 maxLength={5000}
                 rows={5}
-                className="mt-2 w-full rounded-lg border border-slate-200 p-3"
+                className="mt-2 w-full rounded-lg border border-slate-200 p-2 sm:p-3"
               />
               <span className="text-xs font-normal text-slate-500">
                 저장되는 내부 답변 기록입니다. 고객에게 자동 발송되지는
@@ -158,7 +157,7 @@ export function RecordDetailDialog({
               </span>
             </label>
           )}
-          <div className="flex justify-between gap-3">
+          <div className="flex justify-between gap-2 sm:gap-3">
             <button
               disabled={busy}
               onClick={() => submit(true)}

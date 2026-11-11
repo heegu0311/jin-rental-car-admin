@@ -1,4 +1,4 @@
-import type { RentalType } from "./contracts.ts";
+import type { RentalType, VehicleOption } from "./contracts.ts";
 
 /** Latest administrator-confirmed rental terms; kept separate from the original request. */
 export interface ReservationConsultationResult {
@@ -10,6 +10,8 @@ export interface ReservationConsultationResult {
   rental_start: string;
   rental_end: string | null;
   package_km: string;
+  vehicle_options: VehicleOption[] | null;
+  staff_request: string;
   insurance_age: string;
   insurance_plan: string;
   rental_total: number | null;

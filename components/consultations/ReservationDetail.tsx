@@ -8,6 +8,7 @@ import {
   type InsuranceConfig,
   type InsuranceAgeGroup,
   type RentalType,
+  type VehicleOption,
   RESERVATION_LABELS,
   VEHICLE_OPTIONS,
   INSURANCE_AGE_GROUPS,
@@ -37,13 +38,14 @@ const LABELED_LINES = [
 ] as const;
 
 function splitOptions(options: string[] | null | undefined) {
-  const vehicle: string[] = [],
+  const vehicle: VehicleOption[] = [],
     fields: { label: string; value: string }[] = [],
     memo: string[] = [];
   for (const item of options ?? []) {
     if (item.startsWith("상담 결과: ")) continue;
-    if ((VEHICLE_OPTIONS as readonly string[]).includes(item)) {
-      vehicle.push(item);
+    const vehicleOption = VEHICLE_OPTIONS.find((option) => option === item);
+    if (vehicleOption) {
+      vehicle.push(vehicleOption);
       continue;
     }
     for (const line of item.split("\n")) {
@@ -185,6 +187,9 @@ export function ReservationDetail({
   const [consultationNote, setConsultationNote] = useState(
     outcome?.note ?? legacyNote ?? "",
   );
+  const [staffRequest, setStaffRequest] = useState(
+    outcome?.staff_request ?? "",
+  );
   const [rentalStart, setRentalStart] = useState(
     outcome?.rental_start ?? normalizeDateTime(reservation.start_date),
   );
@@ -198,6 +203,9 @@ export function ReservationDetail({
   const [packageKm, setPackageKm] = useState(
     outcome?.package_km ?? reservation.package_km,
   );
+  const [selectedVehicleOptions, setSelectedVehicleOptions] = useState<
+    VehicleOption[]
+  >(() => outcome?.vehicle_options ?? vehicle);
   const updateRentalStart = (value: string) => {
     setRentalStart(value);
     setRentalEnd(addRentalPeriod(value, rentalType, periodCount));
@@ -363,12 +371,12 @@ export function ReservationDetail({
     {
       label: "희망 옵션",
       requested: vehicle.length ? vehicle.join(" · ") : "미지정",
-      current: selectedCar?.options?.length
-        ? selectedCar.options.join(" · ")
-        : "차량 옵션 미등록",
+      current: selectedVehicleOptions.length
+        ? selectedVehicleOptions.join(" · ")
+        : "미선택",
       changed:
         [...vehicle].sort().join("\u0000") !==
-        [...(selectedCar?.options ?? [])].sort().join("\u0000"),
+        [...selectedVehicleOptions].sort().join("\u0000"),
     },
     {
       label: "렌트 기간",
@@ -422,9 +430,12 @@ export function ReservationDetail({
     savedOutcome.insurance_plan === (insurancePlanName || "선택 전") &&
     savedOutcome.deposit_amount === currentDeposit &&
     savedOutcome.note === consultationNote &&
+    savedOutcome.staff_request === staffRequest &&
     savedOutcome.rental_start === rentalStart &&
     savedOutcome.rental_end === (rentalEnd || null) &&
     savedOutcome.package_km === packageKm &&
+    [...(savedOutcome.vehicle_options ?? vehicle)].sort().join("\u0000") ===
+      [...selectedVehicleOptions].sort().join("\u0000") &&
     savedOutcome.rental_total === rentalTotal &&
     savedOutcome.insurance_min ===
       (insurancePlanName === INSURANCE_NONE ? 0 : (premium?.min ?? null)) &&
@@ -447,6 +458,7 @@ export function ReservationDetail({
         rental_start: rentalStart,
         rental_end: rentalEnd || null,
         package_km: packageKm,
+        vehicle_options: selectedVehicleOptions,
         insurance_age: ageGroup,
         insurance_plan: insurancePlanName || "선택 전",
         rental_total: rentalTotal,
@@ -458,6 +470,7 @@ export function ReservationDetail({
         total_max: totalMax,
         deposit_amount: Number(depositAmount),
         note: consultationNote,
+        staff_request: staffRequest,
       };
       try {
         const result = await saveReservationOutcome(reservation.id, outcome);
@@ -535,6 +548,31 @@ export function ReservationDetail({
               </option>
             ))}
           </select>
+        );
+      case "희망 옵션":
+        return (
+          <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
+            {VEHICLE_OPTIONS.map((option) => {
+              const selected = selectedVehicleOptions.includes(option);
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() =>
+                    setSelectedVehicleOptions((current) =>
+                      selected
+                        ? current.filter((item) => item !== option)
+                        : [...current, option],
+                    )
+                  }
+                  className={`min-h-8 rounded border px-1 py-1 text-[10px] leading-3 ${selected ? "border-blue-500 bg-blue-50 font-semibold text-blue-800" : "border-slate-200 bg-white text-slate-600"}`}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
         );
       case "렌트 기간":
         return (
@@ -636,12 +674,12 @@ export function ReservationDetail({
     }
   };
   return (
-    <div className="space-y-4">
-      <p className="text-xs text-slate-500">
+    <div className="space-y-2 sm:space-y-4">
+      <p className="px-1 text-xs text-slate-500 sm:px-0">
         접수일 {formatKstDateTime(reservation.created_at)}
       </p>
-      <section className="rounded-xl border border-slate-200 p-4">
-        <div className="flex items-start justify-between gap-3">
+      <section className="rounded-lg border border-slate-200 p-2 sm:rounded-xl sm:p-4">
+        <div className="flex items-start justify-between gap-2 sm:gap-3">
           <div className="min-w-0">
             <p className="text-xs font-semibold text-slate-500">희망 차량</p>
             <p className="mt-1 break-keep text-base font-bold text-slate-900">
@@ -652,11 +690,11 @@ export function ReservationDetail({
             {RESERVATION_LABELS[reservation.status]}
           </StatusBadge>
         </div>
-        <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200 text-sm">
+        <dl className="mt-2 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200 text-sm sm:mt-4">
           {summary.map((f) => (
             <div
               key={f.label}
-              className="bg-slate-50 px-3 py-2.5 odd:last:col-span-2"
+              className="bg-slate-50 px-2 py-2 odd:last:col-span-2 sm:px-3 sm:py-2.5"
             >
               <dt className="text-xs text-slate-500">{f.label}</dt>
               <dd className="mt-0.5 font-semibold text-slate-900">{f.value}</dd>
@@ -665,7 +703,7 @@ export function ReservationDetail({
         </dl>
       </section>
       {!isNewCar && (
-        <section className="rounded-xl border border-blue-200 bg-blue-50/60 p-3">
+        <section className="rounded-lg border border-blue-200 bg-blue-50/60 p-2 sm:rounded-xl sm:p-3">
           <button
             type="button"
             aria-expanded={calculatorOpen}
@@ -702,7 +740,7 @@ export function ReservationDetail({
             </span>
           </button>
           {calculatorOpen && (
-            <div className="mt-3 border-t border-blue-100 pt-3">
+            <div className="mt-2 border-t border-blue-100 pt-2 sm:mt-3 sm:pt-3">
               <div className="mb-2 grid grid-cols-2 gap-2 text-[11px] font-bold">
                 <div className="rounded-md bg-white px-2 py-2 text-slate-600">
                   고객 요청
@@ -755,39 +793,52 @@ export function ReservationDetail({
                     className="mt-1 w-full resize-y rounded-md border border-slate-200 bg-white px-2.5 py-2 text-xs font-normal text-slate-900"
                   />
                 </label>
-                <div className="flex flex-wrap items-end justify-between gap-2">
-                  {savedOutcome ? (
-                    <p className="text-[10px] text-emerald-700">
-                      저장됨
-                      {savedOutcome.updated_at
-                        ? ` · ${formatKstDateTime(savedOutcome.updated_at)}`
-                        : ""}
-                    </p>
-                  ) : (
-                    <p className="text-[10px] text-slate-500">
-                      초기 요청은 유지되고 상담 결과만 별도로 저장됩니다.
-                    </p>
-                  )}
-                  <button
-                    type="button"
-                    disabled={savingOutcome || !selectedCar || !validDeposit}
-                    onClick={saveOutcome}
-                    className="ml-auto rounded-lg bg-blue-700 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {savingOutcome ? "저장 중…" : "상담 결과 저장"}
-                  </button>
-                </div>
+                <p className="self-end text-[10px] text-slate-500">
+                  초기 요청은 유지되고 상담 결과만 별도로 저장됩니다.
+                </p>
               </div>
             </div>
           )}
         </section>
       )}
       <section>
-        <h3 className="text-sm font-semibold text-slate-900">요청 메모</h3>
-        <p className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-slate-50 p-3 text-sm leading-6 text-slate-700">
+        <h3 className="text-sm font-semibold text-slate-900">고객 요청 메모</h3>
+        <p className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-slate-50 p-2 text-sm leading-6 text-slate-700 sm:p-3">
           {memo || <span className="text-slate-500">작성한 메모 없음</span>}
         </p>
       </section>
+      {!isNewCar && (
+        <section>
+          <label className="block text-sm font-semibold text-slate-900">
+            담당자 처리 요청사항
+            <textarea
+              maxLength={1000}
+              rows={3}
+              value={staffRequest}
+              onChange={(event) => setStaffRequest(event.target.value)}
+              placeholder="담당자가 후속으로 확인하거나 처리할 내용을 적어주세요."
+              className="mt-2 w-full resize-y rounded-lg border border-slate-200 p-2 text-sm font-normal text-slate-900 sm:p-3"
+            />
+          </label>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+            {savedOutcome?.updated_at ? (
+              <p className="text-[10px] text-emerald-700">
+                최근 저장 {formatKstDateTime(savedOutcome.updated_at)}
+              </p>
+            ) : (
+              <span />
+            )}
+            <button
+              type="button"
+              disabled={savingOutcome || !selectedCar || !validDeposit}
+              onClick={saveOutcome}
+              className="ml-auto rounded-lg bg-blue-700 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {savingOutcome ? "저장 중…" : "상담 결과 저장"}
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

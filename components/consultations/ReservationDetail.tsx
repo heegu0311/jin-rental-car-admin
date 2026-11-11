@@ -83,73 +83,6 @@ function normalizeDateTime(value: string) {
   return match?.[1] ?? "";
 }
 
-function RequestOutcomeComparison({
-  rows,
-  saved,
-}: {
-  rows: {
-    label: string;
-    requested: string;
-    current: string;
-    changed: boolean;
-  }[];
-  saved: boolean;
-}) {
-  return (
-    <section className="rounded-lg border border-slate-200 bg-white p-3">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-bold text-slate-900">
-            고객 요청과 상담 결과
-          </h3>
-          <p className="mt-0.5 text-[10px] text-slate-500">
-            달라진 조건은 강조 표시됩니다.
-          </p>
-        </div>
-        <span
-          className={`rounded-full px-2 py-1 text-[10px] font-semibold ${saved ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
-        >
-          {saved ? "상담 결과 저장됨" : "저장 전 미리보기"}
-        </span>
-      </div>
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="rounded-lg bg-slate-50 px-2.5 py-2 font-bold text-slate-600">
-          고객 요청
-        </div>
-        <div className="rounded-lg bg-blue-50 px-2.5 py-2 font-bold text-blue-800">
-          상담 결과
-        </div>
-        {rows.map((row) => (
-          <div
-            key={row.label}
-            className="col-span-2 grid grid-cols-2 gap-2 border-b border-slate-100 pb-2 last:border-0 last:pb-0"
-          >
-            <div className="min-w-0">
-              <p className="text-[10px] text-slate-500">{row.label}</p>
-              <p className="mt-0.5 break-words font-medium text-slate-800">
-                {row.requested}
-              </p>
-            </div>
-            <div
-              className={`min-w-0 rounded-md px-2 py-1 ${row.changed ? "bg-amber-50 text-amber-900 ring-1 ring-amber-200" : "text-slate-800"}`}
-            >
-              <p className="flex items-center justify-between gap-1 text-[10px] text-slate-500">
-                {row.label}
-                {row.changed && (
-                  <span className="shrink-0 font-bold text-amber-700">
-                    변경
-                  </span>
-                )}
-              </p>
-              <p className="mt-0.5 break-words font-semibold">{row.current}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 export function ReservationDetail({
   reservation,
   vehicles = [],
@@ -215,7 +148,7 @@ export function ReservationDetail({
       ? ""
       : (outcome?.insurance_plan ?? requestedPlan);
   const [insurancePlanName, setInsurancePlanName] = useState(initialPlan);
-  const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [calculatorOpen, setCalculatorOpen] = useState(true);
   const [savedOutcome, setSavedOutcome] = useState(outcome);
   const [depositAmount, setDepositAmount] = useState(
     String(
@@ -511,6 +444,155 @@ export function ReservationDetail({
             : f.value.replace(/\s*\([A-Za-z]+\)$/, ""),
       })),
   ].filter((f) => f.value);
+  const renderOutcomeInput = (row: (typeof comparisonRows)[number]) => {
+    const inputClass =
+      "h-9 min-w-0 w-full rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-900";
+    switch (row.label) {
+      case "대여 시작 일시":
+        return (
+          <input
+            aria-label="상담 결과 대여 시작 일시"
+            type="datetime-local"
+            step={1800}
+            value={rentalStart}
+            onChange={(event) => setRentalStart(event.target.value)}
+            className={inputClass}
+          />
+        );
+      case "반납 일시":
+        return (
+          <input
+            aria-label="상담 결과 반납 일시"
+            type="datetime-local"
+            step={1800}
+            value={rentalEnd}
+            onChange={(event) => setRentalEnd(event.target.value)}
+            className={inputClass}
+          />
+        );
+      case "차량":
+        return (
+          <select
+            aria-label="상담 결과 차량"
+            value={selectedCarId}
+            onChange={(event) => setSelectedCarId(event.target.value)}
+            className={inputClass}
+          >
+            <option value="">차량 선택</option>
+            {vehicles.map((car) => (
+              <option key={car.id} value={car.id}>
+                {car.name}
+              </option>
+            ))}
+          </select>
+        );
+      case "렌트 기간":
+        return (
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_72px] gap-1">
+            <select
+              aria-label="상담 결과 렌트 단위"
+              value={rentalType}
+              onChange={(event) => {
+                setRentalType(event.target.value as RentalType);
+                setInsurancePlanName("");
+              }}
+              className={inputClass}
+            >
+              <option value="daily">일</option>
+              <option value="weekly">주</option>
+              <option value="monthly">개월</option>
+            </select>
+            <input
+              aria-label="상담 결과 기간 수"
+              type="number"
+              min={1}
+              max={rentalType === "daily" ? 30 : rentalType === "weekly" ? 8 : 60}
+              value={periodCount}
+              onChange={(event) =>
+                setPeriodCount(
+                  Math.min(
+                    rentalType === "daily" ? 30 : rentalType === "weekly" ? 8 : 60,
+                    Math.max(1, Number(event.target.value) || 1),
+                  ),
+                )
+              }
+              className={inputClass}
+            />
+          </div>
+        );
+      case "약정 거리":
+        return (
+          <input
+            aria-label="상담 결과 약정 거리"
+            value={packageKm}
+            maxLength={80}
+            onChange={(event) => setPackageKm(event.target.value)}
+            className={inputClass}
+          />
+        );
+      case "자차보험":
+        return (
+          <div className="grid min-w-0 gap-1">
+            <select
+              aria-label="상담 결과 운전자 연령"
+              value={ageGroup}
+              onChange={(event) => {
+                setAgeGroup(event.target.value as InsuranceAgeGroup);
+                setInsurancePlanName("");
+              }}
+              className={inputClass}
+            >
+              {INSURANCE_AGE_GROUPS.map((age) => (
+                <option key={age} value={age}>
+                  {age}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="상담 결과 자차보험"
+              value={insurancePlanName}
+              onChange={(event) => setInsurancePlanName(event.target.value)}
+              disabled={!insurance}
+              className={`${inputClass} disabled:bg-slate-100`}
+            >
+              <option value="">보험안 선택</option>
+              <option value={INSURANCE_NONE}>{INSURANCE_NONE}</option>
+              {availablePlans.map((plan) => (
+                <option key={plan.name} value={plan.name}>
+                  {plan.name}
+                </option>
+              ))}
+            </select>
+            <span className="text-[10px] text-slate-500">
+              {premium
+                ? formatAmountRange(premium.min, premium.max)
+                : insurancePlanName === INSURANCE_NONE
+                  ? "보험 미선택"
+                  : "보험료 확인 필요"}
+            </span>
+          </div>
+        );
+      case "보증금":
+        return (
+          <input
+            aria-label="상담 결과 보증금"
+            type="number"
+            min={0}
+            max={100_000_000}
+            step={10000}
+            value={depositAmount}
+            onChange={(event) => setDepositAmount(event.target.value)}
+            className={inputClass}
+          />
+        );
+      default:
+        return (
+          <p className="min-h-9 rounded-md bg-slate-50 px-2 py-2 text-xs font-bold text-slate-800">
+            {row.current}
+          </p>
+        );
+    }
+  };
   return (
     <div className="space-y-4">
       <section className="rounded-xl border border-slate-200 p-4">
@@ -537,6 +619,124 @@ export function ReservationDetail({
           ))}
         </dl>
       </section>
+      {!isNewCar && (
+        <section className="rounded-xl border border-blue-200 bg-blue-50/60 p-3">
+          <button
+            type="button"
+            aria-expanded={calculatorOpen}
+            onClick={() => setCalculatorOpen((open) => !open)}
+            className="flex w-full items-center justify-between gap-3 text-left"
+          >
+            <span className="min-w-0">
+              <span className="block text-sm font-bold text-slate-900">
+                고객 요청과 상담 결과
+              </span>
+              <span className="mt-0.5 block truncate text-xs text-slate-600">
+                {selectedCar
+                  ? `${selectedCar.name} · ${rentalType === "daily" ? "일" : rentalType === "weekly" ? "주" : "개월"} ${periodCount}`
+                  : "상담 조건을 바로 선택하고 금액을 확인하세요"}
+              </span>
+            </span>
+            <span className="flex shrink-0 items-center gap-2">
+              <span className="text-right">
+                <span className="block text-[10px] font-medium text-blue-700">
+                  예상 합계
+                </span>
+                <span className="block text-sm font-bold text-blue-800">
+                  {totalMin == null
+                    ? "계산 전"
+                    : totalMin === totalMax
+                      ? formatWon(totalMin)
+                      : `${formatWon(totalMin)}~${formatWon(totalMax)}`}
+                </span>
+              </span>
+              <ChevronDown
+                aria-hidden="true"
+                className={`size-4 text-blue-700 transition-transform ${calculatorOpen ? "rotate-180" : ""}`}
+              />
+            </span>
+          </button>
+          {calculatorOpen && (
+            <div className="mt-3 border-t border-blue-100 pt-3">
+              <div className="mb-2 grid grid-cols-2 gap-2 text-[11px] font-bold">
+                <div className="rounded-md bg-white px-2 py-2 text-slate-600">
+                  고객 요청
+                </div>
+                <div className="rounded-md bg-blue-100 px-2 py-2 text-blue-800">
+                  상담 결과 · 변경 즉시 계산
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-x-2">
+                {comparisonRows.map((row) => (
+                  <div
+                    key={row.label}
+                    className="col-span-2 grid min-w-0 grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-2 border-b border-blue-100 py-2 last:border-b-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-slate-500">{row.label}</p>
+                      <p className="mt-1 break-words text-xs font-medium leading-5 text-slate-800">
+                        {row.requested}
+                      </p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="mb-1 flex min-h-3 items-center justify-between gap-1 text-[10px] text-slate-500">
+                        <span className="truncate">{row.label}</span>
+                        {row.changed && (
+                          <span className="shrink-0 font-bold text-amber-700">
+                            변경
+                          </span>
+                        )}
+                      </p>
+                      {renderOutcomeInput(row)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2 text-[10px] leading-4 text-slate-500">
+                {specialPrice > 0
+                  ? "고객 요금은 접수 당시 저장된 월렌트 특가를 반영했습니다."
+                  : "고객 대여료는 현재 차량 등록 요금 기준이며, 접수 이후 요금 변경 시 당시 안내 금액과 다를 수 있습니다."}
+                {" "}표시 합계는 대여료와 자차보험 기준이며 보증금·탁송비·초과료는 별도로 확인해주세요.
+              </p>
+              <div className="mt-3 grid gap-2 border-t border-blue-100 pt-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+                <label className="text-xs font-semibold text-slate-600">
+                  통화 확인 내용
+                  <input
+                    type="text"
+                    maxLength={1000}
+                    value={consultationNote}
+                    onChange={(event) => setConsultationNote(event.target.value)}
+                    placeholder="예: 탁송 장소 확인"
+                    className="mt-1 h-9 w-full rounded-md border border-slate-200 bg-white px-2.5 text-xs font-normal text-slate-900"
+                  />
+                </label>
+                <div className="flex flex-wrap items-end justify-between gap-2">
+                  {savedOutcome ? (
+                    <p className="text-[10px] text-emerald-700">
+                      저장됨
+                      {savedOutcome.updated_at
+                        ? ` · ${formatKstDateTime(savedOutcome.updated_at)}`
+                        : ""}
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-slate-500">
+                      초기 요청은 유지되고 상담 결과만 별도로 저장됩니다.
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    disabled={savingOutcome || !selectedCar || !validDeposit}
+                    onClick={saveOutcome}
+                    className="ml-auto rounded-lg bg-blue-700 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {savingOutcome ? "저장 중…" : "상담 결과 저장"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
       <section>
         <h3 className="text-sm font-semibold text-slate-900">
           희망 옵션{" "}
@@ -566,328 +766,7 @@ export function ReservationDetail({
       <p className="text-xs text-slate-500">
         접수일 {formatKstDateTime(reservation.created_at)}
       </p>
-      {!isNewCar && (
-        <section className="rounded-xl border border-blue-200 bg-blue-50/60 p-3">
-          <button
-            type="button"
-            aria-expanded={calculatorOpen}
-            onClick={() => setCalculatorOpen((open) => !open)}
-            className="flex w-full items-center justify-between gap-3 text-left"
-          >
-            <span className="min-w-0">
-              <span className="block text-sm font-bold text-slate-900">
-                상담 요금 계산 및 조건 확정
-              </span>
-              <span className="mt-0.5 block truncate text-xs text-slate-600">
-                {selectedCar
-                  ? `${selectedCar.name} · ${rentalType === "daily" ? "일" : rentalType === "weekly" ? "주" : "개월"} ${periodCount}`
-                  : "차량·기간·보험안을 바꿔 바로 계산"}
-              </span>
-            </span>
-            <span className="flex shrink-0 items-center gap-2">
-              <span className="text-right">
-                <span className="block text-[10px] font-medium text-blue-700">
-                  예상 합계
-                </span>
-                <span className="block text-sm font-bold text-blue-800">
-                  {totalMin == null
-                    ? "계산 전"
-                    : totalMin === totalMax
-                      ? formatWon(totalMin)
-                      : `${formatWon(totalMin)}~${formatWon(totalMax)}`}
-                </span>
-              </span>
-              <ChevronDown
-                aria-hidden="true"
-                className={`size-4 text-blue-700 transition-transform ${calculatorOpen ? "rotate-180" : ""}`}
-              />
-            </span>
-          </button>
-          {calculatorOpen && (
-            <div className="mt-3 border-t border-blue-100 pt-3">
-              <p className="mb-3 text-[11px] text-slate-600">
-                선택을 바꾸면 등록된 요금 기준으로 즉시 계산합니다. 상담 안내용
-                예상 금액입니다.
-              </p>
-              <RequestOutcomeComparison
-                rows={comparisonRows}
-                saved={currentMatchesSaved}
-              />
-              <p className="mt-2 text-[10px] leading-4 text-slate-500">
-                {specialPrice > 0
-                  ? "고객 요금은 접수 당시 저장된 월렌트 특가를 반영했습니다."
-                  : "고객 대여료는 현재 차량 등록 요금 기준이며, 접수 이후 요금 변경 시 당시 안내 금액과 다를 수 있습니다."}
-              </p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                <label className="text-xs font-semibold text-slate-600">
-                  차량
-                  <select
-                    value={selectedCarId}
-                    onChange={(event) => setSelectedCarId(event.target.value)}
-                    className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900"
-                  >
-                    <option value="">차량 선택</option>
-                    {vehicles.map((car) => (
-                      <option key={car.id} value={car.id}>
-                        {car.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="text-xs font-semibold text-slate-600">
-                  대여 시작 일시
-                  <input
-                    type="datetime-local"
-                    step={1800}
-                    value={rentalStart}
-                    onChange={(event) => setRentalStart(event.target.value)}
-                    className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-900"
-                  />
-                </label>
-                <label className="text-xs font-semibold text-slate-600">
-                  반납 일시
-                  <input
-                    type="datetime-local"
-                    step={1800}
-                    value={rentalEnd}
-                    onChange={(event) => setRentalEnd(event.target.value)}
-                    className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-900"
-                  />
-                </label>
-                <fieldset className="text-xs font-semibold text-slate-600">
-                  <legend>렌트 단위</legend>
-                  <div className="mt-1.5 grid h-10 grid-cols-3 gap-1">
-                    {(
-                      [
-                        ["daily", "일"],
-                        ["weekly", "주"],
-                        ["monthly", "개월"],
-                      ] as const
-                    ).map(([type, label]) => (
-                      <button
-                        key={type}
-                        type="button"
-                        aria-pressed={rentalType === type}
-                        onClick={() => {
-                          setRentalType(type);
-                          setInsurancePlanName("");
-                        }}
-                        className={`rounded-lg border text-sm ${rentalType === type ? "border-blue-600 bg-blue-600 font-bold text-white" : "border-slate-200 bg-white text-slate-700"}`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
-                <label className="text-xs font-semibold text-slate-600">
-                  기간 (
-                  {rentalType === "daily"
-                    ? "일"
-                    : rentalType === "weekly"
-                      ? "주"
-                      : "개월"}
-                  )
-                  <input
-                    type="number"
-                    min={1}
-                    max={
-                      rentalType === "daily"
-                        ? 30
-                        : rentalType === "weekly"
-                          ? 8
-                          : 60
-                    }
-                    value={periodCount}
-                    onChange={(event) =>
-                      setPeriodCount(
-                        Math.min(
-                          rentalType === "daily"
-                            ? 30
-                            : rentalType === "weekly"
-                              ? 8
-                              : 60,
-                          Math.max(1, Number(event.target.value) || 1),
-                        ),
-                      )
-                    }
-                    className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900"
-                  />
-                  <span className="mt-1 flex gap-1">
-                    {(rentalType === "daily"
-                      ? [1, 3, 7, 14, 30]
-                      : rentalType === "weekly"
-                        ? [1, 2, 4, 8]
-                        : [1, 3, 6, 12, 24]
-                    ).map((count) => (
-                      <button
-                        key={count}
-                        type="button"
-                        aria-pressed={periodCount === count}
-                        onClick={() => setPeriodCount(count)}
-                        className={`min-h-7 flex-1 rounded border text-xs ${periodCount === count ? "border-blue-600 bg-white font-bold text-blue-700" : "border-transparent text-slate-500 hover:bg-white"}`}
-                      >
-                        {count}
-                      </button>
-                    ))}
-                  </span>
-                </label>
-                <label className="text-xs font-semibold text-slate-600">
-                  약정 거리
-                  <input
-                    type="text"
-                    maxLength={80}
-                    value={packageKm}
-                    onChange={(event) => setPackageKm(event.target.value)}
-                    className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900"
-                  />
-                </label>
-                <label className="text-xs font-semibold text-slate-600">
-                  운전자 연령
-                  <select
-                    value={ageGroup}
-                    onChange={(event) => {
-                      setAgeGroup(event.target.value as InsuranceAgeGroup);
-                      setInsurancePlanName("");
-                    }}
-                    className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900"
-                  >
-                    {INSURANCE_AGE_GROUPS.map((age) => (
-                      <option key={age} value={age}>
-                        {age}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="text-xs font-semibold text-slate-600">
-                  자차보험
-                  <select
-                    value={insurancePlanName}
-                    onChange={(event) =>
-                      setInsurancePlanName(event.target.value)
-                    }
-                    disabled={!insurance}
-                    className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 disabled:bg-slate-100"
-                  >
-                    <option value="">보험안 선택</option>
-                    <option value={INSURANCE_NONE}>{INSURANCE_NONE}</option>
-                    {availablePlans.map((plan) => (
-                      <option key={plan.name} value={plan.name}>
-                        {plan.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 rounded-lg bg-white p-2.5 text-sm">
-                <span className="text-slate-500">대여료</span>
-                <strong className="text-right">
-                  {rentalTotal == null
-                    ? "요금 확인 필요"
-                    : formatWon(rentalTotal)}
-                </strong>
-                <span className="text-slate-500">자차보험</span>
-                <strong className="text-right">
-                  {!insurance
-                    ? "보험 설정 미등록"
-                    : premium
-                      ? premium.min === premium.max
-                        ? formatWon(premium.min)
-                        : `${formatWon(premium.min)}~${formatWon(premium.max)}`
-                      : insurancePlanName === INSURANCE_NONE
-                        ? "선택 안함"
-                        : "선택 없음"}
-                </strong>
-                <span className="border-t border-slate-100 pt-2 font-bold text-slate-900">
-                  예상 합계
-                </span>
-                <strong className="border-t border-slate-100 pt-2 text-right text-base text-blue-700">
-                  {totalMin == null
-                    ? "상담 문의"
-                    : totalMin === totalMax
-                      ? formatWon(totalMin)
-                      : `${formatWon(totalMin)}~${formatWon(totalMax)}`}
-                </strong>
-              </div>
-              <p className="mt-2 text-[11px] leading-5 text-slate-500">
-                표시 금액은 대여료와 선택한 자차보험 기준입니다. 실제 안내 전
-                보증금·탁송비·약정거리 초과료 등을 확인해주세요.
-              </p>
-            </div>
-          )}
-        </section>
-      )}
-      {!isNewCar && (
-        <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-3">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900">상담 결과 저장</h3>
-            <p className="mt-0.5 text-xs text-slate-500">
-              초기 요청은 유지하고, 통화 후 합의한 조건을 별도로 기록합니다.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-50 p-2.5 text-xs">
-            <span className="text-slate-500">확정 차량·기간</span>
-            <strong className="text-right text-slate-800">
-              {selectedCar
-                ? `${selectedCar.name} · ${rentalType === "daily" ? "일" : rentalType === "weekly" ? "주" : "개월"} ${periodCount}`
-                : "차량 미선택"}
-            </strong>
-            <span className="text-slate-500">보험·예상 금액</span>
-            <strong className="text-right text-slate-800">
-              {insurancePlanName || "보험안 미선택"} ·{" "}
-              {totalMin == null
-                ? "금액 확인 필요"
-                : totalMin === totalMax
-                  ? formatWon(totalMin)
-                  : `${formatWon(totalMin)}~${formatWon(totalMax)}`}
-            </strong>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-[170px_1fr]">
-            <label className="text-xs font-semibold text-slate-600">
-              확정 보증금 (원)
-              <input
-                type="number"
-                min={0}
-                max={100_000_000}
-                step={10000}
-                value={depositAmount}
-                onChange={(event) => setDepositAmount(event.target.value)}
-                className="mt-1 h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-900"
-              />
-            </label>
-            <label className="text-xs font-semibold text-slate-600">
-              통화 확인 내용
-              <input
-                type="text"
-                maxLength={1000}
-                value={consultationNote}
-                onChange={(event) => setConsultationNote(event.target.value)}
-                placeholder="예: 보증금 30만원으로 안내, 탁송 장소 확인"
-                className="mt-1 h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm font-normal text-slate-900"
-              />
-            </label>
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-2">
-            {savedOutcome ? (
-              <p className="text-[11px] text-emerald-700">
-                최근 상담 결과 저장됨
-                {savedOutcome.updated_at
-                  ? ` · ${formatKstDateTime(savedOutcome.updated_at)}`
-                  : ""}
-              </p>
-            ) : (
-              <span />
-            )}
-            <button
-              type="button"
-              disabled={savingOutcome || !selectedCar || !validDeposit}
-              onClick={saveOutcome}
-              className="rounded-lg bg-blue-700 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {savingOutcome ? "저장 중…" : "상담 결과 저장"}
-            </button>
-          </div>
-        </section>
-      )}
+
     </div>
   );
 }

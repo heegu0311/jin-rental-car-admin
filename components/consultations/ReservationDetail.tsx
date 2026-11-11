@@ -181,9 +181,9 @@ export function ReservationDetail({
         insuranceField.includes(plan.name),
       )?.name ?? "");
   const initialPlan =
-    outcome?.insurance_plan === "선택 전"
-      ? ""
-      : (outcome?.insurance_plan ?? requestedPlan);
+    outcome?.insurance_plan && outcome.insurance_plan !== "선택 전"
+      ? outcome.insurance_plan
+      : requestedPlan;
   const [insurancePlanName, setInsurancePlanName] = useState(initialPlan);
   const [calculatorOpen, setCalculatorOpen] = useState(true);
   const [savedOutcome, setSavedOutcome] = useState(outcome);
@@ -237,6 +237,17 @@ export function ReservationDetail({
   const { busy: savingStaffRequest, run: runSaveStaffRequest } =
     useSubmitLock();
   const selectedCar = vehicles.find((car) => car.id === selectedCarId);
+  const insuranceSurcharge = insuranceField.match(
+    /\(\+([\d,]+)(?:~([\d,]+))?원\)/,
+  );
+  const customerInsuranceRange = insuranceSurcharge
+    ? {
+        min: Number(insuranceSurcharge[1].replaceAll(",", "")),
+        max: Number(
+          (insuranceSurcharge[2] ?? insuranceSurcharge[1]).replaceAll(",", ""),
+        ),
+      }
+    : null;
   const days =
     rentalType === "daily" && rentalStart && rentalEnd
       ? (() => {
@@ -263,6 +274,16 @@ export function ReservationDetail({
   );
   const insuranceClass =
     insurance && insuranceClassOf(insurance.ccLimits, selectedCar);
+  const useRequestedInsurancePrice = Boolean(
+    !insurancePlanName &&
+      customerInsuranceRange &&
+      insuranceField &&
+      !insuranceField.includes(INSURANCE_NONE) &&
+      rentalType === requestedType &&
+      ageGroup === requestedAgeGroup &&
+      selectedCar &&
+      customerCar?.id === selectedCar.id,
+  );
   const premium = selectedPlan
     ? insuranceClass == null
       ? insurancePriceRange(selectedPlan)
@@ -270,17 +291,21 @@ export function ReservationDetail({
           min: insurancePrice(selectedPlan, insuranceClass),
           max: insurancePrice(selectedPlan, insuranceClass),
         }
-    : null;
+    : useRequestedInsurancePrice
+      ? customerInsuranceRange
+      : null;
   const totalMin =
     rentalTotal == null ||
-    !insurance ||
-    (insurancePlanName !== INSURANCE_NONE && !selectedPlan)
+    (insurancePlanName !== INSURANCE_NONE &&
+      !selectedPlan &&
+      !useRequestedInsurancePrice)
       ? null
       : rentalTotal + (premium?.min ?? 0);
   const totalMax =
     rentalTotal == null ||
-    !insurance ||
-    (insurancePlanName !== INSURANCE_NONE && !selectedPlan)
+    (insurancePlanName !== INSURANCE_NONE &&
+      !selectedPlan &&
+      !useRequestedInsurancePrice)
       ? null
       : rentalTotal + (premium?.max ?? 0);
   const registeredDeposit = vehicleDeposit(
@@ -323,17 +348,6 @@ export function ReservationDetail({
           )
         : customerUnitPrice * requestedCount
       : null;
-  const insuranceSurcharge = insuranceField.match(
-    /\(\+([\d,]+)(?:~([\d,]+))?원\)/,
-  );
-  const customerInsuranceRange = insuranceSurcharge
-    ? {
-        min: Number(insuranceSurcharge[1].replaceAll(",", "")),
-        max: Number(
-          (insuranceSurcharge[2] ?? insuranceSurcharge[1]).replaceAll(",", ""),
-        ),
-      }
-    : null;
   const customerTotalMin =
     customerRentalTotal == null ||
     (!!insuranceField &&
@@ -357,7 +371,10 @@ export function ReservationDetail({
     insurancePlanName === INSURANCE_NONE
       ? "선택 안함"
       : premium
-        ? `${ageGroup} · ${insurancePlanName} · ${formatAmountRange(premium.min, premium.max)}`
+        ? `${ageGroup} · ${insurancePlanName || "고객 요청 보험"} · ${formatAmountRange(
+            premium.min,
+            premium.max,
+          )}${useRequestedInsurancePrice ? " (고객 요청 기준)" : ""}`
         : insurancePlanName || "선택 전";
   const currentDeposit = Number(depositAmount);
   const validDeposit =
@@ -430,7 +447,12 @@ export function ReservationDetail({
     {
       label: "예상 합계",
       requested: formatAmountRange(customerTotalMin, customerTotalMax),
-      current: formatAmountRange(totalMin, totalMax),
+      current:
+        totalMin == null
+          ? rentalTotal == null
+            ? "금액 확인 필요"
+            : `${formatAmount(rentalTotal)} (보험료 미포함)`
+          : formatAmountRange(totalMin, totalMax),
       changed: customerTotalMin !== totalMin || customerTotalMax !== totalMax,
     },
   ];
@@ -742,7 +764,11 @@ export function ReservationDetail({
               disabled={!insurance}
               className={`${inputClass} disabled:bg-slate-100`}
             >
-              <option value="">보험안 선택</option>
+              <option value="">
+                {useRequestedInsurancePrice
+                  ? "고객 요청 보험료 적용"
+                  : "보험안 선택"}
+              </option>
               <option value={INSURANCE_NONE}>{INSURANCE_NONE}</option>
               {availablePlans.map((plan) => (
                 <option key={plan.name} value={plan.name}>
@@ -834,7 +860,9 @@ export function ReservationDetail({
                 </span>
                 <span className="block text-sm font-bold text-blue-800">
                   {totalMin == null
-                    ? "계산 전"
+                    ? rentalTotal == null
+                      ? "계산 전"
+                      : `${formatWon(rentalTotal)} · 보험료 미포함`
                     : totalMin === totalMax
                       ? formatWon(totalMin)
                       : `${formatWon(totalMin)}~${formatWon(totalMax)}`}

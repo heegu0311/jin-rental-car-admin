@@ -131,7 +131,7 @@ export function RecordDetailDialog({
           <div className="space-y-2 text-sm font-semibold">
             <p>처리 상태</p>
             <StatusChips
-              label="처리 상태 선택 · 저장을 눌러 반영"
+              label="처리 상태"
               value={status}
               options={Object.entries(labels).map(([value, label]) => ({
                 value,

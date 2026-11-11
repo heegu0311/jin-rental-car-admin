@@ -361,6 +361,16 @@ export function ReservationDetail({
       changed: (selectedCar?.name ?? "") !== reservation.car_name,
     },
     {
+      label: "희망 옵션",
+      requested: vehicle.length ? vehicle.join(" · ") : "미지정",
+      current: selectedCar?.options?.length
+        ? selectedCar.options.join(" · ")
+        : "차량 옵션 미등록",
+      changed:
+        [...vehicle].sort().join("\u0000") !==
+        [...(selectedCar?.options ?? [])].sort().join("\u0000"),
+    },
+    {
       label: "렌트 기간",
       requested: requestedPeriodLabel,
       current: currentPeriodLabel,
@@ -732,14 +742,14 @@ export function ReservationDetail({
               </p>
               <div className="mt-3 grid gap-2 border-t border-blue-100 pt-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
                 <label className="text-xs font-semibold text-slate-600">
-                  통화 확인 내용
-                  <input
-                    type="text"
+                  상담 특이사항
+                  <textarea
                     maxLength={1000}
+                    rows={3}
                     value={consultationNote}
                     onChange={(event) => setConsultationNote(event.target.value)}
-                    placeholder="예: 탁송 장소 확인"
-                    className="mt-1 h-9 w-full rounded-md border border-slate-200 bg-white px-2.5 text-xs font-normal text-slate-900"
+                    placeholder="통화 중 확인하거나 합의한 특이사항을 기록하세요."
+                    className="mt-1 w-full resize-y rounded-md border border-slate-200 bg-white px-2.5 py-2 text-xs font-normal text-slate-900"
                   />
                 </label>
                 <div className="flex flex-wrap items-end justify-between gap-2">
@@ -769,26 +779,6 @@ export function ReservationDetail({
           )}
         </section>
       )}
-      <section>
-        <h3 className="text-sm font-semibold text-slate-900">
-          희망 옵션{" "}
-          <span className="font-normal text-slate-500">{vehicle.length}</span>
-        </h3>
-        {vehicle.length ? (
-          <ul className="mt-2 flex flex-wrap gap-1.5">
-            {vehicle.map((o) => (
-              <li
-                key={o}
-                className="rounded-md border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700"
-              >
-                {o}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-2 text-sm text-slate-500">선택한 옵션 없음</p>
-        )}
-      </section>
       <section>
         <h3 className="text-sm font-semibold text-slate-900">요청 메모</h3>
         <p className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-slate-50 p-3 text-sm leading-6 text-slate-700">

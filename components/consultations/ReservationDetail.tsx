@@ -101,20 +101,16 @@ function addRentalPeriod(
   const match = start.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
   if (!match || !Number.isInteger(count) || count < 1) return "";
   const [, year, month, day, hour, minute] = match;
-  const y = Number(year);
-  const m = Number(month) - 1;
-  const d = Number(day);
-  let result: Date;
-  if (type === "monthly") {
-    const targetMonth = m + count;
-    const lastDay = new Date(Date.UTC(y, targetMonth + 1, 0)).getUTCDate();
-    result = new Date(
-      Date.UTC(y, targetMonth, Math.min(d, lastDay), Number(hour), Number(minute)),
-    );
-  } else {
-    const addDays = count * (type === "weekly" ? 7 : 1);
-    result = new Date(Date.UTC(y, m, d + addDays, Number(hour), Number(minute)));
-  }
+  const addDays = count * (type === "monthly" ? 30 : type === "weekly" ? 7 : 1);
+  const result = new Date(
+    Date.UTC(
+      Number(year),
+      Number(month) - 1,
+      Number(day) + addDays,
+      Number(hour),
+      Number(minute),
+    ),
+  );
   return result.toISOString().slice(0, 16);
 }
 
@@ -247,6 +243,10 @@ export function ReservationDetail({
     { length: rentalType === "daily" ? 30 : rentalType === "weekly" ? 8 : 60 },
     (_, index) => index + 1,
   );
+  const effectiveRentalEnd =
+    rentalType === "daily"
+      ? rentalEnd
+      : addRentalPeriod(rentalStart, rentalType, periodCount);
   const { busy: savingOutcome, run: runSaveOutcome } = useSubmitLock();
   const { busy: savingStaffRequest, run: runSaveStaffRequest } =
     useSubmitLock();
@@ -416,8 +416,8 @@ export function ReservationDetail({
     {
       label: "반납 일시",
       requested: customerEnd.replace("T", " ") || "미지정",
-      current: rentalEnd.replace("T", " ") || "미지정",
-      changed: customerEnd !== rentalEnd,
+      current: effectiveRentalEnd.replace("T", " ") || "미지정",
+      changed: customerEnd !== effectiveRentalEnd,
     },
     {
       label: "희망 옵션",
@@ -491,7 +491,7 @@ export function ReservationDetail({
     savedOutcome.deposit_amount === currentDeposit &&
     savedOutcome.note === consultationNote &&
     savedOutcome.rental_start === rentalStart &&
-    savedOutcome.rental_end === (rentalEnd || null) &&
+    savedOutcome.rental_end === (effectiveRentalEnd || null) &&
     savedOutcome.package_km === packageKm &&
     [...(savedOutcome.vehicle_options ?? vehicle)].sort().join("\u0000") ===
       [...selectedVehicleOptions].sort().join("\u0000") &&
@@ -520,7 +520,7 @@ export function ReservationDetail({
         rental_type: rentalType,
         period_count: periodCount,
         rental_start: rentalStart,
-        rental_end: rentalEnd || null,
+        rental_end: effectiveRentalEnd || null,
         package_km: packageKm,
         vehicle_options: selectedVehicleOptions,
         insurance_age: ageGroup,
@@ -645,6 +645,15 @@ export function ReservationDetail({
           </div>
         );
       case "반납 일시":
+        if (rentalType !== "daily")
+          return (
+            <p className="rounded-md bg-slate-100 px-2 py-2 text-xs text-slate-700">
+              {effectiveRentalEnd.replace("T", " ") || "대여 시작 일시를 선택하세요"}
+              <span className="mt-1 block text-[10px] text-slate-500">
+                기간 기준 자동 계산 · 1개월 30일
+              </span>
+            </p>
+          );
         return (
           <div className="grid min-w-0 gap-1 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
             <input

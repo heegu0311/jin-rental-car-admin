@@ -12,6 +12,10 @@ function notificationUrl(value) {
 }
 
 self.addEventListener("push", (event) => {
+  const seoulHour = Number(new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul", hour: "2-digit", hourCycle: "h23",
+  }).format(new Date()));
+  if (seoulHour >= 22 || seoulHour < 6) return;
   let data = {};
   try {
     data = event.data ? event.data.json() : {};

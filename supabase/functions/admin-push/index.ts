@@ -90,6 +90,11 @@ Deno.serve(async (req) => {
   if (!ctx.secret || !sameSecret(given, ctx.secret))
     return new Response(null, { status: 401 });
   if (!payload) return new Response(null, { status: 400 });
+  const seoulHour = Number(new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul", hour: "2-digit", hourCycle: "h23",
+  }).format(new Date()));
+  if (seoulHour >= 22 || seoulHour < 6)
+    return Response.json({ sent: 0, failed: 0, removed: 0 });
   if (!ctx.public_key || !ctx.private_key || !ctx.subject)
     return new Response(null, { status: 503 });
 

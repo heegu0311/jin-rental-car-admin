@@ -9,6 +9,7 @@ import {
 import { createVehicleSheetColumns } from "@/lib/domain/vehicle-sheet";
 import type { VehicleSheetPatch } from "@/components/vehicles/VehicleSheet";
 import { operationLog } from "@/lib/observability";
+import { refreshPublicSite } from "@/lib/web-revalidate";
 
 const columns = createVehicleSheetColumns({
   price: INSURANCE_LIMITS.price,
@@ -153,7 +154,7 @@ export async function patchVehicleSheet(id: string, patch: VehicleSheetPatch) {
         : {}),
     },
   );
-  return {
-    error: error ? "저장에 실패했습니다. 입력값과 권한을 확인해주세요." : null,
-  };
+  if (error) return { error: "저장에 실패했습니다. 입력값과 권한을 확인해주세요." };
+  const site = await refreshPublicSite(id);
+  return { error: null, site };
 }

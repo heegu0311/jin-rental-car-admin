@@ -2,6 +2,7 @@
 
 import { requireAdmin } from "@/lib/auth";
 import { operationLog } from "@/lib/observability";
+import { refreshPublicSite } from "@/lib/web-revalidate";
 import {
   vehiclePayload,
   vehiclePayloadError,
@@ -80,7 +81,8 @@ export async function saveVehicle(id: string | null, car: Car) {
       priceMonthly: payload.price_monthly,
       isMonthlySpecial: payload.is_monthly_special,
     });
-    return { error: null };
+    const site = await refreshPublicSite(result.data.id);
+    return { error: null, site };
   } catch {
     operationLog(
       "vehicle.save",

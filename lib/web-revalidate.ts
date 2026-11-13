@@ -9,11 +9,11 @@ function failed(reason: string): PublicSiteRefresh {
 }
 
 /**
- * 공개 사이트(web)의 ISR 캐시를 즉시 무효화한다. 실패해도 web은 3시간 주기로 재생성된다.
+ * 공개 사이트(web)의 ISR 캐시를 무효화한다. 실패하면 경로별 1~3시간 주기로 재생성된다.
  * WEB_REVALIDATE_URL/SECRET은 서버 전용 환경변수이며 공개 번들에 포함하지 않는다.
  * 실패 사유에는 설정 이름과 응답 상태만 담고 비밀값은 담지 않는다.
  */
-export async function refreshPublicSite(): Promise<PublicSiteRefresh> {
+export async function refreshPublicSite(vehicleId?: string): Promise<PublicSiteRefresh> {
   const requestId = crypto.randomUUID();
   const startedAt = performance.now();
   const fail = (reason: string, code: string) => {
@@ -33,7 +33,12 @@ export async function refreshPublicSite(): Promise<PublicSiteRefresh> {
   try {
     const response = await fetch(url, {
       method: "POST",
-      headers: { Authorization: `Bearer ${secret}`, "x-request-id": requestId },
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        "x-request-id": requestId,
+        "Content-Type": "application/json",
+      },
+      body: vehicleId ? JSON.stringify({ vehicleId }) : undefined,
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });

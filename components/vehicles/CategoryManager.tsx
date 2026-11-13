@@ -41,7 +41,7 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
 
     if (!result.error) {
       setNewCategory("");
-      refreshPublicSiteOrNotify("카테고리를 추가했습니다.");
+      await refreshPublicSiteOrNotify("카테고리를 추가했습니다.");
       fetchCategories();
       onCategoryChange?.();
     } else {
@@ -64,7 +64,7 @@ export function CategoryManager({ onCategoryChange }: CategoryManagerProps) {
       toast.error("카테고리를 삭제하지 못했습니다. 다시 시도해주세요.");
       return;
     }
-    refreshPublicSiteOrNotify("카테고리를 삭제했습니다.");
+    await refreshPublicSiteOrNotify("카테고리를 삭제했습니다.");
     fetchCategories();
     onCategoryChange?.();
   };

@@ -1,7 +1,7 @@
 "use client";
 import { Feedback } from "@/components/shared/feedback";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { compareCategory } from "@/lib/domain/contracts";
 import {
@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { refreshPublicSiteOrNotify } from "@/lib/public-site";
+import { notifySaved, refreshPublicSiteOrNotify } from "@/lib/public-site";
 
 export default function VehiclesPage() {
   const [cars, setCars] = useState<Car[]>([]);
@@ -45,7 +45,6 @@ export default function VehiclesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCar, setEditingCar] = useState<Car | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "table" | "sheet">("grid");
-  const siteRefreshTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const [supabase] = useState(createClient);
 
@@ -123,15 +122,17 @@ export default function VehiclesPage() {
   const handleSaveCar = async (carData: Car) => {
     const result = await saveVehicle(editingCar?.id ?? null, carData);
     if (result.error) throw new Error(result.error);
-    refreshPublicSiteOrNotify(
-      editingCar ? "차량 정보를 저장했습니다." : "차량을 등록했습니다.",
-    );
+    if (result.site)
+      notifySaved(
+        editingCar ? "차량 정보를 저장했습니다." : "차량을 등록했습니다.",
+        result.site,
+      );
     fetchData();
     setIsModalOpen(false);
     setEditingCar(null);
   };
 
-  /** 표 편집 셀 저장. 고객 사이트 갱신은 연속 입력이 끝난 뒤 한 번만 요청한다. */
+  /** 표 편집 셀 저장과 고객 사이트 캐시 무효화 결과를 함께 확인한다. */
   const handlePatchCar = async (id: string, patch: VehicleSheetPatch) => {
     const result = await patchVehicleSheet(id, patch);
     if (result.error) throw new Error(result.error);
@@ -140,10 +141,7 @@ export default function VehiclesPage() {
         car.id === id ? applyVehiclePatch(car, patch, categories) : car,
       ),
     );
-    clearTimeout(siteRefreshTimer.current);
-    siteRefreshTimer.current = setTimeout(() => {
-      refreshPublicSiteOrNotify("차량 정보를 저장했습니다.");
-    }, 1500);
+    if (result.site) notifySaved("차량 정보를 저장했습니다.", result.site);
   };
 
   const handleDeleteCar = async (id: string) => {
@@ -153,7 +151,7 @@ export default function VehiclesPage() {
         toast.error("삭제하지 못했습니다. 연결된 데이터를 확인해주세요.");
         return;
       }
-      refreshPublicSiteOrNotify("차량을 삭제했습니다.");
+      await refreshPublicSiteOrNotify("차량을 삭제했습니다.");
       fetchData();
     }
   };

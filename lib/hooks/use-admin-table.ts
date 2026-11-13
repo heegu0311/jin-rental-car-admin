@@ -54,7 +54,7 @@ export function useAdminTable<T extends { id: string }>(
       toast.error("변경을 저장하지 못했습니다.");
       return;
     }
-    refreshPublicSiteOrNotify(doneMessage);
+    await refreshPublicSiteOrNotify(doneMessage);
     setRows((prev) =>
       prev.map((r) => (r.id === row.id ? { ...r, [field]: next } : r)),
     );
@@ -70,7 +70,7 @@ export function useAdminTable<T extends { id: string }>(
       toast.error("삭제하지 못했습니다.");
       return;
     }
-    refreshPublicSiteOrNotify(done);
+    await refreshPublicSiteOrNotify(done);
     setRows((prev) => prev.filter((r) => r.id !== id));
   }
 

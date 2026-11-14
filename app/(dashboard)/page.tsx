@@ -8,6 +8,13 @@ import {
   type Reservation,
   type Inquiry,
 } from "@/lib/domain/contracts";
+
+function displayStartDate(value: string) {
+  return value.replace(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2})(?::\d{2})?$/,
+    "$1. $2. $3. $4",
+  );
+}
 export default async function DashboardPage() {
   const { db } = await requireAdmin();
   const now = new Date();
@@ -31,7 +38,10 @@ export default async function DashboardPage() {
   const since = calendar[0].start;
   const result = await Promise.all([
     db.from("vehicles").select("id", { count: "exact", head: true }),
-    db.from("reservations").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    db
+      .from("reservations")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
     db
       .from("reservations")
       .select("id", { count: "exact", head: true })
@@ -141,7 +151,9 @@ export default async function DashboardPage() {
               ))}
             </div>
           ) : (
-            <EmptyState />
+            <div className="rounded-2xl border border-dashed border-slate-200 px-6 py-10 text-center font-semibold text-slate-700 md:py-16">
+              등록된 내용이 없습니다.
+            </div>
           )}
         </Panel>
       </div>
@@ -156,37 +168,59 @@ export default async function DashboardPage() {
         {!bookings.length ? (
           <EmptyState />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <caption className="sr-only">최근 상담 접수</caption>
-              <thead className="bg-slate-50 text-xs text-slate-500">
-                <tr>
-                  {["차량명", "고객명", "희망 시작일", "기간", "상태"].map(
-                    (s) => (
-                      <th key={s} className="p-3" scope="col">
-                        {s}
-                      </th>
-                    ),
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {bookings.map((b) => (
-                  <tr key={b.id} className="border-b border-slate-100">
-                    <td className="p-3">{b.car_name}</td>
-                    <td className="p-3">{b.user_name}</td>
-                    <td className="p-3">{b.start_date}</td>
-                    <td className="p-3">{b.period}</td>
-                    <td className="p-3">
-                      <StatusBadge tone={b.status}>
-                        {RESERVATION_LABELS[b.status]}
-                      </StatusBadge>
-                    </td>
+          <>
+            <ul className="divide-y divide-slate-100 md:hidden">
+              {bookings.map((b) => (
+                <li key={b.id} className="space-y-2 py-4 first:pt-0 last:pb-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="min-w-0 break-words text-sm font-semibold leading-6 text-slate-900">
+                      {b.car_name}
+                    </p>
+                    <StatusBadge tone={b.status}>
+                      {RESERVATION_LABELS[b.status]}
+                    </StatusBadge>
+                  </div>
+                  <p className="text-sm text-slate-600">
+                    {b.user_name} · {b.period}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    희망 시작일 {displayStartDate(b.start_date)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full text-left text-sm">
+                <caption className="sr-only">최근 상담 접수</caption>
+                <thead className="bg-slate-50 text-xs text-slate-500">
+                  <tr>
+                    {["차량명", "고객명", "희망 시작일", "기간", "상태"].map(
+                      (s) => (
+                        <th key={s} className="p-3" scope="col">
+                          {s}
+                        </th>
+                      ),
+                    )}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {bookings.map((b) => (
+                    <tr key={b.id} className="border-b border-slate-100">
+                      <td className="p-3">{b.car_name}</td>
+                      <td className="p-3">{b.user_name}</td>
+                      <td className="p-3">{displayStartDate(b.start_date)}</td>
+                      <td className="p-3">{b.period}</td>
+                      <td className="p-3">
+                        <StatusBadge tone={b.status}>
+                          {RESERVATION_LABELS[b.status]}
+                        </StatusBadge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </Panel>
     </div>

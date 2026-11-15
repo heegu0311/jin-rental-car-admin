@@ -5,7 +5,7 @@ import {
 } from "@/lib/web-revalidate";
 
 export const PUBLIC_SITE_DELAY_NOTICE =
-  "고객 사이트 즉시 반영에 실패해 최대 3시간 후 반영됩니다.";
+  "고객 사이트 즉시 반영에 실패했습니다. 설정을 확인한 뒤 다시 저장하거나 재검증해야 합니다.";
 
 /** 저장 결과를 알린다. 고객 사이트 즉시 반영에 실패하면 지연 반영을 함께 안내한다. */
 export function notifySaved(message: string, site: PublicSiteRefresh) {

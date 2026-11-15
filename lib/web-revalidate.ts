@@ -9,7 +9,7 @@ function failed(reason: string): PublicSiteRefresh {
 }
 
 /**
- * 공개 사이트(web)의 ISR 캐시를 무효화한다. 실패하면 경로별 1~3시간 주기로 재생성된다.
+ * 공개 사이트(web)의 정적 캐시를 무효화한다. 실패 시 자동 재생성은 없다.
  * WEB_REVALIDATE_URL/SECRET은 서버 전용 환경변수이며 공개 번들에 포함하지 않는다.
  * 실패 사유에는 설정 이름과 응답 상태만 담고 비밀값은 담지 않는다.
  */

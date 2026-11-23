@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { reservationCategory } from "@/lib/consultation";
 import { requireAdmin } from "@/lib/auth";
 import { StatusBadge, EmptyState } from "@/components/shared/feedback";
 import { Panel } from "@/components/shared/Panel";
@@ -8,6 +9,12 @@ import {
   type Reservation,
   type Inquiry,
 } from "@/lib/domain/contracts";
+
+function reservationHref(record: Reservation) {
+  const path =
+    reservationCategory(record) === "new-car" ? "/new-car" : "/reservations";
+  return `${path}?record=${encodeURIComponent(record.id)}`;
+}
 
 function displayStartDate(value: string) {
   return value.replace(
@@ -135,8 +142,8 @@ export default async function DashboardPage() {
               {inquiries.map((i) => (
                 <Link
                   key={i.id}
-                  href="/inquiries"
-                  className="block space-y-2 py-4"
+                  href={`/inquiries?record=${encodeURIComponent(i.id)}`}
+                  className="block space-y-2 rounded py-4 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-600"
                 >
                   <p className="text-sm font-semibold">{i.title}</p>
                   <div className="flex justify-between">
@@ -171,10 +178,18 @@ export default async function DashboardPage() {
           <>
             <ul className="divide-y divide-slate-100 md:hidden">
               {bookings.map((b) => (
-                <li key={b.id} className="space-y-2 py-4 first:pt-0 last:pb-0">
+                <li
+                  key={b.id}
+                  className="relative space-y-2 py-4 first:pt-0 last:pb-0"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <p className="min-w-0 break-words text-sm font-semibold leading-6 text-slate-900">
-                      {b.car_name}
+                      <Link
+                        href={reservationHref(b)}
+                        className="after:absolute after:inset-0 hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-blue-600"
+                      >
+                        {b.car_name}
+                      </Link>
                     </p>
                     <StatusBadge tone={b.status}>
                       {RESERVATION_LABELS[b.status]}
@@ -194,19 +209,31 @@ export default async function DashboardPage() {
                 <caption className="sr-only">최근 상담 접수</caption>
                 <thead className="bg-slate-50 text-xs text-slate-500">
                   <tr>
-                    {["차량명", "고객명", "희망 시작일", "기간", "상태"].map(
-                      (s) => (
-                        <th key={s} className="p-3" scope="col">
-                          {s}
-                        </th>
-                      ),
-                    )}
+                    {[
+                      "차량명",
+                      "고객명",
+                      "희망 시작일",
+                      "기간",
+                      "상태",
+                      "관리",
+                    ].map((s) => (
+                      <th key={s} className="p-3" scope="col">
+                        {s}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {bookings.map((b) => (
                     <tr key={b.id} className="border-b border-slate-100">
-                      <td className="p-3">{b.car_name}</td>
+                      <td className="p-3">
+                        <Link
+                          href={reservationHref(b)}
+                          className="rounded font-semibold hover:text-blue-700 hover:underline focus-visible:outline-2 focus-visible:outline-blue-600"
+                        >
+                          {b.car_name}
+                        </Link>
+                      </td>
                       <td className="p-3">{b.user_name}</td>
                       <td className="p-3">{displayStartDate(b.start_date)}</td>
                       <td className="p-3">{b.period}</td>
@@ -214,6 +241,14 @@ export default async function DashboardPage() {
                         <StatusBadge tone={b.status}>
                           {RESERVATION_LABELS[b.status]}
                         </StatusBadge>
+                      </td>
+                      <td className="p-3">
+                        <Link
+                          href={reservationHref(b)}
+                          className="whitespace-nowrap rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-blue-600 focus-visible:outline-2 focus-visible:outline-blue-600"
+                        >
+                          상세 보기
+                        </Link>
                       </td>
                     </tr>
                   ))}

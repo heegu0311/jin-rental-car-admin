@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { AccountIdentity } from "@/lib/account";
 import { PushToggle } from "@/components/admin/PushToggle";
 import { InstallGuide } from "@/components/admin/InstallGuide";
+import { PendingConsultations } from "@/components/admin/PendingConsultations";
 const titles: Record<string, string> = {
   "/": "대시보드 개요",
   "/vehicles": "차량 관리",
@@ -40,6 +41,7 @@ export function Header({
         {titles[key] || "진렌트카 운영 관리"}
       </p>
       <div className="ml-auto flex shrink-0 items-center gap-2 text-xs sm:gap-3">
+        <PendingConsultations />
         <InstallGuide />
         <PushToggle />
         <Link

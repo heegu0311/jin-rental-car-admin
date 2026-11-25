@@ -6,6 +6,15 @@ export interface PushResult {
   error?: string;
   publicKey?: string;
 }
+export async function pendingConsultationCount(): Promise<number | null> {
+  const { db } = await requireAdmin();
+  const [reservations, inquiries] = await Promise.all([
+    db.from("reservations").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    db.from("inquiries").select("id", { count: "exact", head: true }).eq("status", "pending"),
+  ]);
+  if (reservations.error || inquiries.error) return null;
+  return (reservations.count ?? 0) + (inquiries.count ?? 0);
+}
 export async function pushPublicKey(): Promise<PushResult> {
   const { db } = await requireAdmin();
   const { data, error } = await db.rpc("admin_push_public_key");

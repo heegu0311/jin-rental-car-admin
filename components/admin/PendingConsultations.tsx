@@ -15,9 +15,11 @@ export function PendingConsultations() {
         if (!active) return;
         setCount(next);
         if (next === null) return;
-        if ("setAppBadge" in navigator && typeof navigator.setAppBadge === "function") {
-          if (next > 0) await navigator.setAppBadge(next);
-          else if ("clearAppBadge" in navigator) await navigator.clearAppBadge();
+        try {
+          if (next > 0) await navigator.setAppBadge?.(next);
+          else await navigator.clearAppBadge?.();
+        } catch {
+          // Badge support varies by Android browser and launcher.
         }
       } catch {
         if (active) setCount(null);

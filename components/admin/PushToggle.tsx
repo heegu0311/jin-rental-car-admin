@@ -32,6 +32,19 @@ function detectSupport(): Support {
   return "unsupported";
 }
 
+async function readyRegistration(): Promise<ServiceWorkerRegistration> {
+  const registration = await navigator.serviceWorker.register("/sw.js", {
+    scope: "/", updateViaCache: "none",
+  });
+  if (registration.active) return registration;
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<never>((_, reject) =>
+      window.setTimeout(() => reject(new Error("service worker timeout")), 10000),
+    ),
+  ]);
+}
+
 export function PushToggle() {
   const [support, setSupport] = useState<Support>("checking");
   const [subscription, setSubscription] = useState<PushSubscription | null>(
@@ -46,8 +59,7 @@ export function PushToggle() {
     let active = true;
     setSupport(next);
     if (next !== "supported") return () => void (active = false);
-    navigator.serviceWorker
-      .register("/sw.js", { scope: "/", updateViaCache: "none" })
+    readyRegistration()
       .then((reg) => reg.pushManager.getSubscription())
       .then((sub) => active && setSubscription(sub))
       .catch(() => active && setSupport("unsupported"));
@@ -87,7 +99,7 @@ export function PushToggle() {
         toast.error(key.error ?? "알림 서버 설정이 완료되지 않았습니다.");
         return;
       }
-      const reg = await navigator.serviceWorker.ready;
+      const reg = await readyRegistration();
       const sub =
         (await reg.pushManager.getSubscription()) ??
         (await reg.pushManager.subscribe({
@@ -96,7 +108,7 @@ export function PushToggle() {
         }));
       const saved = await registerPush(sub.toJSON(), navigator.userAgent);
       if (saved.error) {
-        await sub.unsubscribe();
+        if (!subscription) await sub.unsubscribe();
         toast.error(saved.error);
         return;
       }

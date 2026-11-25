@@ -16,6 +16,9 @@ function worker({ openedClient = null } = {}) {
   let updates = 0;
   vm.runInNewContext(source, {
     URL,
+    Date: class extends Date {
+      constructor(...args) { super(...(args.length ? args : ["2026-11-25T03:00:00Z"])); }
+    },
     self: {
       location: { origin },
       addEventListener: (name, handler) => handlers.set(name, handler),

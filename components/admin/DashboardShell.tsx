@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { Header } from "@/components/admin/Header";
+import { AppUpdateBanner } from "@/components/admin/AppUpdateBanner";
 import type { AccountIdentity } from "@/lib/account";
 
 export function DashboardShell({
@@ -23,6 +24,7 @@ export function DashboardShell({
           identity={identity}
           onMenuClick={() => setIsSidebarOpen(true)}
         />
+        <AppUpdateBanner />
         <main className="flex-1 overflow-y-auto bg-slate-100 p-4 md:p-8">
           {children}
         </main>

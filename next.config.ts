@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  env: {
+    ADMIN_BUILD_ID: process.env.ADMIN_BUILD_ID ?? "development",
+  },
   async headers() {
     return [
       {

@@ -112,6 +112,7 @@ test("푸시 수신과 클릭에 같은 내부 주소 검증을 적용한다", a
       data: { json: () => ({ url, title: "새 상담", body: "상담 접수" }) },
     });
     assert.equal(sw.notifications[0].options.data.url, expected);
+    assert.equal(sw.notifications[0].options.silent, true);
     await sw.click(sw.notifications[0].options.data.url);
     assert.deepEqual(sw.opened, [origin + expected]);
   }
